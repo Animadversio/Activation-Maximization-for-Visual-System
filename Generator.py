@@ -3,6 +3,7 @@ import net_utils
 
 
 class Generator:
+    '''Load CaffeNet generator for all usage'''
     def __init__(self):
         generator = net_utils.load('generator')
         detransformer = net_utils.get_detransformer(generator)

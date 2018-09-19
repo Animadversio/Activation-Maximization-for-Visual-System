@@ -45,6 +45,7 @@ class ExperimentBase:
         raise NotImplementedError
 
     def attach_optimizer(self, optimizer):
+        '''Notes: Seems it support multiple optimizer working together! '''
         if self._optimizers is None:
             self._optimizers = [optimizer]
             self._update_dynparams(optimizer.dynamic_parameters)

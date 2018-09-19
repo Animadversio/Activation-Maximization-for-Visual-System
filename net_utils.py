@@ -17,6 +17,7 @@ loaded_nets = {}
 
 
 def get(net_name):
+    '''Get the definition and weights for different NNs. From downloaded Caffenet File in `netsdir` '''
     if net_name == 'caffe-net':
         net_weights = os.path.join(netsdir, 'caffenet', 'bvlc_reference_caffenet.caffemodel')
         net_definition = os.path.join(netsdir, 'caffenet', 'caffenet.prototxt')
@@ -45,7 +46,7 @@ def get(net_name):
 
 
 def load(net_name):
-    ''' Load nets by name and save the net in dict `loaded_nets` for multiple usage.
+    ''' Load nets by name using `get` routine. Store the nets in dict `loaded_nets` for repeating usage.
     :param net_name:
     :return: net
     '''
@@ -56,14 +57,14 @@ def load(net_name):
         if os.name == 'nt':
             net = caffe.Net(net_def, caffe.TEST)
             net.copy_from(net_weights)
-        else:
+        else: # UBUNTU systems' name is 'posix'
             net = caffe.Net(net_def, caffe.TEST, weights=net_weights)
         loaded_nets[net_name] = net
         return net
 
 
 def get_detransformer(generator):
-    '''Inverse-Transforming the input generator dimensions, formats...'''
+    '''Inverse-Transforming the input generator dimensions, formats, etc...'''
     detransformer = caffe.io.Transformer({'data': generator.blobs['deconv0'].data.shape})
     detransformer.set_transpose('data', (2, 0, 1))             # move color channels to outermost dimension
     detransformer.set_mean('data', ilsvrc2012_mean)            # subtract the dataset-mean value in each channel

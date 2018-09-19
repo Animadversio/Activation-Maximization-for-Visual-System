@@ -13,7 +13,7 @@ class WithIOCNNScorer(WithIOScorer):
             (str classifier_name, str net_layer, int neuron_index[, int neuron_x, int neuron_y])
         """
         super(WithIOCNNScorer, self).__init__(writedir, backupdir, image_size, random_seed)
-        # parse the `target_neuron` parameter syntax `('caffe-net', 'fc8', 1)`
+        # parse the `target_neuron` parameter syntax i.e. `('caffe-net', 'fc8', 1)`
         self._classifier_name = str(target_neuron[0])
         self._net_layer = str(target_neuron[1])
         self._net_iunit = int(target_neuron[2])
@@ -59,6 +59,6 @@ class WithIOCNNScorer(WithIOScorer):
 
 
 class NoIOCNNScorer(Scorer):
-    # TODO
+    # TODO ???
     def __init__(self):
         pass

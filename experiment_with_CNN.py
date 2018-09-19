@@ -70,7 +70,7 @@ class WithCNNExperiment(ExperimentBase):
         optimizer.save_init_population()
         scorer = WithIOCNNScorer(target_neuron=target_neuron, writedir=blockwritedir, backupdir=recorddir,
                                  image_size=image_size, random_seed=random_seed)
-        self.attach_optimizer(optimizer)
+        self.attach_optimizer(optimizer) # TODO: Maybe we can attach more than one optimizer here?
         self.attach_scorer(scorer)
 
         # load & backup_images natural stimuli
