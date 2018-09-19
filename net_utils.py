@@ -63,7 +63,7 @@ def load(net_name):
 
 
 def get_detransformer(generator):
-    '''Transforming the input generator dimensions'''
+    '''Inverse-Transforming the input generator dimensions, formats...'''
     detransformer = caffe.io.Transformer({'data': generator.blobs['deconv0'].data.shape})
     detransformer.set_transpose('data', (2, 0, 1))             # move color channels to outermost dimension
     detransformer.set_mean('data', ilsvrc2012_mean)            # subtract the dataset-mean value in each channel
