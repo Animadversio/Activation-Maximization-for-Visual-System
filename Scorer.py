@@ -30,6 +30,7 @@ class Scorer:
 
 
 class BlockWriter:
+    '''A class in charge of I/O writing images '''
     def __init__(self, writedir, backupdir, block_size=None,
                  reps=1, image_size=None, random_seed=None, cleanupdir=None):
         self._writedir = writedir
@@ -162,7 +163,7 @@ class WithIOScorer(Scorer):
         self._curr_nimgs = None
         self._curr_listscores = None
         self._curr_cumuscores = None
-        self._curr_nscores = None
+        self._curr_nscores = None   #
         self._curr_scores_mat = None
         self._curr_imgfn_2_imgid = None
         self._istep = -1
@@ -203,7 +204,7 @@ class WithIOScorer(Scorer):
             blockwriter.backup_images()
             t2 = time()
 
-            scores, scores_local_idx, novel_imgfns = self._get_scores()
+            scores, scores_local_idx, novel_imgfns = self._get_scores()  # Implemented in each subclasses
             if self._score_shape == (0,) and len(scores) > 0:    # if score_shape is the inital placeholder
                 self._score_shape = scores[0].shape
                 self._curr_cumuscores = np.zeros((nimgs, *self._score_shape), dtype='float')
@@ -466,3 +467,6 @@ class ShuffledEPhysScorer(EPhysScorer):
             self._random_generator.shuffle(shuffled_view[:self._first])
         shuffled_scores = scores[shuffled_view]
         return shuffled_scores
+
+
+# TODO: Shall we add something like `human scorer`? like giving scores basing on aesthetic value or other subjective measures of human

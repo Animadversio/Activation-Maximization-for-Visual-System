@@ -50,8 +50,8 @@ def write_images(imgs, names, path, size=None, timeout=0.5):
 def write_codes(codes, names, path, timeout=0.5):
     """
     Saves codes as npy files (1 in each file) to given path with given names
-    :param codes: list of images as numpy arrays with shape (w, h, c) and dtype uint8
-    :param names: filenames of images, excluding extension
+    :param codes: list of images as numpy arrays with shape (w, h, c) and dtype uint8. NOTE only thing in a .npy file is a single code.
+    :param names: filenames of images, excluding extension. number of names should be paired with codes.
     :param path: path to save to
     :param timeout: timeout for trying to write each code
     :return: None
@@ -78,6 +78,7 @@ def write_codes(codes, names, path, timeout=0.5):
 def savez(fpath, save_kwargs, timeout=1):
     """
     wraps numpy.savez, implementing OSError tolerance within timeout
+    "Save several arrays into a single file in uncompressed ``.npz`` format." DUMP EVERYTHING!
     """
     trying = True
     t0 = time()
@@ -94,7 +95,9 @@ save_scores = savez    # a synonym for backwards compatibility
 
 
 def load_codes(codedir, size):
-    # make sure enough codes for requested size
+    """ load all the *.npy files in the `codedir`. and randomly sample # `size` of them.
+    make sure enough codes for requested size
+    """
     codefns = sorted([fn for fn in os.listdir(codedir) if '.npy' in fn])
     assert size <= len(codefns), 'not enough codes (%d) to satisfy size (%d)' % (len(codefns), size)
     # load codes
@@ -113,6 +116,30 @@ def load_codes2(codedir, size):
     assert size <= len(codefns), 'not enough codes (%d) to satisfy size (%d)' % (len(codefns), size)
     # load codes
     codefns = list(np.random.choice(codefns, size=min(len(codefns), size), replace=False))
+    codes = []
+    for codefn in codefns:
+        code = np.load(os.path.join(codedir, codefn), allow_pickle=False).flatten()
+        codes.append(code)
+    codes = np.array(codes)
+    return codes, codefns
+
+def load_codes_search(codedir, srckey, size=None):
+    """Load the code files with `srckey` in its name.
+
+    :param codedir:
+    :param srckey: keyword to identify / filter the code. e.g. "gen298_010760.npy", "gen298_010760", "gen298"
+    :param size: Defaultly None. if there is too many codes, one can use this to specify the sample size
+    :return: codes and corresponding file names `codes, codefns`
+    Added @sep.19
+    """
+    # make sure enough codes for requested size
+    codefns = sorted([fn for fn in os.listdir(codedir) if ('.npy' in fn) and (srckey in fn)])
+
+    if not size is None: # input size parameter indicates to select the codes.
+        assert size <= len(codefns), 'not enough codes (%d) to satisfy size (%d)' % (len(codefns), size)
+        codefns = list(np.random.choice(codefns, size=min(len(codefns), size), replace=False))
+
+    # load codes by the codefns
     codes = []
     for codefn in codefns:
         code = np.load(os.path.join(codedir, codefn), allow_pickle=False).flatten()
