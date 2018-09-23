@@ -85,6 +85,19 @@ class WithCNNExperiment(ExperimentBase):
         self.scorer.load_classifier()
 
     def run(self):
+        '''
+
+        Running each iteration in the order:
+
+        `self.order.score()`
+        `self.optimizer.save_current_codes()
+        self.optimizer.save_current_genealogy()
+        self.scorer.save_current_scores()
+        t2 = time()
+        # use results to update optimizer
+        self.optimizer.step(synscores)`
+
+        '''
         self.load_nets()    # nets are not loaded in __init__; this enables exp to be run with multiprocessing
         self.istep = 0
         while self._istep < max_steps:

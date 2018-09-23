@@ -383,7 +383,14 @@ class Genetic(Optimizer):
 
     @property
     def generation(self):
+        '''Return current step number'''
         return self._istep
+
+# TODO: Finish the CMAES optimizer
+class CMAES(Optimizer):
+    def __init__(self, population_size, mutation_rate, mutation_size, kT_multiplier, recorddir,
+                 parental_skew=0.5, n_conserve=0, random_seed=None, thread=None):
+        super(Genetic, self).__init__(recorddir, random_seed, thread)
 
 #
 # class FDGD(Optimizer):
