@@ -123,6 +123,7 @@ def load_codes2(codedir, size):
     codes = np.array(codes)
     return codes, codefns
 
+
 def load_codes_search(codedir, srckey, size=None):
     """Load the code files with `srckey` in its name.
 
@@ -220,3 +221,36 @@ def sort_nicely(l):
     newl = l[:]
     newl.sort(key=alphanum_key)
     return newl
+
+import matplotlib.pyplot as plt
+
+
+def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_str=""):
+    ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
+    for stepi in range(steps):
+        try:
+            with np.load(CurDataDir + "scores_end_block{0:03}.npz".format(stepi)) as data:
+                score_tmp = data['scores']
+                ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
+        except FileNotFoundError:
+            print("maximum steps is %d." % stepi)
+            ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
+            steps = stepi
+            break;
+
+    gen_slice = np.arange(steps).reshape((-1, 1))
+    gen_num = np.repeat(gen_slice, population_size, 1)
+
+    AvgScore = np.nanmean(ScoreEvolveTable, axis=1)
+    MaxScore = np.nanmax(ScoreEvolveTable, axis=1)
+
+    figh = plt.figure()
+    plt.scatter(gen_num, ScoreEvolveTable, s=16, alpha=0.6, label="all score")
+    plt.plot(gen_slice, AvgScore, color='black', label="Average score")
+    plt.plot(gen_slice, MaxScore, color='red', label="Max score")
+    plt.xlabel("generation #")
+    plt.ylabel("CNN unit score")
+    plt.title("Optimization Trajectory of Score\n" + title_str)
+    plt.legend()
+    plt.show()
+    return figh

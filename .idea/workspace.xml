@@ -3,7 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="613a4399-523d-447c-9e0d-11f5c059e84a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code_Read_Analyze_scr.py" beforeDir="false" afterPath="$PROJECT_DIR$/Code_Read_Analyze_scr.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experiment_with_noisyCNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/experiment_with_noisyCNN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -48,7 +50,7 @@
           <entry key="ipynb" value="1" />
           <entry key="md" value="3" />
           <entry key="os" value="2" />
-          <entry key="py" value="34" />
+          <entry key="py" value="35" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -56,7 +58,7 @@
           <entry key="IPNB" value="1" />
           <entry key="Markdown" value="3" />
           <entry key="PLAIN_TEXT" value="2" />
-          <entry key="Python" value="32" />
+          <entry key="Python" value="33" />
           <entry key="Scratch" value="2" />
         </counts>
       </usages-collector>
@@ -64,9 +66,9 @@
         <counts>
           <entry key="Python Console" value="419" />
           <entry key="experiment_with_HumanScorer" value="949" />
-          <entry key="experiment_with_noisyCNN" value="21" />
+          <entry key="experiment_with_noisyCNN" value="34" />
           <entry key="md" value="343" />
-          <entry key="py" value="8828" />
+          <entry key="py" value="9277" />
           <entry key="txt" value="191" />
         </counts>
       </usages-collector>
@@ -74,7 +76,7 @@
         <counts>
           <entry key="Markdown" value="343" />
           <entry key="PLAIN_TEXT" value="191" />
-          <entry key="Python" value="10069" />
+          <entry key="Python" value="10531" />
           <entry key="Scratch" value="148" />
         </counts>
       </usages-collector>
@@ -85,11 +87,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Code_Read_Analyze_scr.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1054">
-              <caret line="62" selection-start-line="62" selection-end-line="62" />
+            <state relative-caret-position="226">
+              <caret line="40" column="40" lean-forward="true" selection-start-line="40" selection-start-column="40" selection-end-line="40" selection-end-column="40" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -97,14 +99,14 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/README.md">
-          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-            <state split_layout="SPLIT">
-              <first_editor relative-caret-position="272">
-                <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
-              </first_editor>
-              <second_editor />
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="260">
+              <caret line="237" column="25" selection-start-line="237" selection-start-column="25" selection-end-line="237" selection-end-column="25" />
+              <folding>
+                <marker date="1537821879258" expanded="true" signature="8606:8607" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -112,8 +114,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/experiment_with_noisyCNN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="156">
-              <caret line="65" column="28" selection-start-line="65" selection-start-column="6" selection-end-line="65" selection-end-column="28" />
+            <state relative-caret-position="306">
+              <caret line="18" column="25" selection-start-line="18" selection-start-column="25" selection-end-line="18" selection-end-column="25" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -124,8 +126,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Logger.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="663">
-              <caret line="40" selection-start-line="40" selection-end-line="40" />
+            <state>
+              <caret line="16" column="7" lean-forward="true" selection-start-line="16" selection-start-column="7" selection-end-line="16" selection-end-column="7" />
             </state>
           </provider>
         </entry>
@@ -145,7 +147,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Optimizer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6664">
+            <state relative-caret-position="376">
               <caret line="392" column="19" selection-start-line="392" selection-start-column="19" selection-end-line="392" selection-end-column="19" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
@@ -198,19 +200,19 @@
         <option value="$PROJECT_DIR$/Logger.py" />
         <option value="$PROJECT_DIR$/ExperimentBase.py" />
         <option value="$PROJECT_DIR$/net_utils.py" />
-        <option value="$PROJECT_DIR$/utils.py" />
         <option value="$PROJECT_DIR$/experiment_multithreaded.py" />
         <option value="$PROJECT_DIR$/experiment_with_CNN.py" />
         <option value="$PROJECT_DIR$/Generator.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
         <option value="$PROJECT_DIR$/Scorer.py" />
         <option value="$PROJECT_DIR$/experiment_with_HumanScorer.py" />
-        <option value="$PROJECT_DIR$/Code_Read_Analyze_scr.py" />
         <option value="$PROJECT_DIR$/Optimizer.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
-        <option value="$PROJECT_DIR$/experiment_with_noisyCNN.py" />
         <option value="$PROJECT_DIR$/CNNScorer.py" />
         <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/experiment_with_noisyCNN.py" />
+        <option value="$PROJECT_DIR$/utils.py" />
+        <option value="$PROJECT_DIR$/Code_Read_Analyze_scr.py" />
       </list>
     </option>
   </component>
@@ -231,14 +233,36 @@
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes />
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="Playtest7" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Playtest7" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Playtest7" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+            </path>
+            <path>
+              <item name="Playtest7" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="ToolWindowConcurrent Activities Diagram.ShowToolbar" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../data" />
-    <property name="settings.editor.selected.configurable" value="PyScientificConfigurable" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../data/with_CNN_noisy" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -457,7 +481,14 @@
       <option name="project" value="LOCAL" />
       <updated>1537764873070</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Add NoisyCNN module to simulate the optimization process in a noisy scorer setting. Just like neural response">
+      <created>1537765031565</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1537765031565</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TodoView">
@@ -473,8 +504,8 @@
     <frame x="8" y="31" width="1368" height="792" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" weight="0.23036253" />
-      <window_info id="Structure" order="1" sideWeight="0.502551" weight="0.1623867" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" visible="true" weight="0.31193355" />
+      <window_info id="Structure" order="1" sideWeight="0.502551" weight="0.16163142" />
       <window_info id="Favorites" order="2" weight="0.32866043" />
       <window_info id="Find" order="3" sideWeight="0.8512" weight="0.2512" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
@@ -484,14 +515,14 @@
       <window_info anchor="bottom" id="Debug" order="4" sideWeight="0.7907855" weight="0.3994253" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
-      <window_info anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.6873112" weight="0.33908045" />
+      <window_info active="true" anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.6873112" visible="true" weight="0.33908045" />
       <window_info anchor="bottom" id="TODO" order="8" sideWeight="0.49848944" weight="0.3275862" />
-      <window_info anchor="bottom" id="Version Control" order="9" sideWeight="0.496" weight="0.32736155" />
+      <window_info anchor="bottom" id="Version Control" order="9" sideWeight="0.496" weight="0.32614943" />
       <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49892008" weight="0.3275862" />
       <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.31268883" side_tool="true" weight="0.33908045" />
       <window_info anchor="bottom" id="Concurrent Activities Diagram" order="12" sideWeight="0.4976" weight="0.32899022" />
       <window_info anchor="right" id="Database" order="0" />
-      <window_info anchor="right" id="SciView" order="1" sideWeight="0.49457702" weight="0.46299094" />
+      <window_info anchor="right" id="SciView" order="1" sideWeight="0.49457702" weight="0.39501512" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="2" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="3" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="4" weight="0.25" />
@@ -640,13 +671,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="86">
-          <caret line="72" column="28" selection-start-line="72" selection-start-column="28" selection-end-line="72" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/lib/python3/dist-packages/caffe/pycaffe.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="156">
@@ -725,23 +749,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Code_Read_Analyze_scr.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1054">
-          <caret line="62" selection-start-line="62" selection-end-line="62" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Logger.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="663">
-          <caret line="40" selection-start-line="40" selection-end-line="40" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
@@ -759,9 +766,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Logger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret line="16" column="7" lean-forward="true" selection-start-line="16" selection-start-column="7" selection-end-line="16" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Optimizer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6664">
+        <state relative-caret-position="376">
           <caret line="392" column="19" selection-start-line="392" selection-start-column="19" selection-end-line="392" selection-end-column="19" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
@@ -780,23 +794,43 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="289">
+            <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/experiment_with_noisyCNN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="156">
-          <caret line="65" column="28" selection-start-line="65" selection-start-column="6" selection-end-line="65" selection-end-column="28" />
+        <state relative-caret-position="306">
+          <caret line="18" column="25" selection-start-line="18" selection-start-column="25" selection-end-line="18" selection-end-column="25" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="272">
-            <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
-          </first_editor>
-          <second_editor />
+    <entry file="file://$PROJECT_DIR$/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="237" column="25" selection-start-line="237" selection-start-column="25" selection-end-line="237" selection-end-column="25" />
+          <folding>
+            <marker date="1537821879258" expanded="true" signature="8606:8607" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Code_Read_Analyze_scr.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="226">
+          <caret line="40" column="40" lean-forward="true" selection-start-line="40" selection-start-column="40" selection-end-line="40" selection-end-column="40" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
