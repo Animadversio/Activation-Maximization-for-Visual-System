@@ -94,6 +94,7 @@ class BlockWriter:
         self._imgids = imgids
         self._nimgs = nimgs
         self._remaining_times_toshow = np.full(len(images), self._reps, dtype=int)
+        # Countdown from `reps` number. If all entry in `_remaining_times_toshow`<=0 then the `block` is done
         self._imgid_2_local_idx = {imgid: i for i, imgid in enumerate(imgids)}
         self._iloop = -1
 
@@ -129,6 +130,7 @@ class BlockWriter:
                 print('failed to backup_images %s' % imgfn)
 
     def show_again(self, imgids):
+        '''If an image has not been scored in current Gen, it will get into `show_again` method'''
         for imgid in imgids:
             try:
                 local_idx = self._imgid_2_local_idx[imgid]
@@ -146,6 +148,9 @@ class BlockWriter:
 
     @property
     def done(self):
+        ''' Check if all `_remaining_times_toshow` indicator are <= 0.
+        i.e. all images have been showed.
+        Control the termination of loop in `score` method in WithIOScorer'''
         return np.all(self._remaining_times_toshow <= 0)
 
     @property
@@ -154,6 +159,7 @@ class BlockWriter:
 
 
 class WithIOScorer(Scorer):
+    '''The direct super class of WITHIOCNNScorer'''
     def __init__(self, writedir, backupdir, image_size=None, random_seed=None, **kwargs):
         super(WithIOScorer, self).__init__(backupdir)
 
@@ -164,8 +170,8 @@ class WithIOScorer(Scorer):
         self._curr_listscores = None
         self._curr_cumuscores = None
         self._curr_nscores = None   #
-        self._curr_scores_mat = None
-        self._curr_imgfn_2_imgid = None
+        self._curr_scores_mat = None   #
+        self._curr_imgfn_2_imgid = None  # save current image filenames. Can be initialized
         self._istep = -1
 
         self._blockwriter = BlockWriter(self._writedir, self._backupdir)
@@ -189,37 +195,45 @@ class WithIOScorer(Scorer):
 
         self._curr_imgids = np.array(image_ids, dtype=str)
         self._curr_images = np.array(images)
-        self._curr_nimgs = nimgs
+        self._curr_nimgs = nimgs  # here 40 for CNN
         blockwriter = self._blockwriter
         blockwriter.show_images(self._curr_images, self._curr_imgids)
         self._curr_listscores = [[] for _ in range(nimgs)]
         self._curr_cumuscores = np.zeros((nimgs, *self._score_shape), dtype='float')
         self._curr_nscores = np.zeros(nimgs, dtype='int')
-        while not blockwriter.done:
+        while not blockwriter.done:  # iterate until all images has been shown `blockwriter._reps` times to Scorer
             t0 = time()
 
             self._curr_imgfn_2_imgid = blockwriter.write_block()
+            # set up the mapping from image filename to imageid (short str)
+            # Cf. `imgid_2_local_idx`
             t1 = time()
 
             blockwriter.backup_images()
             t2 = time()
 
             scores, scores_local_idx, novel_imgfns = self._get_scores()  # Implemented in each subclasses
-            if self._score_shape == (0,) and len(scores) > 0:    # if score_shape is the inital placeholder
+            # `score` list of doubles,
+            # `scores_local_idx` list of int index of these image stimuli
+            # `novel_imgfns` list of new image filenames. NOTE: Seems the only use of it is print out `novel image` number
+            if self._score_shape == (0,) and len(scores) > 0:   # if score_shape is the inital placeholder
                 self._score_shape = scores[0].shape
                 self._curr_cumuscores = np.zeros((nimgs, *self._score_shape), dtype='float')
+                # In case of scalar score (like CNN scoring), the `_score_shape` is `()`,
+                # thus `_curr_cumuscores` is also a single dimension vector
             for score, idx in zip(scores, scores_local_idx):
-                self._curr_listscores[idx].append(score)
-                self._curr_cumuscores[idx] += score
+                self._curr_listscores[idx].append(score)  # record the score for a idx in a list
+                self._curr_cumuscores[idx] += score  # sum up the score for a idx, if there is repetition. Like to sum the `_curr_listscores`
                 self._curr_nscores[idx] += 1
+
             if self._require_response:
+                # In case of Ephys experiments, there can be images with no response. So images should show again.
                 unscored_imgids = set(self._curr_imgfn_2_imgid.values()) - set(self._curr_imgids[scores_local_idx])
                 blockwriter.show_again(unscored_imgids)
             t3 = time()
 
             blockwriter.cleanup()
             t4 = time()
-
             # report delays
             if self._verbose:
                 print(('block %03d time: total %.2fs | ' +
@@ -230,24 +244,24 @@ class WithIOScorer(Scorer):
                     print('novel images:  {}'.format(sorted(novel_imgfns)))
 
         # consolidate & save data before returning
-        # calculate average score
+        # calculate average score as `scores`
         scores = np.empty(self._curr_cumuscores.shape)
-        valid_mask = self._curr_nscores != 0
+        valid_mask = self._curr_nscores != 0  # mask for the idxs with at least one `reps`
         scores[~valid_mask] = np.nan
         if np.sum(valid_mask) > 0:    # if any valid scores
             if len(self._curr_cumuscores.shape) == 2:
-                # if multiple channels, need to reshape nscores for correct array broadcasting
+                # if multiple channels (vector score), need to reshape nscores for correct array broadcasting
                 scores[valid_mask] = self._curr_cumuscores[valid_mask] / self._curr_nscores[:, np.newaxis][valid_mask]
             else:
                 scores[valid_mask] = self._curr_cumuscores[valid_mask] / self._curr_nscores[valid_mask]
-        # make matrix of all individual scores
+        # make a matrix of all individual scores as `scores_mat` (If single repitition, it's just the transpose of `scores`)
         scores_mat = np.full((*scores.shape, max(self._curr_nscores)), np.nan)
         for i in range(len(self._curr_imgids)):
             if self._curr_nscores[i] > 0:
                 scores_mat[i, ..., :self._curr_nscores[i]] = np.array(self._curr_listscores[i]).T
         # record scores
-        self._curr_scores = scores
-        self._curr_scores_mat = scores_mat
+        self._curr_scores = scores  # which is saved in the end of each generation
+        self._curr_scores_mat = scores_mat  # which is saved in the end of each generation
         return scores    # shape of (nimgs, [nchannels,])
 
     def _get_scores(self):
@@ -469,4 +483,52 @@ class ShuffledEPhysScorer(EPhysScorer):
         return shuffled_scores
 
 
-# TODO: Shall we add something like `human scorer`? like giving scores basing on aesthetic value or other subjective measures of human
+# Shall we add something like `human scorer`? like giving scores
+# basing on aesthetic value or other subjective measures of human
+import matplotlib.pyplot as plt
+class WithIOHumanScorer(WithIOScorer):
+    '''Give the response to image of one neuron in a pretrained CNN. '''
+    def __init__(self, writedir, backupdir, image_size, random_seed=None):
+        """
+        """
+        super(WithIOHumanScorer, self).__init__(writedir, backupdir, image_size, random_seed)
+
+    def _get_scores(self):
+        imgid_2_local_idx = {imgid: i for i, imgid in enumerate(self._curr_imgids)}
+        # mapping from keys='imgid' (img filenames) to value=i (local_idx, in [0,40) )
+        # i.e. the inverse mapping of `self._curr_imgids`.
+        # Note the `local_idx` is the order number of the img in the order of `imgid`
+        # And output scores are in the order of the `_curr_imgfn`
+        organized_scores = []  # ?
+        scores_local_idx = []  # ?
+        novel_imgfns = []  # ?
+
+        for imgfn in self._curr_imgfn_2_imgid.keys():
+            im = utils.read_image(os.path.join(self._writedir, imgfn))  # shape=(83, 83, 3)
+            plt.figure(1)
+            plt.clf()
+            plt.imshow(im)
+            plt.xticks([])
+            plt.yticks([])
+            plt.show()
+            while True:
+                raw_score = input("Input your score for the image ([0,100]): \n")
+                try:
+                    raw_score = float(raw_score)
+                    if 0<=raw_score and raw_score<=100:
+                        break
+                    else:
+                        print("Invalid input! Score should be in [0,100]! Try again!\n")
+                except:
+                    print("Invalid input!  Try again!\n")
+            score = raw_score
+            try:
+                imgid = self._curr_imgfn_2_imgid[imgfn]
+                local_idx = imgid_2_local_idx[imgid]
+                organized_scores.append(score)
+                scores_local_idx.append(local_idx)
+            except KeyError:
+                novel_imgfns.append(imgfn)  # Record this `novel_imgfns` to report at the end of each gen.
+
+        return organized_scores, scores_local_idx, novel_imgfns
+        # Return the response for a generation of images

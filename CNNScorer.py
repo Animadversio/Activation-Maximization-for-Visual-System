@@ -92,6 +92,82 @@ class WithIOCNNScorer(WithIOScorer):
 
         return organized_scores, scores_local_idx, novel_imgfns
 
+#%%  Add noise to Scorer. Inherit most methods from CNNScorer
+
+import numpy as np
+import numpy.random as random
+import matplotlib.pyplot as plt
+from scipy.stats import norm, expon, gamma, lognorm, uniform
+
+class WithIONoisyCNNScorer(WithIOCNNScorer):
+    '''Give the response to image of one neuron in a pretrained CNN. '''
+
+    def __init__(self, target_neuron, writedir, backupdir, image_size, random_seed=None,
+                 noise_scheme=None, noise_param=None, noise_rand_seed=0):
+        """
+        :param target_neuron: tuple of
+            (str classifier_name, str net_layer, int neuron_index[, int neuron_x, int neuron_y])
+        """
+        super(WithIONoisyCNNScorer, self).__init__(target_neuron, writedir, backupdir, image_size, random_seed)
+        self._AddNoise = None
+        self.noise_dist = None
+        self.noise_scheme = noise_scheme
+        self.noise_param = noise_param
+        self.init_noise_generator(noise_scheme, noise_param, noise_rand_seed)
+
+    def init_noise_generator(self, noise_scheme, noise_param, noise_rand_seed):
+        if noise_scheme is None:
+            self._AddNoise = False
+        else:
+            self._AddNoise = True
+            random.seed(seed=noise_rand_seed)
+            distrib_dict = {'norm': norm, 'expon': expon,
+                            'gamma': gamma, 'lognorm': lognorm,
+                            'uniform': uniform}
+            try:
+                self.noise_dist = distrib_dict[noise_scheme]
+                if type(noise_param) is dict:
+                    self.noise_dist = self.noise_dist(**noise_param)
+                elif type(noise_param) is tuple:
+                    self.noise_dist = self.noise_dist(*noise_param)
+                else:
+                    raise (ValueError, "Input noise_param is not parseable")
+            except KeyError:
+                raise(KeyError, "Invalid `noise_scheme` name, cannot find corresponding distribution for noise")
+        self.demo_noise_dist()
+
+    def demo_noise_dist(self):
+        dist = self.noise_dist
+        if dist is not None:
+            print("Noise scheme: {}, parameter: {} , \nmean: {:.3f}, median: {:.3f}, std: {:.3f}, [0.05-0.95] percentage range [{:.3f},{:.3f}]".format(self.noise_scheme, self.noise_param,
+                                                                                           dist.mean(), dist.median(), dist.std(),
+                                                                                           dist.ppf(0.05), dist.ppf(0.95),))
+
+            LB=dist.ppf(0.05)
+            HB=dist.ppf(0.95)
+            support = np.arange(LB, HB, (HB-LB)/200)
+            plt.figure()
+            plt.plot(support, dist.pdf(support))
+            plt.title("{} (param = {})".format(self.noise_scheme, self.noise_param))
+            plt.show()
+        else:
+            print("Noise free mode!\n")
+        input("Press any key to confirm the noise setting.")
+
+    def noise_generator(self, shape=1):
+        return self.noise_dist.rvs(size=shape)
+
+    def _get_scores(self):
+        organized_scores, scores_local_idx, novel_imgfns = super(WithIONoisyCNNScorer, self)._get_scores()
+        if self._AddNoise and (not len(organized_scores) == 0):
+            # noise = self.noise_generator(organized_scores.shape)
+            # organized_scores = organized_scores + noise
+            organized_scores = [score + self.noise_generator() for score in organized_scores]
+
+        return organized_scores, scores_local_idx, novel_imgfns
+        # Return the response for a generation of images
+
+
 class NoIOCNNScorer(Scorer):
     # TODO ???
     def __init__(self):
