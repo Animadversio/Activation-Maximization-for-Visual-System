@@ -100,7 +100,9 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm, expon, gamma, lognorm, uniform
 
 class WithIONoisyCNNScorer(WithIOCNNScorer):
-    '''Give the response to image of one neuron in a pretrained CNN. '''
+    '''Give the response to image of one neuron in a pretrained CNN. Add noise to the unit's output.
+
+    '''
 
     def __init__(self, target_neuron, writedir, backupdir, image_size, random_seed=None,
                  noise_scheme=None, noise_param=None, noise_rand_seed=0):

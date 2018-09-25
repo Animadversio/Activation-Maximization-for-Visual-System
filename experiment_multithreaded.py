@@ -149,7 +149,6 @@ class MultithreadedExperiment(ExperimentBase):
 
             self.istep += 1
 
-
 if __name__ == '__main__':
     experiment = MultithreadedExperiment(logdir=recorddir, random_seed=random_seed)
     print('initialized')

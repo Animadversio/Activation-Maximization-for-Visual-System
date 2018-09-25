@@ -224,7 +224,7 @@ def sort_nicely(l):
 
 import matplotlib.pyplot as plt
 
-
+#%%
 def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_str=""):
     ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
     for stepi in range(steps):

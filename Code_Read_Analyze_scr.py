@@ -1,9 +1,16 @@
+'''
+This code mainly deal with read the scores and codes and generating figures from them.
+
+'''
+
 import utils
 import numpy as np
 import matplotlib.pyplot as plt
 import importlib
 import os
 importlib.reload(utils)  # Reload the modules after changing them, or they will not affect the codes.
+
+
 #%%
 utils.load_codes("/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/", 10)
 utils.load_codes_search("/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/", "gen100")
@@ -38,7 +45,6 @@ with np.load(os.path.join(CurDataDir, "genealogy_gen297.npz")) as data:
 #%% Visualize Optimizing Trajectory
 # have been wrapped up in utils.visualize_score_trajectory
 
-# CurDataDir = "/home/poncelab/Documents/data/with_CNN_noisy/caffe-net_fc6_0001/backup/"
 CurDataDir = "/home/poncelab/Documents/data/with_CNN_noisy_gauss_5/caffe-net_fc6_0001/backup/"
 steps = 300
 population_size = 40
@@ -71,7 +77,7 @@ plt.ylabel("CNN unit score")
 plt.title("Optimization Trajectory of Score\n" + title_str)
 plt.legend()
 plt.show()
-#%%
+#%% Visualize the different modules
 
 utils.visualize_score_trajectory("/home/poncelab/Documents/data/with_CNN_noisy_gauss_5/caffe-net_fc6_0001/backup/",
                                  title_str= "Noisy_CNN: gaussian Noise, std = 5")
@@ -81,3 +87,49 @@ utils.visualize_score_trajectory("/home/poncelab/Documents/data/with_CNN/caffe-n
                                  title_str= "Normal_CNN: No noise")
 utils.visualize_score_trajectory("/home/poncelab/Documents/data/with_humanscorer/backup/",
                                  title_str= "Human scorer")
+
+
+#%% Visualize Score and Image for each generation.
+
+CurDataDir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/"
+block_num = 1
+title_cmap = plt.cm.viridis
+col_n = 6
+
+fncatalog = os.listdir(CurDataDir)
+
+fn_image_gen = [fn for fn in fncatalog if (".bmp" in fn) and ("block{0:03}".format(block_num) in fn)]
+fn_score_gen = [fn for fn in fncatalog if (".npz" in fn) and ("score" in fn) and ("block{0:03}".format(block_num) in fn)]
+
+fn_image_gen = sorted(fn_image_gen)
+image_num = len(fn_image_gen)
+
+row_n = np.ceil(image_num/col_n)
+assert len(fn_score_gen) is 1, "not correct number of score files"
+with np.load(os.path.join(CurDataDir, fn_score_gen[0])) as data:
+    score_gen = data['scores']
+assert len(score_gen) is image_num, "image and score number do not match"
+lb = score_gen.min()
+ub = score_gen.max()
+if ub == lb:
+    cmap_flag = False
+else:
+    cmap_flag = True
+
+plt.figure(figsize=[12, 12])
+for i, imagefn in enumerate(fn_image_gen):
+    img_tmp = plt.imread(os.path.join(CurDataDir, imagefn) )
+    score_tmp = score_gen[i]
+    plt.subplot(row_n, col_n, i+1)
+    plt.imshow(img_tmp)
+    plt.axis('off')
+    if cmap_flag:  # color the titles with a heatmap! 
+        plt.title("{0:.2f}".format(score_tmp), color=title_cmap((score_tmp-lb)/(ub-lb)))  # normalize a value between [0,1]
+    else:
+        plt.title("{0:.2f}".format(score_tmp) )
+
+plt.suptitle("Block{0:03}".format(block_num))
+plt.tight_layout()
+plt.show()
+
+# plt.imread(os.path.join(CurDataDir, "block299_35_gen298_010752.bmp"))

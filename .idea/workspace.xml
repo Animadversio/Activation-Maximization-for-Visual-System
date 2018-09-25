@@ -3,8 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="613a4399-523d-447c-9e0d-11f5c059e84a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CNNScorer.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNScorer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code_Read_Analyze_scr.py" beforeDir="false" afterPath="$PROJECT_DIR$/Code_Read_Analyze_scr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/experiment_with_noisyCNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/experiment_with_noisyCNN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experiment_multithreaded.py" beforeDir="false" afterPath="$PROJECT_DIR$/experiment_multithreaded.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,7 +15,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/Playtest7$experiment_with_CNN.coverage" NAME="experiment_with_CNN Coverage Results" MODIFIED="1537733094776" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Playtest7$experiment_with_CNN.coverage" NAME="experiment_with_CNN Coverage Results" MODIFIED="1537824021494" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Playtest7$experiment_with_HumanScorer.coverage" NAME="experiment_with_HumanScorer Coverage Results" MODIFIED="1537733441276" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Playtest7$experiment_with_noisyCNN.coverage" NAME="experiment_with_noisyCNN Coverage Results" MODIFIED="1537757187615" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
@@ -50,7 +51,7 @@
           <entry key="ipynb" value="1" />
           <entry key="md" value="3" />
           <entry key="os" value="2" />
-          <entry key="py" value="35" />
+          <entry key="py" value="39" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -58,7 +59,7 @@
           <entry key="IPNB" value="1" />
           <entry key="Markdown" value="3" />
           <entry key="PLAIN_TEXT" value="2" />
-          <entry key="Python" value="33" />
+          <entry key="Python" value="37" />
           <entry key="Scratch" value="2" />
         </counts>
       </usages-collector>
@@ -66,17 +67,17 @@
         <counts>
           <entry key="Python Console" value="419" />
           <entry key="experiment_with_HumanScorer" value="949" />
-          <entry key="experiment_with_noisyCNN" value="34" />
+          <entry key="experiment_with_noisyCNN" value="336" />
           <entry key="md" value="343" />
-          <entry key="py" value="9277" />
-          <entry key="txt" value="191" />
+          <entry key="py" value="10308" />
+          <entry key="txt" value="281" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Markdown" value="343" />
-          <entry key="PLAIN_TEXT" value="191" />
-          <entry key="Python" value="10531" />
+          <entry key="PLAIN_TEXT" value="281" />
+          <entry key="Python" value="11864" />
           <entry key="Scratch" value="148" />
         </counts>
       </usages-collector>
@@ -90,8 +91,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Code_Read_Analyze_scr.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="226">
-              <caret line="40" column="40" lean-forward="true" selection-start-line="40" selection-start-column="40" selection-end-line="40" selection-end-column="40" />
+            <state relative-caret-position="287">
+              <caret line="125" column="54" selection-start-line="125" selection-start-column="54" selection-end-line="125" selection-end-column="54" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -100,12 +101,33 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/experiment_with_CNN.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="403">
+              <caret line="143" lean-forward="true" selection-start-line="143" selection-end-line="143" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/experiment_multithreaded.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="202">
+              <caret line="18" column="19" lean-forward="true" selection-start-line="18" selection-start-column="19" selection-end-line="18" selection-end-column="19" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="260">
-              <caret line="237" column="25" selection-start-line="237" selection-start-column="25" selection-end-line="237" selection-end-column="25" />
+            <state relative-caret-position="1052">
+              <caret line="226" column="3" selection-start-line="226" selection-start-column="3" selection-end-line="226" selection-end-column="3" />
               <folding>
-                <marker date="1537821879258" expanded="true" signature="8606:8607" ph="..." />
+                <marker date="1537897574448" expanded="true" signature="8609:8610" ph="..." />
               </folding>
             </state>
           </provider>
@@ -114,7 +136,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/experiment_with_noisyCNN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
+            <state relative-caret-position="-969">
               <caret line="18" column="25" selection-start-line="18" selection-start-column="25" selection-end-line="18" selection-end-column="25" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
@@ -135,10 +157,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/CNNScorer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="578">
-              <caret line="101" column="26" selection-start-line="101" selection-start-column="6" selection-end-line="101" selection-end-column="26" />
+            <state relative-caret-position="226">
+              <caret line="121" column="9" selection-start-line="121" selection-start-column="9" selection-end-line="121" selection-end-column="9" />
               <folding>
-                <marker date="1537758028979" expanded="true" signature="4521:7822" ph="..." />
+                <marker date="1537823051272" expanded="true" signature="4521:7859" ph="..." />
               </folding>
             </state>
           </provider>
@@ -200,7 +222,6 @@
         <option value="$PROJECT_DIR$/Logger.py" />
         <option value="$PROJECT_DIR$/ExperimentBase.py" />
         <option value="$PROJECT_DIR$/net_utils.py" />
-        <option value="$PROJECT_DIR$/experiment_multithreaded.py" />
         <option value="$PROJECT_DIR$/experiment_with_CNN.py" />
         <option value="$PROJECT_DIR$/Generator.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
@@ -208,9 +229,10 @@
         <option value="$PROJECT_DIR$/experiment_with_HumanScorer.py" />
         <option value="$PROJECT_DIR$/Optimizer.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
-        <option value="$PROJECT_DIR$/CNNScorer.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/experiment_with_noisyCNN.py" />
+        <option value="$PROJECT_DIR$/CNNScorer.py" />
+        <option value="$PROJECT_DIR$/experiment_multithreaded.py" />
         <option value="$PROJECT_DIR$/utils.py" />
         <option value="$PROJECT_DIR$/Code_Read_Analyze_scr.py" />
       </list>
@@ -223,10 +245,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="8" />
+    <option name="x" value="65" />
     <option name="y" value="31" />
-    <option name="width" value="1368" />
-    <option name="height" value="792" />
+    <option name="width" value="1341" />
+    <option name="height" value="832" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -281,7 +303,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.experiment_with_noisyCNN">
+  <component name="RunManager" selected="Python.experiment_with_CNN">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="Playtest7" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -420,10 +442,10 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.experiment_with_CNN" />
         <item itemvalue="Python.experiment_with_noisyCNN" />
         <item itemvalue="Python.experiment_with_HumanScorer" />
         <item itemvalue="Python.scratch" />
-        <item itemvalue="Python.experiment_with_CNN" />
         <item itemvalue="Python.experiment_online_immigrants" />
       </list>
     </recent_temporary>
@@ -488,7 +510,14 @@
       <option name="project" value="LOCAL" />
       <updated>1537765031565</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Add Trajectory visualization module. wrapped up in utils.visualize_score_trajectory">
+      <created>1537822102216</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1537822102216</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TodoView">
@@ -501,32 +530,32 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="8" y="31" width="1368" height="792" extended-state="0" />
+    <frame x="65" y="31" width="1341" height="832" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" visible="true" weight="0.31193355" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" visible="true" weight="0.1688512" />
       <window_info id="Structure" order="1" sideWeight="0.502551" weight="0.16163142" />
       <window_info id="Favorites" order="2" weight="0.32866043" />
       <window_info id="Find" order="3" sideWeight="0.8512" weight="0.2512" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Docker" order="1" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="2" />
-      <window_info anchor="bottom" id="Run" order="3" sideWeight="0.8272" weight="0.20358306" />
+      <window_info anchor="bottom" id="Run" order="3" sideWeight="0.8272" weight="0.1915761" />
       <window_info anchor="bottom" id="Debug" order="4" sideWeight="0.7907855" weight="0.3994253" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
-      <window_info active="true" anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.6873112" visible="true" weight="0.33908045" />
+      <window_info anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.6873112" visible="true" weight="0.33831522" />
       <window_info anchor="bottom" id="TODO" order="8" sideWeight="0.49848944" weight="0.3275862" />
       <window_info anchor="bottom" id="Version Control" order="9" sideWeight="0.496" weight="0.32614943" />
       <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49892008" weight="0.3275862" />
       <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.31268883" side_tool="true" weight="0.33908045" />
       <window_info anchor="bottom" id="Concurrent Activities Diagram" order="12" sideWeight="0.4976" weight="0.32899022" />
       <window_info anchor="right" id="Database" order="0" />
-      <window_info anchor="right" id="SciView" order="1" sideWeight="0.49457702" weight="0.39501512" />
+      <window_info active="true" anchor="right" id="SciView" order="1" sideWeight="0.49486652" visible="true" weight="0.3477255" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="2" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="3" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="4" weight="0.25" />
-      <window_info anchor="right" x="0" y="0" width="273" height="510" id="Documentation" order="5" sideWeight="0.5043478" side_tool="true" weight="0.3602719" />
+      <window_info anchor="right" x="0" y="0" width="273" height="510" id="Documentation" order="5" sideWeight="0.50513345" side_tool="true" weight="0.39475712" />
     </layout>
     <layout-to-restore>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" weight="0.23036253" />
@@ -577,7 +606,8 @@
     <MESSAGE value="Add notes/comments to the Code Read Analyze scr.py" />
     <MESSAGE value="&#10;Sep. 23rd &#10;&#10;* [X] Add module `experiment_with_HumanScorer` for fun~ Try to rate the images to guide the network to generate more images you like&#10;* [X] Add visualization code in `Code_Read_Analyze_scr`. Part `Visualize Optimizing Trajectory`" />
     <MESSAGE value="Add NoisyCNN module to simulate the optimization process in a noisy scorer setting. Just like neural response" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add NoisyCNN module to simulate the optimization process in a noisy scorer setting. Just like neural response" />
+    <MESSAGE value="Add Trajectory visualization module. wrapped up in utils.visualize_score_trajectory" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Trajectory visualization module. wrapped up in utils.visualize_score_trajectory" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -647,13 +677,6 @@
           <folding>
             <element signature="e#0#22#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/experiment_multithreaded.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-612">
-          <caret line="12" column="26" selection-start-line="12" selection-start-column="14" selection-end-line="12" selection-end-column="26" />
         </state>
       </provider>
     </entry>
@@ -732,16 +755,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/experiment_with_CNN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2431">
-          <caret line="143" selection-start-line="143" selection-end-line="143" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/lib/python3/dist-packages/scipy/stats/_continuous_distns.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
@@ -784,16 +797,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CNNScorer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="578">
-          <caret line="101" column="26" selection-start-line="101" selection-start-column="6" selection-end-line="101" selection-end-column="26" />
-          <folding>
-            <marker date="1537758028979" expanded="true" signature="4521:7822" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
@@ -804,9 +807,19 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/CNNScorer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="226">
+          <caret line="121" column="9" selection-start-line="121" selection-start-column="9" selection-end-line="121" selection-end-column="9" />
+          <folding>
+            <marker date="1537823051272" expanded="true" signature="4521:7859" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/experiment_with_noisyCNN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
+        <state relative-caret-position="-969">
           <caret line="18" column="25" selection-start-line="18" selection-start-column="25" selection-end-line="18" selection-end-column="25" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
@@ -814,20 +827,51 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/cmaes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="658">
+          <caret line="158" lean-forward="true" selection-start-line="158" selection-end-line="158" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/experiment_multithreaded.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="202">
+          <caret line="18" column="19" lean-forward="true" selection-start-line="18" selection-start-column="19" selection-end-line="18" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="237" column="25" selection-start-line="237" selection-start-column="25" selection-end-line="237" selection-end-column="25" />
+        <state relative-caret-position="1052">
+          <caret line="226" column="3" selection-start-line="226" selection-start-column="3" selection-end-line="226" selection-end-column="3" />
           <folding>
-            <marker date="1537821879258" expanded="true" signature="8606:8607" ph="..." />
+            <marker date="1537897574448" expanded="true" signature="8609:8610" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/experiment_with_CNN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="403">
+          <caret line="143" lean-forward="true" selection-start-line="143" selection-end-line="143" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2018.2/system/python_stubs/-1247971763/builtins.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="2952" column="8" selection-start-line="2952" selection-start-column="8" selection-end-line="2952" selection-end-column="16" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Code_Read_Analyze_scr.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="226">
-          <caret line="40" column="40" lean-forward="true" selection-start-line="40" selection-start-column="40" selection-end-line="40" selection-end-column="40" />
+        <state relative-caret-position="287">
+          <caret line="125" column="54" selection-start-line="125" selection-start-column="54" selection-end-line="125" selection-end-column="54" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
