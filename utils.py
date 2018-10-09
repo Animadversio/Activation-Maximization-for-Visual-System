@@ -20,7 +20,7 @@ def write_images(imgs, names, path, size=None, timeout=0.5):
     """
     Saves images as 24-bit bmp files to given path with given names
     :param imgs: list of images as numpy arrays with shape (w, h, c) and dtype uint8
-    :param names: filenames of images including or excluding '.bmp'
+    :param names: filenames of images **including or excluding** '.bmp'
     :param path: path to save to
     :param size: size (pixels) to resize image to; default is unchanged
     :param timeout: timeout for trying to write each image
@@ -224,21 +224,28 @@ def sort_nicely(l):
 
 import matplotlib.pyplot as plt
 
-#%%
-def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_str=""):
+#%% Visualization Routines
+def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_str="",
+                               save=False, exp_title_str='', savedir=''):
     ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
-    for stepi in range(steps):
+    startnum=0
+    for stepi in range(startnum, steps):
         try:
-            with np.load(CurDataDir + "scores_end_block{0:03}.npz".format(stepi)) as data:
+            with np.load(os.path.join(CurDataDir, "scores_end_block{0:03}.npz".format(stepi))) as data:
                 score_tmp = data['scores']
                 ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
         except FileNotFoundError:
-            print("maximum steps is %d." % stepi)
-            ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
-            steps = stepi
-            break;
+            if stepi == 0:
+                startnum += 1
+                steps += 1
+                continue
+            else:
+                print("maximum steps is %d." % stepi)
+                ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
+                steps = stepi
+                break
 
-    gen_slice = np.arange(steps).reshape((-1, 1))
+    gen_slice = np.arange(startnum, steps).reshape((-1, 1))
     gen_num = np.repeat(gen_slice, population_size, 1)
 
     AvgScore = np.nanmean(ScoreEvolveTable, axis=1)
@@ -252,5 +259,82 @@ def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_
     plt.ylabel("CNN unit score")
     plt.title("Optimization Trajectory of Score\n" + title_str)
     plt.legend()
+    if save:
+        if savedir=='':
+            savedir = CurDataDir
+        plt.savefig(os.path.join(savedir, exp_title_str + "score_traj"))
     plt.show()
     return figh
+
+
+def visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_title_str='', title_cmap=plt.cm.viridis, col_n=6, savedir=''):
+    '''
+    # CurDataDir:  "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/"
+    # block_num: the number of block to visualize 20
+    # title_cmap: define the colormap to do the code, plt.cm.viridis
+    # col_n: number of column in a plot 6
+    # FIXED: on Oct. 7th support new name format, and align the score are image correctly
+    '''
+    fncatalog = os.listdir(CurDataDir)
+    fn_score_gen = [fn for fn in fncatalog if
+                    (".npz" in fn) and ("score" in fn) and ("block{0:03}".format(block_num) in fn)]
+    assert len(fn_score_gen) is 1, "not correct number of score files"
+    with np.load(os.path.join(CurDataDir, fn_score_gen[0])) as data:
+        score_gen = data['scores']
+        image_ids = data['image_ids']
+    fn_image_gen = []
+    for imgid in image_ids:
+        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and '.bmp' in fn]
+        assert len(fn_tmp_list) is 1, "Image file not found or wrong Image file number"
+        fn_image_gen.append(fn_tmp_list[0])
+    image_num = len(fn_image_gen)
+
+    assert len(score_gen) is image_num, "image and score number do not match"
+    lb = score_gen.min()
+    ub = score_gen.max()
+    if ub == lb:
+        cmap_flag = False
+    else:
+        cmap_flag = True
+
+    row_n = np.ceil(image_num / col_n)
+    figW = 12
+    figH = figW / col_n * row_n + 1
+    # figs, axes = plt.subplots(int(row_n), col_n, figsize=[figW, figH])
+    fig = plt.figure(figsize=[figW, figH])
+    for i, imagefn in enumerate(fn_image_gen):
+        img_tmp = plt.imread(os.path.join(CurDataDir, imagefn))
+        score_tmp = score_gen[i]
+        plt.subplot(row_n, col_n, i + 1)
+        plt.imshow(img_tmp)
+        plt.xticks([])
+        plt.yticks([])
+        plt.axis('off')
+        if cmap_flag:  # color the titles with a heatmap!
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16,
+                      color=title_cmap((score_tmp - lb) / (ub - lb)))  # normalize a value between [0,1]
+        else:
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+
+    plt.suptitle(exp_title_str + "Block{0:03}".format(block_num), fontsize=16)
+    plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
+    if save:
+        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+    plt.show()
+    return fig
+
+
+def visualize_all(CurDataDir, save=True, title_str=''):
+    SaveImgDir = os.path.join(CurDataDir, "sum_img/")
+    if not os.path.isdir(SaveImgDir):
+        os.mkdir(SaveImgDir)
+    for num in range(1, 301):
+        try:
+            fig = visualize_image_score_each_block(CurDataDir, block_num=num,
+                                                         save=save, savedir=SaveImgDir, exp_title_str=title_str)
+            fig.clf()
+        except AssertionError:
+            print("Show and Save %d number of image visualizations. " % (num) )
+            break
+    visualize_score_trajectory(CurDataDir, title_str="Normal_CNN: No noise",
+                                     save=save, savedir=SaveImgDir, exp_title_str=title_str)

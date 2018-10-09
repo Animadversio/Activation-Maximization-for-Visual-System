@@ -4,6 +4,7 @@ import utils
 import numpy as np
 import os
 from shutil import copyfile,rmtree
+from time import time
 
 
 class Optimizer:
@@ -14,7 +15,7 @@ class Optimizer:
         assert isinstance(random_seed, int) or random_seed is None, 'random_seed must be an integer or None'
 
         self._generator = None
-        self._istep = 0
+        self._istep = 0                 # step num of Optimizer start from 0, at the end of each step _istep is 1...maxstep
         self._dynparams = {}
 
         self._curr_samples = None       # array of codes
@@ -47,6 +48,9 @@ class Optimizer:
         self._prepare_images()
 
     def _prepare_images(self):
+        ''' Use generator to generate image from each code in `_curr_samples`
+        These images will finally be used in `scorer`
+        '''
         if self._generator is None:
             raise RuntimeError('generator not loaded. please run optimizer.load_generator() first')
 
@@ -68,7 +72,7 @@ class Optimizer:
         utils.write_codes(self._curr_samples, self._curr_sample_ids, self._recorddir)
 
     @property
-    def current_images(self):
+    def current_images(self):  # Wrapper of `_curr_images`
         if self._curr_images is None:
             raise RuntimeError('Current images have not been initialized. Is generator loaded?')
         return self._curr_images
@@ -209,8 +213,7 @@ class Genetic(Optimizer):
 
     def save_init_population(self):
         '''Record experimental parameter: initial population
-        in the directory "[:recorddir]/init_population"
-        '''
+        in the directory "[:recorddir]/init_population" '''
         assert (self._init_population_fns is not None) and (self._init_population_dir is not None),\
             'please load init population first by calling load_init_population();' + \
             'if init is not loaded from file, it can be found in experiment backup_images folder after experiment runs'
@@ -297,7 +300,7 @@ class Genetic(Optimizer):
         self._istep += 1
         self._curr_samples = new_samples
         self._genealogy = new_genealogy
-        self._curr_sample_idc = range(self._next_sample_idx, self._next_sample_idx + new_size)
+        self._curr_sample_idc = range(self._next_sample_idx, self._next_sample_idx + new_size)  # cumulative id .
         self._next_sample_idx += new_size
         if self._thread is None:
             self._curr_sample_ids = ['gen%03d_%06d' % (self._istep, idx) for idx in self._curr_sample_idc]
@@ -386,11 +389,202 @@ class Genetic(Optimizer):
         '''Return current step number'''
         return self._istep
 
-# TODO: Finish the CMAES optimizer
+
+from numpy.linalg import norm
+from numpy.random import randn
+from numpy import exp, floor, log, log2, sqrt, zeros, eye, ones, diag
+
+
 class CMAES(Optimizer):
-    def __init__(self, population_size, mutation_rate, mutation_size, kT_multiplier, recorddir,
-                 parental_skew=0.5, n_conserve=0, random_seed=None, thread=None):
+    # functions to be added
+    #         load_init_population(initcodedir, size=population_size)
+    #         save_init_population()
+    #         step()
+    # Note this is a single step version of CMAES
+    def __init__(self, recorddir, space_dimen, init_sigma=None, population_size=None, maximize=True,
+                 random_seed=None, thread=None):
         super(CMAES, self).__init__(recorddir, random_seed, thread)
+        # --------------------  Initialization --------------------------------
+        # assert len(initX) == N or initX.size == N
+        # xmean = np.array(initX)
+        # xmean.shape = (-1, 1)
+
+        N = space_dimen
+        self.space_dimen = space_dimen
+        # Overall control parameter
+        self.maximize = maximize  # if the program is to maximize or to minimize
+
+        # Strategy parameter setting: Selection
+        if population_size is None:
+            self.lambda_ = int(4 + floor(3 * log2(N)))  # population size, offspring number
+            # the relation between dimension and population size.
+        else:
+            self.lambda_ = population_size  # use custom specified population size
+        mu = self.lambda_ / 2  # number of parents/points for recombination
+        #  Select half the population size as parents
+        weights = log(mu + 1 / 2) - (log(np.arange(1, 1 + floor(mu))))  # muXone array for weighted recombination
+        self.mu = int(floor(mu))
+        self.weights = weights / sum(weights)  # normalize recombination weights array
+        mueff = self.weights.sum() ** 2 / sum(self.weights ** 2)  # variance-effectiveness of sum w_i x_i
+        self.weights.shape = (1, -1)  # Add the 1st dim to the weights mat
+        self.mueff = mueff  # add to class variable
+        self.sigma = init_sigma  # Note by default, sigma is None here.
+        print("Space dimension: %d, Population size: %d, Select size:%d, Optimization Parameters:\nInitial sigma: %.3f"
+              % (self.space_dimen, self.lambda_, self.mu, self.sigma))
+
+        # Strategy parameter settiself.weightsng: Adaptation
+        self.cc = (4 + mueff / N) / (N + 4 + 2 * mueff / N)  # time constant for cumulation for C
+        self.cs = (mueff + 2) / (N + mueff + 5)  # t-const for cumulation for sigma control
+        self.c1 = 2 / ((N + 1.3) ** 2 + mueff)  # learning rate for rank-one update of C
+        self.cmu = min(1 - self.c1, 2 * (mueff - 2 + 1 / mueff) / ((N + 2) ** 2 + mueff))  # and for rank-mu update
+        self.damps = 1 + 2 * max(0, sqrt((mueff - 1) / (N + 1)) - 1) + self.cs  # damping for sigma
+        # usually close to 1
+        print("cc=%.3f, cs=%.3f, c1=%.3f, cmu=%.3f, damps=%.3f" % (self.cc, self.cs, self.c1, self.cmu, self.damps))
+
+        self.xmean = zeros((1, N))
+        self.xold = zeros((1, N))
+        # Initialize dynamic (internal) strategy parameters and constants
+        self.pc = zeros((1, N))
+        self.ps = zeros((1, N))  # evolution paths for C and sigma
+        self.B = eye(N)  # B defines the coordinate system
+        self.D = ones(N)  # diagonal D defines the scaling
+        self.C = self.B * diag(self.D ** 2) * self.B.T  # covariance matrix C
+        self.invsqrtC = self.B * diag(1 / self.D) * self.B.T  # C^-1/2
+        # self.D.shape = (-1, 1)
+
+        self.eigeneval = 0  # track update of B and D
+        self.counteval = 0
+        self.chiN = sqrt(N) * (1 - 1 / (4 * N) + 1 / (
+                    21 * N ** 2))  # expectation of ||N(0,I)|| == norm(randn(N,1)) in 1/N expansion formula
+
+    def step(self, scores):
+        # Note it's important to decide which variable is to be saved in the `Optimizer` object
+        # Note to conform with other code, this part is transposed.
+        N = self.space_dimen
+        lambda_, mu, mueff, chiN = self.lambda_, self.mu, self.mueff, self.chiN
+        cc, cs, c1, cmu, damps = self.cc, self.cs, self.c1, self.cmu, self.damps
+        sigma, C, B, D, invsqrtC, ps, pc, = self.sigma, self.C, self.B, self.D, self.invsqrtC, self.ps, self.pc,
+        # set short name for everything
+
+        # Sort by fitness and compute weighted mean into xmean
+        if self.maximize is False:
+            code_sort_index = np.argsort(scores)  # add - operator it will do maximization.
+        else:
+            code_sort_index = np.argsort(-scores)
+        # scores = scores[code_sort_index]  # Ascending order. minimization
+
+        if self._istep == 0:
+            # if without initialization, the first xmean is evaluated from weighted average all the natural images
+            self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]
+        else:
+            self.xold = self.xmean
+            self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]   # Weighted recombination, new mean value
+
+            # Cumulation: Update evolution paths
+            norm_step_len = (self.xmean - self.xold) / sigma
+            ps = (1 - cs) * ps + sqrt(cs * (2 - cs) * mueff) * (norm_step_len @ invsqrtC)
+            hsig = norm(ps) / chiN / sqrt(1 - (1 - cs) ** (2 * self.counteval / lambda_)) < (1.4 + 2 / (N + 1))
+            pc = (1 - cc) * pc + hsig * sqrt(cc * (2 - cc) * mueff) * norm_step_len
+
+            # Adapt covariance matrix C
+            x_tmp = (1 / sigma) * (self._curr_samples[code_sort_index[0:mu], :] - self.xold)
+
+            C = ((1 - c1 - cmu) * C  # regard old matrix
+                 + c1 * (pc.T @ pc  # plus rank one update
+                         + (1 - hsig) * cc * (2 - cc) * C)  # minor correction if hsig==0
+                 + cmu * x_tmp.T @ diag(self.weights.flat) @ x_tmp)  # plus rank mu update
+
+            # Adapt step size sigma
+            sigma = sigma * exp((cs / damps) * (norm(ps) / chiN - 1))
+            # self.sigma = self.sigma * exp((self.cs / self.damps) * (norm(ps) / self.chiN - 1))
+            print("sigma: %.2f" % sigma)
+
+            # Decomposition of C into B*diag(D.^2)*B' (diagonalization)
+            # if self.counteval - self.eigeneval > lambda_ / (c1 + cmu) / N / 10:  # to achieve O(N^2)
+            #     # FIXME: Seems every time after this decomposition , the score went down!
+            #     t1 = time()
+            #     self.eigeneval = self.counteval
+            #     C = np.triu(C) + np.triu(C, 1).T  # enforce symmetry
+            #     [D, B] = np.linalg.eig(C)  # eigen decomposition, B==normalized eigenvectors
+            #     print("Spectrum Range:%.2f, %.2f" % (D.min(), D.max()))
+            #     D = sqrt(D)  # D is a vector of standard deviations now
+            #     invsqrtC = B @ diag(1 / D) @ B.T
+            #     t2 = time()
+            #     print("Cov Matrix Eigenvalue Decomposition (linalg) time cost: %.2f s" % (t2-t1))
+        # Generate new sample by sampling from Gaussian distribution
+        new_samples = zeros((self.lambda_, N))
+        new_ids = []
+        for k in range(self.lambda_):
+            new_samples[k:k + 1, :] = self.xmean + sigma * ((D * randn(1, N)) @ B.T )  # m + sig * Normal(0,C)
+            # Clever way to generate multivariate gaussian!!
+            # Stretch the guassian hyperspher with D and transform the
+            # ellipsoid by B mat linear transform between coordinates
+            new_ids.append("gen%03d_%06d" % (self._istep, self.counteval))
+            # assign id to newly generated images. These will be used as file names at 2nd round
+            self.counteval += 1
+
+        self.sigma, self.C, self.B, self.D, self.invsqrtC, self.ps, self.pc, = sigma, C, B, D, invsqrtC, ps, pc,
+
+        self._istep += 1
+        self._curr_samples = new_samples
+        self._curr_sample_ids = new_ids
+        self._prepare_images()
+
+
+    def save_optimizer_state(self):
+        # if needed, a save Optimizer status function. Automatic save the optimization parameters at 1st step.
+        if self._istep == 1:
+            optim_setting = {"space_dimen": self.space_dimen, "population_size": self.lambda_,
+                              "select_num": self.mu, "weights": self.weights,
+                              "cc": self.cc, "cs": self.cs, "c1": self.c1, "cmu": self.cmu, "damps": self.damps}
+            utils.savez(os.path.join(self._recorddir, "optimizer_setting.npz"), optim_setting)
+        utils.savez(os.path.join(self._recorddir, "optimizer_state_block%03d.npz" % self._istep),
+                    {"sigma": self.sigma, "C": self.C, "D": self.D, "ps": self.ps, "pc": self.pc})
+
+    def load_init_population(self, initcodedir, size):
+        # make sure we are at the beginning of experiment
+        assert self._istep == 0, 'initialization only allowed at the beginning'
+        # make sure size <= population size
+        assert size <= self.lambda_, 'size %d too big for population of size %d' % (size, self.lambda_)
+        # load codes
+        init_population, genealogy = utils.load_codes2(initcodedir, size)  # find `size` # of images in the target dir.
+        # if needed can be control the number
+        # apply
+        self._init_population = init_population
+        self._init_population_dir = initcodedir
+        self._init_population_fns = genealogy    # a list of '*.npy' file names
+        self._curr_samples = self._init_population.copy()
+        self._curr_sample_ids = genealogy.copy()
+        # self._curr_samples = self._curr_samples.T
+        # no update for idc, idx, ids because popsize unchanged
+        try:
+            self._prepare_images()
+        except RuntimeError:    # this means generator not loaded; on load, images will be prepared
+            pass
+
+    def save_init_population(self):
+        '''Record experimental parameter: initial population
+        in the directory "[:recorddir]/init_population" '''
+        assert (self._init_population_fns is not None) and (self._init_population_dir is not None),\
+            'please load init population first by calling load_init_population();' + \
+            'if init is not loaded from file, it can be found in experiment backup_images folder after experiment runs'
+        recorddir = os.path.join(self._recorddir, 'init_population')
+        try:
+            os.mkdir(recorddir)
+        except OSError as e:
+            if e.errno == 17:
+                # ADDED Sep.17, To let user delete the directory if existing during the system running.
+                chs = input("Dir %s exist input y to delete the dir and write on it, n to exit" % recorddir)
+                if chs is 'y':
+                    print("Directory %s all removed." % recorddir)
+                    rmtree(recorddir)
+                    os.mkdir(recorddir)
+                else:
+                    raise OSError('trying to save init population but directory already exists: %s' % recorddir)
+            else:
+                raise
+        for fn in self._init_population_fns:
+            copyfile(os.path.join(self._init_population_dir, fn), os.path.join(recorddir, fn))
 
 #
 # class FDGD(Optimizer):
