@@ -117,6 +117,13 @@ class WithIONoisyCNNScorer(WithIOCNNScorer):
         """
         :param target_neuron: tuple of
             (str classifier_name, str net_layer, int neuron_index[, int neuron_x, int neuron_y])
+        :param noise_scheme:  None or one of {'norm': norm, 'expon': expon,
+                            'gamma': gamma, 'lognorm': lognorm,
+                            'uniform'}
+        :param noise_param: parameters for the `scipy.stats` distributions
+                            for 'norm' distribution noise_param = {'loc': 0, 'scale': 5}
+                            for 'expon' distribution noise_param = {'loc': 0, 'scale': 5}
+        :param noise_rand_seed: random seed in int
         """
         super(WithIONoisyCNNScorer, self).__init__(target_neuron, writedir, backupdir, image_size, random_seed)
         self._AddNoise = None
@@ -181,15 +188,24 @@ class WithIONoisyCNNScorer(WithIOCNNScorer):
 class NoIOCNNScorer(Scorer):
     # TODO
     # NOTE this module is more easy to use. Because, there is no point to handle blocks for CNN scorer.
+    # NoiseGeneration is added
     '''
         The only methods that a `scorer` module should get are
             `scorer.score(stimuli, stimuli_ids)`,
             `scorer.save_current_scores()`
             `scorer.load_classifier()`
         So to realize a `scorer` class just make these 3 functions. that's enough
+        :param noise_scheme:  None or one of {'norm': norm, 'expon': expon,
+                            'gamma': gamma, 'lognorm': lognorm,
+                            'uniform'}
+        :param noise_param: parameters for the `scipy.stats` distributions
+                            for 'norm' distribution noise_param = {'loc': 0, 'scale': 5}
+                            for 'expon' distribution noise_param = {'loc': 0, 'scale': 5}
+        :param noise_rand_seed: random seed in int
     '''
 
-    def __init__(self, target_neuron, writedir, record_pattern=False):
+    def __init__(self, target_neuron, writedir, record_pattern=False,
+                 noise_scheme=None, noise_param=None, noise_rand_seed=0):
         """
         :param target_neuron: tuple of
             (str classifier_name, str net_layer, int neuron_index[, int neuron_x, int neuron_y])
@@ -216,11 +232,63 @@ class NoIOCNNScorer(Scorer):
         self._classifier = None
         self._transformer = None
 
+        # Noise specification
+        self._addnoise = None
+        self.noise_dist = None
+        self.noise_scheme = noise_scheme
+        self.noise_param = noise_param
+        self.init_noise_generator(noise_scheme, noise_param, noise_rand_seed)
+        self.demo_noise_dist()
+
+    def init_noise_generator(self, noise_scheme, noise_param, noise_rand_seed):
+        if noise_scheme is None:
+            self._addnoise = False
+        else:
+            self._addnoise = True
+            random.seed(seed=noise_rand_seed)
+            distrib_dict = {'norm': norm, 'expon': expon,
+                            'gamma': gamma, 'lognorm': lognorm,
+                            'uniform': uniform}
+            try:
+                self.noise_dist = distrib_dict[noise_scheme]
+                if type(noise_param) is dict:
+                    self.noise_dist = self.noise_dist(**noise_param)
+                elif type(noise_param) is tuple:
+                    self.noise_dist = self.noise_dist(*noise_param)
+                else:
+                    raise (ValueError, "Input noise_param is not parseable")
+            except KeyError:
+                raise (KeyError, "Invalid `noise_scheme` name, cannot find corresponding distribution for noise")
+
+    def demo_noise_dist(self):
+        dist = self.noise_dist
+        if dist is not None:
+            print(
+                "Noise scheme: {}, parameter: {} , \nmean: {:.3f}, median: {:.3f}, std: {:.3f}, [0.05-0.95] percentage range [{:.3f},{:.3f}]".format(
+                    self.noise_scheme, self.noise_param,
+                    dist.mean(), dist.median(), dist.std(),
+                    dist.ppf(0.05), dist.ppf(0.95), ))
+
+            LB = dist.ppf(0.05)
+            HB = dist.ppf(0.95)
+            support = np.arange(LB, HB, (HB - LB) / 200)
+            plt.figure()
+            plt.plot(support, dist.pdf(support))
+            plt.title("{} (param = {})".format(self.noise_scheme, self.noise_param))
+            plt.savefig(os.path.join(self._backupdir, "noise_scheme.png"))
+            plt.show()
+        else:
+            print("Noise free mode!\n")
+        # input("Press any key to confirm the noise setting.")
+
     def load_classifier(self):
         classifier = net_utils.load(self._classifier_name)
         transformer = net_utils.get_transformer(classifier, scale=1)
         self._classifier = classifier
         self._transformer = transformer
+
+    def noise_generator(self, shape=1):
+        return self.noise_dist.rvs(size=shape)
 
     def score(self, images, image_ids, ):
         '''input `images` is a list of nparray [256,256,3], image_ids is a list of str'''
@@ -255,6 +323,8 @@ class NoIOCNNScorer(Scorer):
                 score = score[self._net_unit_x, self._net_unit_y]
 
             scores[i] = score
+        if self._addnoise is True:
+            scores = scores + self.noise_generator(scores.shape)  # TOCHECK
         self._curr_scores = scores
         if self.record_pattern:
             self._pattern_array = np.asarray(self._pattern_array)

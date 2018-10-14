@@ -319,3 +319,143 @@ plt.show(block=False)
 CurDataDir = '/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/trial_cma3_no_eigdecom/'#trial_cma3_no_eigdecom/
 utils.visualize_all(CurDataDir, title_str="cmaes_trial3_no_eigdecom", save=True)
 
+
+#%% Trajectory Comparison between different algorithms
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0005/"
+trial_list = ['trial_cma5_noeig_sgm20', 'genetic_trial0', 'genetic_trial4']
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0005",
+                                     save=True, savedir=neuron_dir)
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0100/"
+trial_list = ['cma_trial4_noeig_sgm5', 'cma_trial8_noeig_sgm10', 'genetic_trial0', 'genetic_trial4']
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0100",
+                                     save=True, savedir=neuron_dir)
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['cma_trial0_noeig_sgm5', 'cma_trial5_noeig_sgm10', 'genetic_trial0', 'genetic_trial4']
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010",
+                                     save=True, savedir=neuron_dir)
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc7_0001/"
+trial_list = ['cma_trial0_noeig_sgm5', 'cma_trial5_noeig_sgm10', 'genetic_trial0', 'genetic_trial4']
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc7_0001",
+                                     save=True, savedir=neuron_dir)
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc7_0010/"
+trial_list = ['cma_trial0_noeig_sgm5', 'cma_trial5_noeig_sgm10', 'genetic_trial0', 'genetic_trial4']
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc7_0001",
+                                     save=True, savedir=neuron_dir)
+
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['cma_trial0_noeig_sgm5', 'genetic_trial0','cma_noeig_sgm5_noise5_trial0','genetic_noise5_trial0','cma_noeig_sgm5_noise10_trial0','genetic_noise10_trial0' ,'cma_noeig_sgm5_noise20_trial0','genetic_noise20_trial0',]
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_noise_level",
+                                     save=True, savedir=neuron_dir)
+
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['cma_trial0_noeig_sgm5', 'genetic_trial0', 'cma_noeig_sgm5_noise20_trial0','genetic_noise20_trial0',]
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_noise_level20",
+                                     save=True, savedir=neuron_dir)
+
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['cma_trial0_noeig_sgm5', 'genetic_trial0', 'cma_noeig_sgm5_noise10_trial0','genetic_noise10_trial0',]
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_noise_level10",
+                                     save=True, savedir=neuron_dir)
+
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['cma_trial0_noeig_sgm5', 'genetic_trial0', 'cma_noeig_sgm5_noise5_trial0','genetic_noise5_trial0',]
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_noise_level5",
+                                     save=True, savedir=neuron_dir)
+#%% Visualize Cholesky algorithm
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['cma_trial0_noeig_sgm5', 'genetic_trial0', 'choleskycma_sgm5_trial0', 'choleskycma_freqAupdate_sgm5_trial0']
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_optimizer_cmp",
+                                     save=True, savedir=neuron_dir)
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['choleskycma_sgm1_trial0', 'choleskycma_sgm3_trial0', 'choleskycma_sgm5_trial0', 'choleskycma_sgm3_uf10_trial0', 'choleskycma_sgm3_uf5_trial0']
+utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_cholcma_param_cmp",
+                                     save=True, savedir=neuron_dir)
+#%%
+CurDataDir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/cma_trial0_noeig_sgm5"
+utils.visualize_all(CurDataDir)
+#%%
+utils.visualize_image_score_each_block(CurDataDir, 299)
+
+#%%
+CurDataDir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+#%% Visualize image code.
+
+trial_title = 'choleskycma_sgm1_uf3_trial1'
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+#%%
+trial_title = "choleskycma_sgm1_uf3_trial0"
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+#%%
+trial_title = 'choleskycma_sgm3_trial0'
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+trial_title = 'choleskycma_sgm3_trial1'
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+trial_title = 'choleskycma_sgm3_trial2'
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+
+#%%
+trial_title = 'choleskycma_sgm3_uf5_trial0'
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+trial_title = 'choleskycma_sgm3_uf5_trial1'
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+trial_title = 'choleskycma_sgm3_uf5_trial2'
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+#%%
+trial_title = "choleskycma_sgm3_uf10_trial0"
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+#%%
+trial_title = "choleskycma_sgm3_uf10_trial0"
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+#%%
+trial_title = "choleskycma_freqAupdate_sgm5_trial0"
+utils.gen_visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+#%%
+trial_title = "genetic_trial0"
+utils.visualize_image_score_each_block(CurDataDir+trial_title, block_num=298, exp_title_str=trial_title)
+
+#%%  The Black Out trial code and image data!!!
+# FIXME Why there is black out trial????
+trial_title = "choleskycma_freqAupdate_sgm5_trial0"
+imagefn = "gen296_011860.npy"
+code_tmp = np.load(os.path.join(CurDataDir+trial_title, imagefn), allow_pickle=False).flatten()
+img_tmp = utils.generator.visualize(code_tmp)
+plt.imshow(img_tmp)
+plt.show()
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['choleskycma_sgm1_trial0', 'choleskycma_sgm3_trial2', 'choleskycma_sgm5_trial0', 'choleskycma_sgm3_uf10_trial0', 'choleskycma_sgm3_uf5_trial0', 'choleskycma_sgm1_uf3_trial1', 'cma_trial0_noeig_sgm5', 'genetic_trial0']
+fig=utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_cholcma_param_cmp2",
+                                     save=True, savedir=neuron_dir)
+#%%
+neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+trial_list = ['choleskycma_sgm3_trial2', 'choleskycma_sgm3_uf10_trial0', 'choleskycma_sgm3_uf5_trial0', 'cma_trial0_noeig_sgm5', 'genetic_trial0']
+fig=utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title for trial_title in trial_list],
+                                     title_str_list=trial_list, exp_title_str="caffe-net_fc6_0010_cholcma_param_cmp3",
+                                     save=True, savedir=neuron_dir)
+fig.set_size_inches(14,10)
+fig.show()
+#%% Image Generation across trials
+
+
+
+

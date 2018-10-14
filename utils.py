@@ -266,6 +266,51 @@ def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_
     plt.show()
     return figh
 
+def visualize_score_trajectory_cmp (CurDataDir_list, steps=300, population_size=40, title_str_list="",
+                               save=False, exp_title_str='', savedir=''):
+    assert len(CurDataDir_list) == len(title_str_list)
+    figh = plt.figure()
+    for CurDataDir, title_str in zip(CurDataDir_list, title_str_list):
+        ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
+        startnum=0
+        for stepi in range(startnum, steps):
+            try:
+                with np.load(os.path.join(CurDataDir, "scores_end_block{0:03}.npz".format(stepi))) as data:
+                    score_tmp = data['scores']
+                    ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
+            except FileNotFoundError:
+                if stepi == 0:
+                    startnum += 1
+                    steps += 1
+                    continue
+                else:
+                    print("maximum steps is %d." % stepi)
+                    ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
+                    steps = stepi
+                    break
+
+        gen_slice = np.arange(startnum, steps).reshape((-1, 1))
+        gen_num = np.repeat(gen_slice, population_size, 1)
+
+        AvgScore = np.nanmean(ScoreEvolveTable, axis=1)
+        MaxScore = np.nanmax(ScoreEvolveTable, axis=1)
+
+
+        plt.scatter(gen_num, ScoreEvolveTable, s=16, alpha=0.3, label="all score "+ title_str)
+        plt.plot(gen_slice, AvgScore, color='black', label="Average score")
+        plt.plot(gen_slice, MaxScore, color='red', label="Max score")
+
+    plt.xlabel("generation #")
+    plt.ylabel("CNN unit score")
+    plt.title("Optimization Trajectory of Score Comparison\n" + exp_title_str)
+    plt.legend()
+    if save:
+        if savedir=='':
+            savedir = CurDataDir
+        plt.savefig(os.path.join(savedir, exp_title_str + "score_traj"))
+    plt.show()
+    return figh
+
 
 def visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_title_str='', title_cmap=plt.cm.viridis, col_n=6, savedir=''):
     '''
@@ -317,6 +362,65 @@ def visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_titl
             plt.title("{0:.2f}".format(score_tmp), fontsize=16)
 
     plt.suptitle(exp_title_str + "Block{0:03}".format(block_num), fontsize=16)
+    plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
+    if save:
+        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+    plt.show()
+    return fig
+
+from Generator import Generator
+generator = Generator()
+def gen_visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_title_str='', title_cmap=plt.cm.viridis, col_n=6, savedir=''):
+    '''
+    # CurDataDir:  "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/"
+    # block_num: the number of block to visualize 20
+    # title_cmap: define the colormap to do the code, plt.cm.viridis
+    # col_n: number of column in a plot 6
+    # FIXED: on Oct. 7th support new name format, and align the score are image correctly
+    '''
+    fncatalog = os.listdir(CurDataDir)
+    fn_score_gen = [fn for fn in fncatalog if
+                    (".npz" in fn) and ("score" in fn) and ("block{0:03}".format(block_num) in fn)]
+    assert len(fn_score_gen) is 1, "not correct number of score files"
+    with np.load(os.path.join(CurDataDir, fn_score_gen[0])) as data:
+        score_gen = data['scores']
+        image_ids = data['image_ids']
+    fn_image_gen = []
+    for imgid in image_ids:
+        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and '.npy' in fn]
+        assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+        fn_image_gen.append(fn_tmp_list[0])
+    image_num = len(fn_image_gen)
+
+    assert len(score_gen) is image_num, "image and score number do not match"
+    lb = score_gen.min()
+    ub = score_gen.max()
+    if ub == lb:
+        cmap_flag = False
+    else:
+        cmap_flag = True
+
+    row_n = np.ceil(image_num / col_n)
+    figW = 12
+    figH = figW / col_n * row_n + 1
+    fig = plt.figure(figsize=[figW, figH])
+    for i, imagefn in enumerate(fn_image_gen):
+        code_tmp = np.load(os.path.join(CurDataDir, imagefn), allow_pickle=False).flatten()
+        img_tmp = generator.visualize(code_tmp)
+        # img_tmp = plt.imread(os.path.join(CurDataDir, imagefn))
+        score_tmp = score_gen[i]
+        plt.subplot(row_n, col_n, i + 1)
+        plt.imshow(img_tmp)
+        plt.xticks([])
+        plt.yticks([])
+        plt.axis('off')
+        if cmap_flag:  # color the titles with a heatmap!
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16,
+                      color=title_cmap((score_tmp - lb) / (ub - lb)))  # normalize a value between [0,1]
+        else:
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+
+    plt.suptitle(exp_title_str + "\nBlock{0:03}".format(block_num), fontsize=16)
     plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
     if save:
         plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
