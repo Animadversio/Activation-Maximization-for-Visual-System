@@ -442,3 +442,71 @@ def visualize_all(CurDataDir, save=True, title_str=''):
             break
     visualize_score_trajectory(CurDataDir, title_str="Normal_CNN: No noise",
                                      save=save, savedir=SaveImgDir, exp_title_str=title_str)
+
+
+def cmp_image_score_across_trial(neuron_dir, trial_list, vis_image_num=10, block_num = 299,
+                                 exp_title_str="Method evolving result compare", save=False, savedir=''):
+    ''' Generated image comparison across different methods.
+    neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+    trial_list = ['choleskycma_sgm3_trial2', 'choleskycma_sgm1_trial2', 'choleskycma_sgm3_uf10_trial0', 'choleskycma_sgm3_uf5_trial0', 'cma_trial0_noeig_sgm5', 'genetic_trial0']
+    vis_image_num : how many images to show in a row
+    block_num : the image block to show.
+    '''
+    figW = vis_image_num * 2.5
+    figH = len(trial_list) * 2.5 + 1
+    col_n = vis_image_num
+    row_n = len(trial_list)
+    fig = plt.figure(figsize=[figW, figH])
+    for trial_j, trial_title in enumerate(trial_list):
+        CurDataDir = os.path.join(neuron_dir, trial_title)
+        fncatalog = os.listdir(CurDataDir)
+        fn_score_gen = [fn for fn in fncatalog if
+                        (".npz" in fn) and ("score" in fn) and ("block{0:03}".format(block_num) in fn)]
+        assert len(fn_score_gen) is 1, "not correct number of score files"
+        with np.load(os.path.join(CurDataDir, fn_score_gen[0])) as data:
+            score_gen = data['scores']
+            image_ids = data['image_ids']
+        idx = np.argsort(
+            - score_gen)  # Note the minus sign for best scores sorting. use positive sign for worst score sorting
+        score_gen = score_gen[idx]
+        image_ids = image_ids[idx]
+        fn_image_gen = []
+        use_img = not (len([fn for fn in fncatalog if (image_ids[0] in fn) and ('.bmp' in fn)]) == 0)
+        # True, if there is bmp rendered files. False, if there is only code, we have to render it through Generator
+        for imgid in image_ids[0: vis_image_num]:
+            if use_img:
+                fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and ('.bmp' in fn)]
+                assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+                fn_image_gen.append(fn_tmp_list[0])
+            if not use_img:
+                fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and ('.npy' in fn)]
+                assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+                fn_image_gen.append(fn_tmp_list[0])
+        image_num = len(fn_image_gen)
+        for i, imagefn in enumerate(fn_image_gen):
+            if use_img:
+                img_tmp = plt.imread(os.path.join(CurDataDir, imagefn))
+            else:
+                code_tmp = np.load(os.path.join(CurDataDir, imagefn), allow_pickle=False).flatten()
+                img_tmp = generator.visualize(code_tmp)
+            score_tmp = score_gen[i]
+            plt.subplot(row_n, col_n, trial_j * col_n + i + 1)
+            plt.imshow(img_tmp)
+            plt.xticks([])
+            plt.yticks([])
+            if i == 0:
+                plt.ylabel(trial_title)
+            else:
+                plt.axis('off')
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+            # if cmap_flag:  # color the titles with a heatmap!
+            #     plt.title("{0:.2f}".format(score_tmp), fontsize=16,
+            #               color=title_cmap((score_tmp - lb) / (ub - lb)))  # normalize a value between [0,1]
+            # else:
+            #     plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+
+    plt.suptitle(exp_title_str + "\nBlock{0:03}".format(block_num), fontsize=16)
+    if save:
+        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+    plt.show()
+    return fig
