@@ -222,9 +222,64 @@ def sort_nicely(l):
     newl.sort(key=alphanum_key)
     return newl
 
-import matplotlib.pyplot as plt
+#%% Dir name manipulation (for experimental code)
+
+
+def add_neuron_subdir(neuron, exp_dir):
+    ''' Add neuron name to the exp_dir, in the form of ('caffe-net', 'fc6', 30). (make the dir in case it doesn't exist) '''
+    if len(neuron) == 5:
+        subdir = '%s_%s_%04d_%d,%d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2], neuron[3], neuron[4])
+    else:
+        subdir = '%s_%s_%04d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2])
+    this_exp_dir = os.path.join(exp_dir, subdir)
+    for dir_ in (this_exp_dir,):
+        if not os.path.isdir(dir_):
+            os.mkdir(dir_)
+    return this_exp_dir
+
+
+def add_trial_subdir(neuron_dir, trial_title):
+    ''' Add trial title to the directory with neuron name on it (make the dir in case it doesn't exist) '''
+    trialdir = os.path.join(neuron_dir, trial_title)
+    if not os.path.isdir(trialdir):
+        os.mkdir(trialdir)
+    return trialdir
+
+#%%
+
+def scores_summary(CurDataDir, steps = 300, population_size = 40):
+    ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
+    ImageidTable = [[""] * population_size for i in range(steps)]
+    startnum = 0
+    for stepi in range(startnum, steps):
+        try:
+            with np.load(os.path.join(CurDataDir, "scores_end_block{0:03}.npz".format(stepi))) as data:
+                score_tmp = data['scores']
+                image_ids = data['image_ids']
+                ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
+                ImageidTable[stepi][0:len(score_tmp)] = image_ids
+        except FileNotFoundError:
+            if stepi == 0:
+                startnum += 1
+                steps += 1
+                continue
+            else:
+                print("maximum steps is %d." % stepi)
+                ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
+                ImageidTable = ImageidTable[0:stepi]
+                steps = stepi
+                break
+    ImageidTable = np.asarray(ImageidTable)
+    savez(os.path.join(CurDataDir, "scores_summary_table.npz"),
+                {"ScoreEvolveTable": ScoreEvolveTable, "ImageidTable": ImageidTable})
+    return ScoreEvolveTable, ImageidTable
+
 
 #%% Visualization Routines
+
+import matplotlib.pyplot as plt
+
+
 def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_str="",
                                save=False, exp_title_str='', savedir=''):
     ScoreEvolveTable = np.full((steps, population_size,), np.NAN)

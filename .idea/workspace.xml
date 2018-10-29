@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="613a4399-523d-447c-9e0d-11f5c059e84a" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/manifold_fitting.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CNNScorer.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNScorer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Optimizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/experiment_with_CNN_Integrated.py" beforeDir="false" afterPath="$PROJECT_DIR$/experiment_with_CNN_Integrated.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -36,13 +41,14 @@
     <session id="-774608893">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="16" />
+          <entry key="project.closed" value="17" />
           <entry key="project.open.time.0" value="2" />
           <entry key="project.open.time.2" value="13" />
-          <entry key="project.open.time.3" value="9" />
+          <entry key="project.open.time.3" value="10" />
+          <entry key="project.open.time.4" value="1" />
           <entry key="project.open.time.5" value="3" />
           <entry key="project.open.time.7" value="1" />
-          <entry key="project.opened" value="28" />
+          <entry key="project.opened" value="30" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -51,7 +57,7 @@
           <entry key="md" value="3" />
           <entry key="os" value="2" />
           <entry key="png" value="2" />
-          <entry key="py" value="103" />
+          <entry key="py" value="108" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -60,20 +66,20 @@
           <entry key="Image" value="2" />
           <entry key="Markdown" value="3" />
           <entry key="PLAIN_TEXT" value="2" />
-          <entry key="Python" value="101" />
+          <entry key="Python" value="106" />
           <entry key="Scratch" value="2" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="Python Console" value="1487" />
+          <entry key="Python Console" value="2146" />
           <entry key="cmaes" value="72" />
           <entry key="dummy" value="30" />
-          <entry key="experiment_with_CNN_CMAES_algo" value="85" />
+          <entry key="experiment_with_CNN_CMAES_algo" value="89" />
           <entry key="experiment_with_HumanScorer" value="949" />
           <entry key="experiment_with_noisyCNN" value="336" />
           <entry key="md" value="343" />
-          <entry key="py" value="24824" />
+          <entry key="py" value="27572" />
           <entry key="txt" value="576" />
         </counts>
       </usages-collector>
@@ -81,7 +87,7 @@
         <counts>
           <entry key="Markdown" value="343" />
           <entry key="PLAIN_TEXT" value="606" />
-          <entry key="Python" value="27605" />
+          <entry key="Python" value="31016" />
           <entry key="Scratch" value="148" />
         </counts>
       </usages-collector>
@@ -92,36 +98,52 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Code_Read_Visualize_Analyze_scr.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="398">
-              <caret line="752" column="79" selection-start-line="752" selection-start-column="79" selection-end-line="752" selection-end-column="79" />
-              <folding>
-                <element signature="e#176#188#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3655">
-              <caret line="512" selection-start-line="512" selection-end-line="512" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/experiment_with_CNN_Integrated.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="9061">
-              <caret line="539" column="19" selection-start-line="539" selection-start-column="19" selection-end-line="539" selection-end-column="124" />
+            <state relative-caret-position="-1367">
+              <caret line="82" column="13" lean-forward="true" selection-start-line="82" selection-start-column="13" selection-end-line="82" selection-end-column="13" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
-                <marker date="1539723954236" expanded="true" signature="6417:6555" ph="..." />
+                <marker date="1540771517324" expanded="true" signature="6056:6057" ph="..." />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/manifold_fitting.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="503">
+              <caret line="163" selection-start-line="163" selection-end-line="163" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+                <marker date="1540772898855" expanded="true" signature="1920:1921" ph="..." />
+                <marker date="1540772898855" expanded="true" signature="4486:4504" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Optimizer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="2888">
+              <caret line="742" column="97" lean-forward="true" selection-start-line="742" selection-start-column="97" selection-end-line="742" selection-end-column="97" />
+              <folding>
+                <element signature="e#0#31#0" expanded="true" />
+                <element signature="e#20185#31040#0" />
+                <marker date="1540771374282" expanded="true" signature="29698:29703" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/CNNScorer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-313">
+              <caret line="343" column="28" selection-start-line="343" selection-start-column="28" selection-end-line="343" selection-end-column="28" />
             </state>
           </provider>
         </entry>
@@ -201,11 +223,12 @@
         <option value="$PROJECT_DIR$/cmaes.py" />
         <option value="$PROJECT_DIR$/experiment_with_CNN.py" />
         <option value="$PROJECT_DIR$/experiment_with_CNN_CMAES_algo.py" />
+        <option value="$PROJECT_DIR$/Code_Read_Visualize_Analyze_scr.py" />
+        <option value="$PROJECT_DIR$/utils.py" />
         <option value="$PROJECT_DIR$/CNNScorer.py" />
         <option value="$PROJECT_DIR$/Optimizer.py" />
-        <option value="$PROJECT_DIR$/utils.py" />
         <option value="$PROJECT_DIR$/experiment_with_CNN_Integrated.py" />
-        <option value="$PROJECT_DIR$/Code_Read_Visualize_Analyze_scr.py" />
+        <option value="$PROJECT_DIR$/manifold_fitting.py" />
       </list>
     </option>
   </component>
@@ -216,10 +239,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="63" />
+    <option name="x" value="68" />
     <option name="y" value="31" />
-    <option name="width" value="2497" />
-    <option name="height" value="1057" />
+    <option name="width" value="2158" />
+    <option name="height" value="1061" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -227,6 +250,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -247,7 +271,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -515,7 +538,14 @@
       <option name="project" value="LOCAL" />
       <updated>1539560194413</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Implement Cholesky CMAES and original version of CMAES&#10;Add several visualization tools!">
+      <created>1540749772037</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1540749772037</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TodoView">
@@ -528,11 +558,11 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="63" y="31" width="2497" height="1057" extended-state="0" />
+    <frame x="68" y="31" width="2158" height="1061" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" weight="0.16021198" />
-      <window_info id="Structure" order="1" sideWeight="0.502551" visible="true" weight="0.16040404" />
-      <window_info id="Favorites" order="2" weight="0.32866043" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" visible="true" weight="0.13623463" />
+      <window_info id="Structure" order="1" sideWeight="0.502551" weight="0.22265407" />
+      <window_info id="Favorites" order="2" weight="0.32857725" />
       <window_info id="Find" order="3" sideWeight="0.8512" weight="0.27548918" />
       <window_info anchor="bottom" id="Database Changes" order="0" show_stripe_button="false" />
       <window_info anchor="bottom" id="Docker" order="1" show_stripe_button="false" />
@@ -541,18 +571,18 @@
       <window_info anchor="bottom" id="Debug" order="4" sideWeight="0.61290324" weight="0.41491598" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
-      <window_info active="true" anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.699798" visible="true" weight="0.37565038" />
+      <window_info anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.8174078" visible="true" weight="0.37409326" />
       <window_info anchor="bottom" id="TODO" order="8" sideWeight="0.49742535" weight="0.3261745" />
       <window_info anchor="bottom" id="Version Control" order="9" sideWeight="0.496" weight="0.32614943" />
-      <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49892008" weight="0.3275862" />
-      <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.300202" side_tool="true" visible="true" weight="0.37565038" />
+      <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49857318" weight="0.32674298" />
+      <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.18259224" side_tool="true" visible="true" weight="0.37409326" />
       <window_info anchor="bottom" id="Concurrent Activities Diagram" order="12" sideWeight="0.4976" weight="0.32899022" />
-      <window_info anchor="right" x="0" y="0" width="273" height="510" id="Documentation" order="0" sideWeight="0.2262295" side_tool="true" weight="0.4622295" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="1" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="2" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="3" weight="0.24982357" />
-      <window_info anchor="right" id="Database" order="4" sideWeight="0.4979757" side_tool="true" weight="0.28989977" />
-      <window_info active="true" anchor="right" x="247" y="210" width="786" height="509" id="SciView" order="5" sideWeight="0.7737705" visible="true" weight="0.41337138" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24982357" />
+      <window_info anchor="right" id="Database" order="3" sideWeight="0.4979757" side_tool="true" weight="0.28989977" />
+      <window_info active="true" anchor="right" x="247" y="210" width="786" height="509" id="SciView" order="4" sideWeight="0.955298" visible="true" weight="0.3178808" />
+      <window_info anchor="right" x="0" y="0" width="273" height="510" id="Documentation" order="5" sideWeight="0.044701986" side_tool="true" visible="true" weight="0.3178808" />
     </layout>
     <layout-to-restore>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" weight="0.23036253" />
@@ -614,7 +644,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Optimizer.py</url>
-          <line>826</line>
+          <line>831</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -918,13 +948,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Scorer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="587">
-          <caret line="253" column="14" selection-start-line="253" selection-start-column="8" selection-end-line="253" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/numpy/linalg/linalg.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1060">
@@ -963,29 +986,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CNNScorer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="281" column="10" selection-start-line="281" selection-start-column="10" selection-end-line="281" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Generator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="272">
           <caret line="17" column="42" selection-start-line="17" selection-start-column="31" selection-end-line="17" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Optimizer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="689" column="76" lean-forward="true" selection-start-line="689" selection-start-column="76" selection-end-line="689" selection-end-column="76" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#20185#31040#0" />
-            <marker date="1539552630269" expanded="true" signature="29698:29703" ph="..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -996,30 +1000,68 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Scorer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="183">
+          <caret line="275" column="8" selection-start-line="275" selection-start-column="8" selection-end-line="275" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="312">
+          <caret line="462" column="8" selection-start-line="462" selection-start-column="8" selection-end-line="463" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Code_Read_Visualize_Analyze_scr.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="398">
-          <caret line="752" column="79" selection-start-line="752" selection-start-column="79" selection-end-line="752" selection-end-column="79" />
+        <state relative-caret-position="255">
+          <caret line="309" column="4" selection-start-line="309" selection-start-column="4" selection-end-line="311" selection-end-column="19" />
           <folding>
             <element signature="e#176#188#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils.py">
+    <entry file="file://$PROJECT_DIR$/experiment_with_CNN_Integrated.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3655">
-          <caret line="512" selection-start-line="512" selection-end-line="512" />
+        <state relative-caret-position="-1367">
+          <caret line="82" column="13" lean-forward="true" selection-start-line="82" selection-start-column="13" selection-end-line="82" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+            <marker date="1540771517324" expanded="true" signature="6056:6057" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/experiment_with_CNN_Integrated.py">
+    <entry file="file://$PROJECT_DIR$/CNNScorer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="9061">
-          <caret line="539" column="19" selection-start-line="539" selection-start-column="19" selection-end-line="539" selection-end-column="124" />
+        <state relative-caret-position="-313">
+          <caret line="343" column="28" selection-start-line="343" selection-start-column="28" selection-end-line="343" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Optimizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2888">
+          <caret line="742" column="97" lean-forward="true" selection-start-line="742" selection-start-column="97" selection-end-line="742" selection-end-column="97" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#20185#31040#0" />
+            <marker date="1540771374282" expanded="true" signature="29698:29703" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/manifold_fitting.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="503">
+          <caret line="163" selection-start-line="163" selection-end-line="163" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
-            <marker date="1539723954236" expanded="true" signature="6417:6555" ph="..." />
+            <marker date="1540772898855" expanded="true" signature="1920:1921" ph="..." />
+            <marker date="1540772898855" expanded="true" signature="4486:4504" ph="..." />
           </folding>
         </state>
       </provider>

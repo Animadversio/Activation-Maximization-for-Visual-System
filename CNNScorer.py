@@ -332,6 +332,46 @@ class NoIOCNNScorer(Scorer):
 
         return scores
 
+    def test_score(self, images, ):
+        '''Just score the image and record nothing. For testing usage'''
+
+        # Check the input
+        if type(images) is list:
+            nimgs = len(images)
+        else:
+            assert type(images) is np.ndarray
+            nimgs = 1
+            images = [images]
+        scores = np.zeros(nimgs)
+        if self.record_pattern:
+            self._pattern_array = [None] * nimgs
+        for i, img in enumerate(images):
+            # Note: now only support single repetition
+            tim = self._transformer.preprocess('data', img)  # shape=(3, 227, 227)
+            self._classifier.blobs['data'].data[...] = tim
+            self._classifier.forward(end=self._net_layer)  # propagate the image the target layer
+
+            if self.record_pattern:  # record the whole layer's activation
+                score_full = self._classifier.blobs[self._net_layer].data[0, :]
+                # self._pattern_array.append(score_full)
+                self._pattern_array[i] = score_full.copy()
+
+            # record only the neuron intended
+            score = self._classifier.blobs[self._net_layer].data[0, self._net_iunit]
+
+            if self._net_unit_x is not None:
+                # if `self._net_unit_x/y` (inside dimension) are provided, then use them to slice the output score
+                score = score[self._net_unit_x, self._net_unit_y]
+
+            scores[i] = score
+        # if self._addnoise is True:
+        #     scores = scores + self.noise_generator(scores.shape)  # TOCHECK
+        if self.record_pattern:
+            self._pattern_array = np.asarray(self._pattern_array)
+            return scores, self._pattern_array
+        else:
+            return scores
+
     def save_current_scores(self):
         savefpath = os.path.join(self._backupdir, 'scores_end_block%03d.npz' % self._istep)
         save_kwargs = {'image_ids': self._curr_imgids, 'scores': self._curr_scores}

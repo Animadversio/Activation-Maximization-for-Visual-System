@@ -5,6 +5,7 @@ from CNNScorer import NoIOCNNScorer
 from ExperimentBase import ExperimentBase
 from Optimizer import CMAES, Genetic, CholeskyCMAES
 import utils
+from utils import add_neuron_subdir, add_trial_subdir
 
 target_neuron = ('caffe-net', 'fc6', 1)
 np.set_printoptions(precision=4, suppress=True)
@@ -20,6 +21,7 @@ n_natural_stimuli = 40
 random_seed = 0
 
 population_size = 36
+# Parameters for a genetic algorithm
 mutation_rate = 0.25
 mutation_size = 0.75
 kT_multiplier = 2
@@ -27,7 +29,7 @@ n_conserve = 10
 parental_skew = 0.75
 
 class CNNExperiment_Simplify(ExperimentBase):
-    def __init__(self, recorddir, logdir, max_steps, init_sigma=5, Aupdate_freq=None, optimizer_name='cmaes', optim_params={},
+    def __init__(self, recorddir, logdir, max_steps, init_sigma=5, init_code=None, Aupdate_freq=None, optimizer_name='cmaes', optim_params={},
                  target_neuron=target_neuron, noise_scheme=None, noise_param=None, noise_rand_seed=0,
                  random_seed=None, saveimg=True, record_pattern=False):
         '''
@@ -42,7 +44,7 @@ class CNNExperiment_Simplify(ExperimentBase):
         if optimizer_name == 'cmaes':
             optimizer = CMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma)
         elif optimizer_name == 'cholcmaes':
-            optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma, Aupdate_freq=Aupdate_freq)
+            optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma, init_code=init_code, Aupdate_freq=Aupdate_freq)
         elif optimizer_name == "genetic":
             optimizer = Genetic(population_size=population_size, random_seed=random_seed, recorddir=recorddir, **optim_params)
         # Variant Optimizer can be added here !
@@ -130,24 +132,6 @@ class CNNExperiment_Simplify(ExperimentBase):
             self.logger.flush()
             self.istep += 1
 
-
-def add_neuron_subdir(neuron, exp_dir):
-    if len(neuron) == 5:
-        subdir = '%s_%s_%04d_%d,%d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2], neuron[3], neuron[4])
-    else:
-        subdir = '%s_%s_%04d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2])
-    this_exp_dir = os.path.join(exp_dir, subdir)
-    for dir_ in (this_exp_dir,):
-        if not os.path.isdir(dir_):
-            os.mkdir(dir_)
-    return this_exp_dir
-
-
-def add_trial_subdir(neuron_dir, trial_title):
-    trialdir = os.path.join(neuron_dir, trial_title)
-    if not os.path.isdir(trialdir):
-        os.mkdir(trialdir)
-    return trialdir
 
 
 if __name__ == '__main__':
@@ -508,49 +492,60 @@ if __name__ == '__main__':
     #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
 
     ## Across random seed stability
-    optim_params = {'mutation_rate': mutation_rate, 'mutation_size': mutation_size, 'n_conserve': n_conserve,
-                                     'kT_multiplier': kT_multiplier, 'parental_skew': parental_skew, }
-    neuron = ('caffe-net', 'fc6', 10)
+    # optim_params = {'mutation_rate': mutation_rate, 'mutation_size': mutation_size, 'n_conserve': n_conserve,
+    #                                  'kT_multiplier': kT_multiplier, 'parental_skew': parental_skew, }
+    # neuron = ('caffe-net', 'fc6', 10)
+    # this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+    # for i in range(1, 5):
+    #     random_seed = int(time())
+    #     trial_title = 'choleskycma_sgm3_uf10_trial%d' % i
+    #     trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    #     experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+    #                                         optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+    #                                         # noise_scheme=noise_scheme, noise_param=noise_param, noise_rand_seed=random_seed,
+    #                                         random_seed=random_seed, saveimg=False, record_pattern=False, )
+    #     experiment.run()
+    #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    #
+    # ## Across neuron stability
+    # neuron_list = [('caffe-net', 'fc6', 100), ('caffe-net', 'fc6', 5), ('caffe-net', 'fc7', 1),
+    #                ('caffe-net', 'fc7', 10)]
+    # for neuron in neuron_list:
+    #     this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+    #     random_seed = int(time())
+    #     trial_title = 'choleskycma_sgm3_uf10_trial%d' % 0
+    #     trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    #     experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+    #                                         optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+    #                                         random_seed=random_seed, saveimg=False, record_pattern=False, )
+    #     experiment.run()
+    #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    #
+    # neuron_list = [('caffe-net', 'fc6', 30), ('caffe-net', 'fc6', 200), ('caffe-net', 'fc6', 150), ('caffe-net', 'fc6', 250)]
+    # for neuron in neuron_list:
+    #     this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+    #     random_seed = int(time())
+    #     trial_title = 'genetic_trial%d' % 0
+    #     trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    #     experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+    #                                         optimizer_name='genetic', optim_params=optim_params, init_sigma=5,
+    #                                         random_seed=random_seed, saveimg=False, record_pattern=False, )
+    #     experiment.run()
+    #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    #
+    #     random_seed = int(time())
+    #     trial_title = 'choleskycma_sgm3_uf10_trial%d' % 0
+    #     trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    #     experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+    #                                         optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+    #                                         random_seed=random_seed, saveimg=False, record_pattern=False, )
+    #     experiment.run()
+    #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    neuron = ('caffe-net', 'fc6', 100)
     this_exp_dir = add_neuron_subdir(neuron, exp_dir)
-    for i in range(1, 5):
+    for i in range(5, 20):
         random_seed = int(time())
         trial_title = 'choleskycma_sgm3_uf10_trial%d' % i
-        trialdir = add_trial_subdir(this_exp_dir, trial_title)
-        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
-                                            optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
-                                            # noise_scheme=noise_scheme, noise_param=noise_param, noise_rand_seed=random_seed,
-                                            random_seed=random_seed, saveimg=False, record_pattern=False, )
-        experiment.run()
-        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-
-    ## Across neuron stability
-    neuron_list = [('caffe-net', 'fc6', 100), ('caffe-net', 'fc6', 5), ('caffe-net', 'fc7', 1),
-                   ('caffe-net', 'fc7', 10)]
-    for neuron in neuron_list:
-        this_exp_dir = add_neuron_subdir(neuron, exp_dir)
-        random_seed = int(time())
-        trial_title = 'choleskycma_sgm3_uf10_trial%d' % 0
-        trialdir = add_trial_subdir(this_exp_dir, trial_title)
-        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
-                                            optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
-                                            random_seed=random_seed, saveimg=False, record_pattern=False, )
-        experiment.run()
-        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-
-    neuron_list = [('caffe-net', 'fc6', 30), ('caffe-net', 'fc6', 200), ('caffe-net', 'fc6', 150), ('caffe-net', 'fc6', 250)]
-    for neuron in neuron_list:
-        this_exp_dir = add_neuron_subdir(neuron, exp_dir)
-        random_seed = int(time())
-        trial_title = 'genetic_trial%d' % 0
-        trialdir = add_trial_subdir(this_exp_dir, trial_title)
-        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
-                                            optimizer_name='genetic', optim_params=optim_params, init_sigma=5,
-                                            random_seed=random_seed, saveimg=False, record_pattern=False, )
-        experiment.run()
-        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-
-        random_seed = int(time())
-        trial_title = 'choleskycma_sgm3_uf10_trial%d' % 0
         trialdir = add_trial_subdir(this_exp_dir, trial_title)
         experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
                                             optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,

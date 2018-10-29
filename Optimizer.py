@@ -592,7 +592,7 @@ class CholeskyCMAES(Optimizer):
     #         save_init_population()
     #         step()
     # Note this is a variant of CMAES Cholesky
-    def __init__(self, recorddir, space_dimen, init_sigma=None, population_size=None, Aupdate_freq=None,
+    def __init__(self, recorddir, space_dimen, init_sigma=None, init_code=None, population_size=None, Aupdate_freq=None,
                  maximize=True, random_seed=None, thread=None):
         super(CholeskyCMAES, self).__init__(recorddir, random_seed, thread)
         # --------------------  Initialization --------------------------------
@@ -635,7 +635,9 @@ class CholeskyCMAES(Optimizer):
         self.damps = 1 + self.cs + 2 * max(0, sqrt((mueff - 1) / (N + 1)) - 1)  # damping for sigma usually  close to 1
 
         print("cc=%.3f, cs=%.3f, c1=%.3f damps=%.3f" % (self.cc, self.cs, self.c1, self.damps))
-
+        if init_code is not None:
+            self.init_x = np.asarray(init_code)
+            self.init_x.shape = (1, N)
         self.xmean = zeros((1, N))
         self.xold = zeros((1, N))
         # Initialize dynamic (internal) strategy parameters and constants
@@ -670,8 +672,11 @@ class CholeskyCMAES(Optimizer):
         # scores = scores[code_sort_index]  # Ascending order. minimization
 
         if self._istep == 0:
-            # if without initialization, the first xmean is evaluated from weighted average all the natural images
-            self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]
+            # Population Initialization: if without initialization, the first xmean is evaluated from weighted average all the natural images
+            if self.init_x is None:
+                self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]
+            else:
+                self.xmean = self.init_x
         else:
             self.xold = self.xmean
             self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]   # Weighted recombination, new mean value
@@ -733,7 +738,7 @@ class CholeskyCMAES(Optimizer):
         if self._istep == 1:
             optim_setting = {"space_dimen": self.space_dimen, "population_size": self.lambda_,
                               "select_num": self.mu, "weights": self.weights,
-                              "cc": self.cc, "cs": self.cs, "c1": self.c1, "damps": self.damps}
+                              "cc": self.cc, "cs": self.cs, "c1": self.c1, "damps": self.damps, "init_x": self.init_x }
             utils.savez(os.path.join(self._recorddir, "optimizer_setting.npz"), optim_setting)
         utils.savez(os.path.join(self._recorddir, "optimizer_state_block%03d.npz" % self._istep),
                     {"sigma": self.sigma, "A": self.A, "Ainv": self.Ainv, "ps": self.ps, "pc": self.pc})
