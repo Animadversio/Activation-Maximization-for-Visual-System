@@ -49,18 +49,12 @@ utils.savez(os.path.join(CurDataDir, "scores_summary_table.npz"),
          {"ScoreEvolveTable" : ScoreEvolveTable,"ImageidTable" : ImageidTable})
 
 
-
 #%% Filter the Samples that has Score in a given range
 
-def select_image(CurDataDir, lb = 200, ub = None):
+def select_image(CurDataDir, lb=200, ub=None):
     fncatalog = os.listdir(CurDataDir)
-    if "scores_summary_table.npz" in fncatalog:
-        # if the summary table exist, just read from it!
-        with np.load(os.path.join(CurDataDir, "scores_summary_table.npz")) as data:
-            ScoreEvolveTable = data['ScoreEvolveTable']
-            ImageidTable = data['ImageidTable']
-    else:
-        ScoreEvolveTable, ImageidTable= utils.scores_summary(CurDataDir)
+    ScoreEvolveTable, ImageidTable= utils.scores_summary(CurDataDir)
+    # it will automatic read the existing summary or generate one.
     if ub is None:
         ub = np.nanmax(ScoreEvolveTable)+1
     if lb is None:
@@ -78,6 +72,7 @@ def select_image(CurDataDir, lb = 200, ub = None):
         code_array.append(code.copy())
         # img_tmp = utils.generator.visualize(code_tmp)
     return code_array, score_list, imgid_list
+
 #%% Collect the high rated images across trial
 exp_dir = "/home/poncelab/Documents/data/with_CNN/"
 neuron = ('caffe-net', 'fc6', 100)
@@ -90,18 +85,81 @@ for i in range(20):
     code_array, score_list, _ = select_image(trialdir, lb=210)
     code_total_list += code_array
     score_total_list += list(score_list)
+code_total_array = np.asarray(code_total_list)
+#%%
+
+#%% Collect the high rated images across trial / different optimize method
+exp_dir = "/home/poncelab/Documents/data/with_CNN/"
+neuron = ('caffe-net', 'fc6', 10)
+this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+code_total_list = []
+score_total_list = []
+trial_list = ['choleskycma_sgm1_trial0',
+ 'choleskycma_sgm1_trial1',
+ 'choleskycma_sgm1_trial2',
+ 'choleskycma_sgm1_uf3_trial0',
+ 'choleskycma_sgm1_uf3_trial1',
+ 'choleskycma_sgm1_uf3_trial2',
+ 'choleskycma_sgm3_trial0',
+ 'choleskycma_sgm3_trial1',
+ 'choleskycma_sgm3_trial2',
+ 'choleskycma_sgm3_uf10_trial0',
+ 'choleskycma_sgm3_uf5_trial0',
+ 'choleskycma_sgm3_uf5_trial1',
+ 'choleskycma_sgm3_uf5_trial2',
+ 'choleskycma_sgm5_trial0',
+ 'genetic_trial0']
+for trial_title in trial_list:
+    trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    code_array, score_list, _ = select_image(trialdir, lb=205)
+    code_total_list += code_array
+    score_total_list += list(score_list)
+code_total_array = np.asarray(code_total_list)
+
 #%% Do the manifold fitting through code space
 from sklearn.manifold import LocallyLinearEmbedding
 embedding = LocallyLinearEmbedding(n_components=10, n_neighbors=30)
-code_total_array = np.asarray(code_total_list)
+
 #%%
-DR_code_array = embedding.fit_transform(code_total_array)
+DR_code_array = embedding.fit_transform(code_total_array) # Really time consuming! hard
 
 #%% Do manifold fitting through image space
 
 
+#%% Visualize the interpolated code
+img_num = 20000
+plt.figure()
+img_tmp = utils.generator.visualize(code_total_array[img_num,:])
+plt.imshow(img_tmp)
+plt.title(str(score_total_list[img_num]))
+plt.show()
+#%% Test the interpolated score
+neuron = ('caffe-net', 'fc6', 10)
+TestScorer = CNNScorer.NoIOCNNScorer(target_neuron=neuron, writedir=this_exp_dir)
+TestScorer.load_classifier()
+
+#%% Randomly inspect the selected images
+plt.subplots(1, 11, figsize = [10, 1.5])
+img_nums = np.random.randint(15000,size=11)
+for i in range(11):
+    img_tmp = utils.generator.visualize(code_total_array[img_nums[i], :])
+    plt.subplot(1, 11,i+1)
+    plt.imshow(img_tmp)
+    plt.xticks([])
+    plt.yticks([])
+    plt.axis('off')
+    plt.title("%.2f" % (TestScorer.test_score(img_tmp)[0]) )
+plt.suptitle(str(img_nums))
+plt.tight_layout()
+plt.show()
 #%%
+
+
 def simplex_interpolate(wvec, code_array):
+    '''Do simplex interpolate/extrapolate between several codes
+    Codes can be input in array (each row is a code) or in list
+    wvec: weight vector can be a scalar for 2 codes. or same length list / array for more codes.
+    '''
     if type(code_array) is list:
         code_array = np.asarray(code_array)
     code_n = code_array.shape[0]
@@ -117,36 +175,8 @@ def simplex_interpolate(wvec, code_array):
         raise ValueError
     code = w_vec @ code_array
     return code
-
-#%% Visualize the interpolated code
-img_num = 20000
-plt.figure()
-img_tmp = utils.generator.visualize(code_total_array[img_num,:])
-plt.imshow(img_tmp)
-plt.title(str(score_total_list[img_num]))
-plt.show()
-#%% Test the interpolated score
-neuron = ('caffe-net', 'fc6', 100)
-TestScorer = CNNScorer.NoIOCNNScorer(target_neuron=neuron, writedir=this_exp_dir)
-TestScorer.load_classifier()
-
-#%%
-plt.subplots(1, 11, figsize = [10, 1.5])
-img_nums = np.random.randint(70000,size=11)
-for i in range(11):
-    img_tmp = utils.generator.visualize(code_total_array[img_nums[i], :])
-    plt.subplot(1, 11,i+1)
-    plt.imshow(img_tmp)
-    plt.xticks([])
-    plt.yticks([])
-    plt.axis('off')
-    plt.title("%.2f" % (TestScorer.test_score(img_tmp)[0]) )
-plt.suptitle(str(img_nums))
-plt.tight_layout()
-plt.show()
-
-#%%
-img_tuple = 14425, 43408
+#%% Linear Interpolate between 2 different images through code space
+img_tuple = 7303, 2143
 plt.subplots(1, 11, figsize = [10, 1.5])
 for i in range(11):
     img_tmp = utils.generator.visualize(simplex_interpolate(i/10, code_total_array[img_tuple, :]))
@@ -157,11 +187,12 @@ for i in range(11):
     plt.axis('off')
     plt.title("%.2f" % TestScorer.test_score(img_tmp)[0])
 plt.tight_layout()
+plt.suptitle("Interpolation between %d - %d" % img_tuple)
 plt.show()
 
 
 # img_tmp = utils.generator.visualize(code_tmp)
-#%%
+#%% Optimize from an established input
 from experiment_with_CNN_Integrated import CNNExperiment_Simplify
 neuron = ('caffe-net', 'fc6', 100)
 this_exp_dir = add_neuron_subdir(neuron, exp_dir)
@@ -173,3 +204,55 @@ experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_
                                     random_seed=random_seed, saveimg=False, record_pattern=False, )
 experiment.run()
 utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+#%% Run Optimization from the interpolating starting points
+neuron = ('caffe-net', 'fc6', 10)
+this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+
+img_tuple = 7303, 2143
+for i in range(11):
+    interp_init_code = simplex_interpolate( i/10, code_total_array[img_tuple, :])
+    random_seed = int(time())
+    trial_title = 'choleskycma_sgm3_uf10_continopt_trial%d' % i
+    trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=150,
+                                        optimizer_name='cholcmaes', init_sigma=3, init_code=interp_init_code, Aupdate_freq=10,
+                                        random_seed=random_seed, saveimg=False, record_pattern=False, )
+    experiment.run()
+    utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+
+#%% Title: Visualize the optimization score starting from different midpoints
+## NOTE:VERY GOOD ILLUSTRATION!
+# TestScorer.test_score(utils.generator.visualize(simplex_interpolate(i/10, code_total_array[img_tuple, :])))[0]
+fig, axes = plt.subplots(6, 11, figsize=[12, 9])
+for i in range(11):
+    trial_title = 'choleskycma_sgm3_uf10_continopt_trial%d' % i
+    trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    ScoreEvolveTable, ImageidTable = utils.scores_summary(trialdir, steps=150)
+
+    ax = axes[0, i]
+    img_tmp = utils.generator.visualize(simplex_interpolate( i/10, code_total_array[img_tuple, :]))
+    ax.imshow(img_tmp)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_axis_off()
+    ax.set_title("%.2f" % TestScorer.test_score(img_tmp)[0])
+
+    for row_j, gen_j in enumerate([29, 59, 89, 119, 149]):
+        bestimg_id = ScoreEvolveTable[gen_j, :].argmax()
+        img_fn = ImageidTable[gen_j, bestimg_id]
+        code = np.load(os.path.join(trialdir, img_fn), allow_pickle=False).flatten()
+        img_tmp = utils.generator.visualize(code)
+
+        ax = axes[row_j+1, i ]
+        ax.imshow(img_tmp)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_axis_off()
+        ax.set_title("%.2f" % TestScorer.test_score(img_tmp)[0])
+
+plt.suptitle("Linear Interpolation between %d, %d, \n and Optimization result by 30 gen interval" % img_tuple)
+plt.tight_layout(rect=(0, 0, 1, 0.9))
+plt.show()
+
+#%% Interpolation between random 2 points
+

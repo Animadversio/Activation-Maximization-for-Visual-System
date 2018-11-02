@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="613a4399-523d-447c-9e0d-11f5c059e84a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/manifold_fitting.py" afterDir="false" />
+    <list default="true" id="613a4399-523d-447c-9e0d-11f5c059e84a" name="Default Changelist" comment="Add init_code initialization tool for Cholesky CMA Optimizaer&#10;Try manifold fitting for the optimized codes. &#10;Add score management code!">
+      <change afterPath="$PROJECT_DIR$/manifold_geometric_analysis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CNNScorer.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNScorer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Optimizer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/experiment_with_CNN_Integrated.py" beforeDir="false" afterPath="$PROJECT_DIR$/experiment_with_CNN_Integrated.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/manifold_fitting.py" beforeDir="false" afterPath="$PROJECT_DIR$/manifold_fitting.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,8 +20,10 @@
     <SUITE FILE_PATH="coverage/Playtest7$experiment_with_CNN_CMAES_algo.coverage" NAME="experiment_with_CNN_CMAES_algo Coverage Results" MODIFIED="1539549402834" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Playtest7$experiment_with_HumanScorer.coverage" NAME="experiment_with_HumanScorer Coverage Results" MODIFIED="1537733441276" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Playtest7$cmaes_T.coverage" NAME="cmaes_T Coverage Results" MODIFIED="1538960820210" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Playtest7$geometric_analysis.coverage" NAME="geometric_analysis Coverage Results" MODIFIED="1540937766654" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Playtest7$experiment_with_noisyCNN.coverage" NAME="experiment_with_noisyCNN Coverage Results" MODIFIED="1537757187615" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Playtest7$cmaes.coverage" NAME="cmaes Coverage Results" MODIFIED="1538960825066" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Playtest7$scratch_2.coverage" NAME="scratch_2 Coverage Results" MODIFIED="1540840496022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -57,7 +59,7 @@
           <entry key="md" value="3" />
           <entry key="os" value="2" />
           <entry key="png" value="2" />
-          <entry key="py" value="108" />
+          <entry key="py" value="117" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
@@ -66,29 +68,29 @@
           <entry key="Image" value="2" />
           <entry key="Markdown" value="3" />
           <entry key="PLAIN_TEXT" value="2" />
-          <entry key="Python" value="106" />
-          <entry key="Scratch" value="2" />
+          <entry key="Python" value="113" />
+          <entry key="Scratch" value="4" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="Python Console" value="2146" />
+          <entry key="Python Console" value="2914" />
           <entry key="cmaes" value="72" />
-          <entry key="dummy" value="30" />
-          <entry key="experiment_with_CNN_CMAES_algo" value="89" />
+          <entry key="dummy" value="39" />
+          <entry key="experiment_with_CNN_CMAES_algo" value="91" />
           <entry key="experiment_with_HumanScorer" value="949" />
           <entry key="experiment_with_noisyCNN" value="336" />
           <entry key="md" value="343" />
-          <entry key="py" value="27572" />
-          <entry key="txt" value="576" />
+          <entry key="py" value="33735" />
+          <entry key="txt" value="734" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="Markdown" value="343" />
-          <entry key="PLAIN_TEXT" value="606" />
-          <entry key="Python" value="31016" />
-          <entry key="Scratch" value="148" />
+          <entry key="PLAIN_TEXT" value="773" />
+          <entry key="Python" value="37864" />
+          <entry key="Scratch" value="233" />
         </counts>
       </usages-collector>
     </session>
@@ -99,51 +101,61 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Code_Read_Visualize_Analyze_scr.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="203">
+              <caret line="403" column="108" lean-forward="true" selection-start-line="403" selection-start-column="67" selection-end-line="403" selection-end-column="108" />
+              <folding>
+                <element signature="e#176#188#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/experiment_with_CNN_Integrated.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1367">
-              <caret line="82" column="13" lean-forward="true" selection-start-line="82" selection-start-column="13" selection-end-line="82" selection-end-column="13" />
+            <state relative-caret-position="577">
+              <caret line="555" column="26" selection-start-line="555" selection-start-column="26" selection-end-line="555" selection-end-column="26" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
-                <marker date="1540771517324" expanded="true" signature="6056:6057" ph="..." />
+                <marker date="1541121537792" expanded="true" signature="6056:6057" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="426">
+              <caret line="496" column="40" selection-start-line="496" selection-start-column="4" selection-end-line="496" selection-end-column="40" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/manifold_fitting.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="390">
+              <caret line="222" column="4" selection-start-line="222" selection-start-column="4" selection-end-line="222" selection-end-column="4" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+                <marker date="1541110482272" expanded="true" signature="1915:1916" ph="..." />
+                <marker date="1541110482272" expanded="true" signature="4773:4775" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/manifold_fitting.py">
+        <entry file="file://$PROJECT_DIR$/manifold_geometric_analysis.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="503">
-              <caret line="163" selection-start-line="163" selection-end-line="163" />
+            <state relative-caret-position="500">
+              <caret line="365" selection-start-line="365" selection-end-line="365" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
-                <marker date="1540772898855" expanded="true" signature="1920:1921" ph="..." />
-                <marker date="1540772898855" expanded="true" signature="4486:4504" ph="..." />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Optimizer.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2888">
-              <caret line="742" column="97" lean-forward="true" selection-start-line="742" selection-start-column="97" selection-end-line="742" selection-end-column="97" />
-              <folding>
-                <element signature="e#0#31#0" expanded="true" />
-                <element signature="e#20185#31040#0" />
-                <marker date="1540771374282" expanded="true" signature="29698:29703" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/CNNScorer.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-313">
-              <caret line="343" column="28" selection-start-line="343" selection-start-column="28" selection-end-line="343" selection-end-column="28" />
             </state>
           </provider>
         </entry>
@@ -179,6 +191,9 @@
       <find>load_code</find>
       <find>optim_params</find>
       <find>A, Ainv</find>
+      <find>max</find>
+      <find>gen_vi</find>
+      <find>min</find>
     </findStrings>
     <replaceStrings>
       <replace>dist</replace>
@@ -188,6 +203,7 @@
       <replace>self.weights</replace>
       <replace>%.3f</replace>
       <replace>0, method_i</replace>
+      <replace>min</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -224,11 +240,15 @@
         <option value="$PROJECT_DIR$/experiment_with_CNN.py" />
         <option value="$PROJECT_DIR$/experiment_with_CNN_CMAES_algo.py" />
         <option value="$PROJECT_DIR$/Code_Read_Visualize_Analyze_scr.py" />
-        <option value="$PROJECT_DIR$/utils.py" />
         <option value="$PROJECT_DIR$/CNNScorer.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_2.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_3.py" />
+        <option value="$PROJECT_DIR$/geometric_analysis.py" />
+        <option value="$PROJECT_DIR$/utils.py" />
+        <option value="$PROJECT_DIR$/manifold_fitting.py" />
         <option value="$PROJECT_DIR$/Optimizer.py" />
         <option value="$PROJECT_DIR$/experiment_with_CNN_Integrated.py" />
-        <option value="$PROJECT_DIR$/manifold_fitting.py" />
+        <option value="$PROJECT_DIR$/manifold_geometric_analysis.py" />
       </list>
     </option>
   </component>
@@ -239,10 +259,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="68" />
-    <option name="y" value="31" />
-    <option name="width" value="2158" />
-    <option name="height" value="1061" />
+    <option name="x" value="63" />
+    <option name="y" value="23" />
+    <option name="width" value="2497" />
+    <option name="height" value="1057" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -277,8 +297,8 @@
     <property name="ToolWindowConcurrent Activities Diagram.ShowToolbar" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../data/with_CNN/caffe-net_fc6_0010" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.appearance" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../data" />
+    <property name="settings.editor.selected.configurable" value="preferences.toDoOptions" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -342,57 +362,10 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="cmaes_T" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Playtest7" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cmaes_T.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="experiment_with_CNN" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Playtest7" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/experiment_with_CNN.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="experiment_with_CNN_CMAES_algo" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Playtest7" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -408,7 +381,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="experiment_with_noisyCNN" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="geometric_analysis" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Playtest7" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -421,7 +394,48 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/experiment_with_noisyCNN.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/manifold_geometric_analysis.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="scratch_2" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Playtest7" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_2.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="scratch_3" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Playtest7" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_3.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -431,19 +445,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.experiment_with_CNN" />
-      <item itemvalue="Python.experiment_with_noisyCNN" />
       <item itemvalue="Python.experiment_with_CNN_CMAES_algo" />
       <item itemvalue="Python.cmaes" />
-      <item itemvalue="Python.cmaes_T" />
+      <item itemvalue="Python.scratch_2" />
+      <item itemvalue="Python.geometric_analysis" />
+      <item itemvalue="Python.scratch_3" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.experiment_with_CNN_CMAES_algo" />
+        <item itemvalue="Python.scratch_3" />
+        <item itemvalue="Python.geometric_analysis" />
+        <item itemvalue="Python.scratch_2" />
         <item itemvalue="Python.cmaes" />
-        <item itemvalue="Python.cmaes_T" />
-        <item itemvalue="Python.experiment_with_CNN" />
-        <item itemvalue="Python.experiment_with_noisyCNN" />
       </list>
     </recent_temporary>
   </component>
@@ -545,10 +559,17 @@
       <option name="project" value="LOCAL" />
       <updated>1540749772037</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Add init_code initialization tool for Cholesky CMA Optimizaer&#10;Try manifold fitting for the optimized codes. &#10;Add score management code!">
+      <created>1540772991684</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1540772991684</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
-  <component name="TodoView">
+  <component name="TodoView" selected-index="1">
     <todo-panel id="selected-file">
       <is-autoscroll-to-source value="true" />
     </todo-panel>
@@ -558,9 +579,9 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="68" y="31" width="2158" height="1061" extended-state="0" />
+    <frame x="63" y="23" width="2497" height="1057" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" visible="true" weight="0.13623463" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" visible="true" weight="0.117407255" />
       <window_info id="Structure" order="1" sideWeight="0.502551" weight="0.22265407" />
       <window_info id="Favorites" order="2" weight="0.32857725" />
       <window_info id="Find" order="3" sideWeight="0.8512" weight="0.27548918" />
@@ -568,21 +589,21 @@
       <window_info anchor="bottom" id="Docker" order="1" show_stripe_button="false" />
       <window_info anchor="bottom" id="Message" order="2" />
       <window_info anchor="bottom" id="Run" order="3" sideWeight="0.81157374" weight="0.32744566" />
-      <window_info anchor="bottom" id="Debug" order="4" sideWeight="0.61290324" weight="0.41491598" />
+      <window_info anchor="bottom" id="Debug" order="4" sideWeight="0.6111637" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
-      <window_info anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.8174078" visible="true" weight="0.37409326" />
-      <window_info anchor="bottom" id="TODO" order="8" sideWeight="0.49742535" weight="0.3261745" />
+      <window_info anchor="bottom" x="30" y="516" width="1042" height="242" id="Python Console" order="7" sideWeight="0.8136975" visible="true" weight="0.3298647" />
+      <window_info anchor="bottom" id="TODO" order="8" sideWeight="0.49694252" weight="0.32466182" />
       <window_info anchor="bottom" id="Version Control" order="9" sideWeight="0.496" weight="0.32614943" />
       <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49857318" weight="0.32674298" />
-      <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.18259224" side_tool="true" visible="true" weight="0.37409326" />
+      <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.18630248" side_tool="true" visible="true" weight="0.3298647" />
       <window_info anchor="bottom" id="Concurrent Activities Diagram" order="12" sideWeight="0.4976" weight="0.32899022" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24982357" />
       <window_info anchor="right" id="Database" order="3" sideWeight="0.4979757" side_tool="true" weight="0.28989977" />
-      <window_info active="true" anchor="right" x="247" y="210" width="786" height="509" id="SciView" order="4" sideWeight="0.955298" visible="true" weight="0.3178808" />
-      <window_info anchor="right" x="0" y="0" width="273" height="510" id="Documentation" order="5" sideWeight="0.044701986" side_tool="true" visible="true" weight="0.3178808" />
+      <window_info active="true" anchor="right" x="247" y="210" width="786" height="509" id="SciView" order="4" sideWeight="0.9580745" visible="true" weight="0.5034651" />
+      <window_info anchor="right" x="0" y="0" width="273" height="510" id="Documentation" order="5" sideWeight="0.041925468" side_tool="true" visible="true" weight="0.5034651" />
     </layout>
     <layout-to-restore>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49744898" weight="0.23036253" />
@@ -637,14 +658,15 @@
     <MESSAGE value="Add Image visualization code" />
     <MESSAGE value="Major change. Incoporate CMAES into optimizer&#10;Add a simplified version of experimental code. &#10;Add many visualization code&#10;Implement NOIOCNNScorer" />
     <MESSAGE value="Implement Cholesky CMAES and original version of CMAES&#10;Add several visualization tools!" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implement Cholesky CMAES and original version of CMAES&#10;Add several visualization tools!" />
+    <MESSAGE value="Add init_code initialization tool for Cholesky CMA Optimizaer&#10;Try manifold fitting for the optimized codes. &#10;Add score management code!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add init_code initialization tool for Cholesky CMA Optimizaer&#10;Try manifold fitting for the optimized codes. &#10;Add score management code!" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Optimizer.py</url>
-          <line>831</line>
+          <line>833</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -686,6 +708,11 @@
           <url>file://$PROJECT_DIR$/cmaes_T.py</url>
           <line>117</line>
           <option name="timeStamp" value="49" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/manifold_geometric_analysis.py</url>
+          <line>42</line>
+          <option name="timeStamp" value="53" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -941,13 +968,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file:///usr/lib/python3/dist-packages/matplotlib/pyplot.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1301">
-          <caret line="244" column="55" lean-forward="true" selection-start-line="244" selection-start-column="55" selection-end-line="244" selection-end-column="55" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/numpy/linalg/linalg.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1060">
@@ -1007,17 +1027,60 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils.py">
+    <entry file="file:///usr/lib/python3/dist-packages/apport_python_hook.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="312">
-          <caret line="462" column="8" selection-start-line="462" selection-start-column="8" selection-end-line="463" selection-end-column="47" />
+        <state relative-caret-position="-373">
+          <caret line="151" selection-start-line="151" selection-end-line="151" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.local/lib/python3.6/site-packages/numpy/core/numeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="247">
+          <caret line="310" selection-start-line="310" selection-end-line="310" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="41" lean-forward="true" selection-start-line="2" selection-start-column="41" selection-end-line="2" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CNNScorer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2585">
+          <caret line="343" column="28" selection-start-line="343" selection-start-column="28" selection-end-line="343" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/python3/dist-packages/matplotlib/pyplot.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-143">
+          <caret line="2261" column="4" selection-start-line="2261" selection-start-column="4" selection-end-line="2261" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_3.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Optimizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="252">
+          <caret line="641" column="48" selection-start-line="641" selection-start-column="48" selection-end-line="641" selection-end-column="48" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#20185#31040#0" />
+            <marker date="1541110907337" expanded="true" signature="29698:29703" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Code_Read_Visualize_Analyze_scr.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="309" column="4" selection-start-line="309" selection-start-column="4" selection-end-line="311" selection-end-column="19" />
+        <state relative-caret-position="203">
+          <caret line="403" column="108" lean-forward="true" selection-start-line="403" selection-start-column="67" selection-end-line="403" selection-end-column="108" />
           <folding>
             <element signature="e#176#188#0" expanded="true" />
           </folding>
@@ -1026,42 +1089,40 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/experiment_with_CNN_Integrated.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1367">
-          <caret line="82" column="13" lean-forward="true" selection-start-line="82" selection-start-column="13" selection-end-line="82" selection-end-column="13" />
+        <state relative-caret-position="577">
+          <caret line="555" column="26" selection-start-line="555" selection-start-column="26" selection-end-line="555" selection-end-column="26" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
-            <marker date="1540771517324" expanded="true" signature="6056:6057" ph="..." />
+            <marker date="1541121537792" expanded="true" signature="6056:6057" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CNNScorer.py">
+    <entry file="file://$PROJECT_DIR$/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-313">
-          <caret line="343" column="28" selection-start-line="343" selection-start-column="28" selection-end-line="343" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Optimizer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2888">
-          <caret line="742" column="97" lean-forward="true" selection-start-line="742" selection-start-column="97" selection-end-line="742" selection-end-column="97" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#20185#31040#0" />
-            <marker date="1540771374282" expanded="true" signature="29698:29703" ph="..." />
-          </folding>
+        <state relative-caret-position="426">
+          <caret line="496" column="40" selection-start-line="496" selection-start-column="4" selection-end-line="496" selection-end-column="40" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/manifold_fitting.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="503">
-          <caret line="163" selection-start-line="163" selection-end-line="163" />
+        <state relative-caret-position="390">
+          <caret line="222" column="4" selection-start-line="222" selection-start-column="4" selection-end-line="222" selection-end-column="4" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
-            <marker date="1540772898855" expanded="true" signature="1920:1921" ph="..." />
-            <marker date="1540772898855" expanded="true" signature="4486:4504" ph="..." />
+            <marker date="1541110482272" expanded="true" signature="1915:1916" ph="..." />
+            <marker date="1541110482272" expanded="true" signature="4773:4775" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/manifold_geometric_analysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="500">
+          <caret line="365" selection-start-line="365" selection-end-line="365" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -244,12 +244,42 @@ def add_trial_subdir(neuron_dir, trial_title):
     if not os.path.isdir(trialdir):
         os.mkdir(trialdir)
     return trialdir
+#%% Code Geometrical Manipulation
 
+
+def simplex_interpolate(wvec, code_array):
+    '''Do simplex interpolate/extrapolate between several codes
+    Codes can be input in array (each row is a code) or in list
+    wvec: weight vector can be a scalar for 2 codes. or same length list / array for more codes.
+    '''
+    if type(code_array) is list:
+        code_array = np.asarray(code_array)
+    code_n = code_array.shape[0]
+    if np.isscalar(wvec):
+        w_vec = np.asarray([1-wvec, wvec])  # changed @oct.30th, 0 for the 1st vector, 1 for the 2nd vector
+    elif len(wvec) == code_n:
+        w_vec = np.asarray(wvec)
+    elif len(wvec) == code_n - 1:
+        w_vec = np.zeros(code_n)
+        w_vec[1:] = wvec
+        w_vec[0] = 1 - sum(w_vec[:-1])
+    else:
+        raise ValueError
+    code = w_vec @ code_array
+    return code
 #%%
 
-def scores_summary(CurDataDir, steps = 300, population_size = 40):
+def scores_summary(CurDataDir, steps = 300, population_size = 40, regenerate=False):
+
     ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
-    ImageidTable = [[""] * population_size for i in range(steps)]
+    ImagefnTable = [[""] * population_size for i in range(steps)]
+    fncatalog = os.listdir(CurDataDir)
+    if "scores_summary_table.npz" in fncatalog and (not regenerate):
+        # if the summary table exist, just read from it!
+        with np.load(os.path.join(CurDataDir, "scores_summary_table.npz")) as data:
+            ScoreEvolveTable = data['ScoreEvolveTable']
+            ImagefnTable = data['ImagefnTable']
+        return ScoreEvolveTable, ImagefnTable
     startnum = 0
     for stepi in range(startnum, steps):
         try:
@@ -257,7 +287,16 @@ def scores_summary(CurDataDir, steps = 300, population_size = 40):
                 score_tmp = data['scores']
                 image_ids = data['image_ids']
                 ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
-                ImageidTable[stepi][0:len(score_tmp)] = image_ids
+                if stepi==0:
+                    image_fns = image_ids
+                else:
+                    image_fns = []
+                    for imgid in image_ids:
+                        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and ('.npy' in fn)]
+                        assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+                        image_fns.append(fn_tmp_list[0])
+                ImagefnTable[stepi][0:len(score_tmp)] = image_fns
+                # FIXME: 1st generation natural stimuli is not in the directory! so it's not possible to get the file name there. Here just put the codeid
         except FileNotFoundError:
             if stepi == 0:
                 startnum += 1
@@ -266,19 +305,49 @@ def scores_summary(CurDataDir, steps = 300, population_size = 40):
             else:
                 print("maximum steps is %d." % stepi)
                 ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
-                ImageidTable = ImageidTable[0:stepi]
+                ImagefnTable = ImagefnTable[0:stepi]
                 steps = stepi
                 break
-    ImageidTable = np.asarray(ImageidTable)
+        ImagefnTable = np.asarray(ImagefnTable)
     savez(os.path.join(CurDataDir, "scores_summary_table.npz"),
-                {"ScoreEvolveTable": ScoreEvolveTable, "ImageidTable": ImageidTable})
-    return ScoreEvolveTable, ImageidTable
+                {"ScoreEvolveTable": ScoreEvolveTable, "ImagefnTable": ImagefnTable})
+    return ScoreEvolveTable, ImagefnTable
 
+
+def select_image(CurDataDir, lb=None, ub=None, trial_rng = None):
+    '''Filter the Samples that has Score in a given range
+    Can be used to find level sets of activation function
+    trial_rng slice the trial number direction
+    '''
+    fncatalog = os.listdir(CurDataDir)
+    ScoreEvolveTable, ImageidTable = scores_summary(CurDataDir)
+    # it will automatic read the existing summary or generate one.
+    if ub is None:
+        ub = np.nanmax(ScoreEvolveTable)+1
+    if lb is None:
+        lb = np.nanmin(ScoreEvolveTable)-1
+    if trial_rng is not None:
+        assert type(trial_rng) is tuple
+        assert len(trial_rng) is 2
+        ScoreEvolveTable = ScoreEvolveTable[slice(*trial_rng), :]
+        ImageidTable = ImageidTable[slice(*trial_rng), :]
+    imgid_list = ImageidTable[np.logical_and(ScoreEvolveTable > lb, ScoreEvolveTable < ub)]
+    score_list = ScoreEvolveTable[np.logical_and(ScoreEvolveTable > lb, ScoreEvolveTable < ub)]
+    image_fn= []
+    for imgid in imgid_list:
+        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and '.npy' in fn]
+        assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+        image_fn.append(fn_tmp_list[0])
+    code_array = []
+    for imagefn in image_fn:
+        code = np.load(os.path.join(CurDataDir, imagefn), allow_pickle=False).flatten()
+        code_array.append(code.copy())
+        # img_tmp = utils.generator.visualize(code_tmp)
+    return code_array, score_list, imgid_list
 
 #%% Visualization Routines
 
 import matplotlib.pyplot as plt
-
 
 def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_str="",
                                save=False, exp_title_str='', savedir=''):

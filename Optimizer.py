@@ -638,6 +638,8 @@ class CholeskyCMAES(Optimizer):
         if init_code is not None:
             self.init_x = np.asarray(init_code)
             self.init_x.shape = (1, N)
+        else:
+            self.init_x = None  # FIXED Nov. 1st
         self.xmean = zeros((1, N))
         self.xold = zeros((1, N))
         # Initialize dynamic (internal) strategy parameters and constants
