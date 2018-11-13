@@ -17,7 +17,7 @@ this_exp_dir = add_neuron_subdir(neuron, exp_dir)
 trial_title = 'choleskycma_sgm3_uf10_trial%d' % 3
 trialdir = add_trial_subdir(this_exp_dir, trial_title)
 
-#%% Score sorting routine
+#%% Score sorting routine see `scores_summary()`
 CurDataDir = trialdir
 steps = 300
 population_size = 40
@@ -111,7 +111,7 @@ trial_list = ['choleskycma_sgm1_trial0',
  'genetic_trial0']
 for trial_title in trial_list:
     trialdir = add_trial_subdir(this_exp_dir, trial_title)
-    code_array, score_list, _ = select_image(trialdir, lb=205)
+    code_array, score_list, _ = utils.select_image(trialdir, lb=205)
     code_total_list += code_array
     score_total_list += list(score_list)
 code_total_array = np.asarray(code_total_list)
@@ -210,7 +210,7 @@ this_exp_dir = add_neuron_subdir(neuron, exp_dir)
 
 img_tuple = 7303, 2143
 for i in range(11):
-    interp_init_code = simplex_interpolate( i/10, code_total_array[img_tuple, :])
+    interp_init_code = simplex_interpolate(i/10, code_total_array[img_tuple, :])
     random_seed = int(time())
     trial_title = 'choleskycma_sgm3_uf10_continopt_trial%d' % i
     trialdir = add_trial_subdir(this_exp_dir, trial_title)
@@ -255,4 +255,7 @@ plt.tight_layout(rect=(0, 0, 1, 0.9))
 plt.show()
 
 #%% Interpolation between random 2 points
+
+
+#%%
 

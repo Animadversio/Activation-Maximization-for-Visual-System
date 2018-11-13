@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import importlib
 importlib.reload(utils)
+
 #%%
 
 exp_dir = "/home/poncelab/Documents/data/with_CNN/"
@@ -50,12 +51,202 @@ for trial_title in trial_list:
     score_total_list += list(score_list)
 code_total_array = np.asarray(code_total_list)
 
-#%% Tangent Map of GAN
+#%% Title: Tangent Map of GAN
+num = 1000
+entry_n = 400
+interv = 30
+total_num = 11
+curr_code = code_total_list[num]
+# curr_score = score_total_list[num]
+img_width = total_num * 1.5+2
+fig, axes = plt.subplots(2, total_num, figsize=[img_width, 2.5])
+increment = np.zeros(curr_code.shape)
+for id in range(total_num):
+    increment[entry_n] = (id - (total_num-1) / 2)*interv
+    tmp_code = curr_code + increment
+    img_tmp = utils.generator.visualize(tmp_code)
+    ax = axes[id]
+    ax.imshow(img_tmp)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_axis_off()
+    ax.set_title("%.1f, %.2f" % (tmp_code[entry_n], TestScorer.test_score(img_tmp)[0]))
+plt.suptitle("Code %d, Perturb Along Coordinate %d, interval=%.1f" % (num, entry_n, interv))
+plt.show()
+
+
+#%%
+def perturb_visulize(curr_code, entry_n, interv=10, total_num=11, code_num = None):
+    # curr_score = score_total_list[num]
+    img_width = total_num * 1.5+2
+    fig, axes = plt.subplots(1, total_num, figsize=[img_width, 2.5])
+    increment = np.zeros(curr_code.shape)
+    for id in range(total_num):
+        increment[entry_n] = (id - (total_num-1) / 2)*interv
+        tmp_code = curr_code + increment
+        img_tmp = generator.visualize(tmp_code)
+        ax = axes[id]
+        ax.imshow(img_tmp)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_axis_off()
+        ax.set_title("%.1f, %.2f" % (tmp_code[entry_n], TestScorer.test_score(img_tmp)[0]))
+    if code_num is not None:
+        plt.suptitle("Code %d, Perturb Along Coordinate %d, interval=%.1f" % (code_num, entry_n, interv))
+    else:
+        plt.suptitle("Perturb Along Coordinate %d, interval=%.1f" % (entry_n, interv))
+    plt.show()
+    return fig
+#%%
+exp_dir = "/home/poncelab/Documents/data/with_CNN/"
+neuron = ('caffe-net', 'fc6', 10)
+this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+trialdir = add_trial_subdir(this_exp_dir, "choleskycma_sgm3_uf10_trial1")
+curr_code = np.load(os.path.join(trialdir, "gen297_011910.npy"), allow_pickle=False).flatten()
+#%%
+TestScorer.test_score(utils.generator.visualize(curr_code))
+#%%
+plt.figure()
+img_tmp = utils.generator.visualize(curr_code)
+plt.imshow(img_tmp)
+plt.show()
+#%%
+# num = 1000
+# curr_code = code_total_list[num]
+entry_n = 2452
+perturb_visulize(curr_code, entry_n)
+#%% Calculate the Tuning Width
+maximum_pos_array = np.zeros(curr_code.shape)
+end_score_array = np.zeros((2, 4096))
+maximum_score_array = np.zeros(curr_code.shape)
+#%%
+# curr_code = code_total_list[num]
+spacarray = np.linspace(-40, 40, 41)
+
+for entry_n in range(0, 4096):#, 4096):
+    # entry_n = 205
+    increment = np.zeros(curr_code.shape)
+    increment[entry_n] = 1
+    # increment = increment / np.linalg.norm(increment)
+    img_tmp_array = [utils.generator.visualize(length * increment + curr_code) for length in spacarray]
+    score_tmp_array = TestScorer.test_score(img_tmp_array)
+    # plt.figure()
+    # plt.plot(spacarray, score_tmp_array)
+    # plt.show()
+
+    maximum_pos = spacarray[score_tmp_array.argmax()]
+    maximum_pos_array[entry_n] = maximum_pos
+    maximum_score_array[entry_n] = score_tmp_array.max()
+    end_score_array[:, entry_n] = [score_tmp_array[0], score_tmp_array[-1]]
+
+#%%
+entry_linspace = np.arange(4096)
+fig = plt.figure(figsize=[15, 6])
+
+plt.subplot(3, 1, 1)
+# plt.plot(maximum_pos_array)
+plt.scatter(entry_linspace, maximum_pos_array, s=16, alpha=0.5)
+plt.xlim([0, 4096])
+plt.xticks([])
+plt.title("Position of Maximum")
+plt.ylabel("Displace")
+plt.subplot(3, 1, 2)
+plt.scatter(entry_linspace, maximum_score_array, s=16, alpha=0.5)
+plt.xlim([0, 4096])
+plt.xticks([])
+plt.title("Maximum Score")
+plt.ylabel("score")
+plt.subplot(3, 1, 3)
+plt.scatter(entry_linspace, end_score_array.min(axis=0), s=16, alpha=0.5)
+plt.xlim([0, 4096])
+plt.title("Minimum Score")
+plt.ylabel("score")
+plt.xlabel("Coordinates")
+fig.tight_layout(rect=[0, 0.03, 0.90, 0.8])
+# plt.suptitle("choleskycma_sgm3_uf10_trial0__gen297_011919 perturbation statistics")
+plt.suptitle("choleskycma_sgm3_uf10_trial1__gen297_011910 perturbation statistics")
+plt.show()
+
+#%%
+plt.figure()
+plt.hist(maximum_pos_array, 10)
+plt.title("Distribution of the position of maximum")
+plt.show()
+
+#%% Save the results
+# save_dir = os.path.join(this_exp_dir, "gradient_map_data0.npz")
+# np.savez(save_dir, {"maximum_pos_array": maximum_pos_array, "maximum_score_array": maximum_score_array,
+#  "end_score_array": end_score_array,
+#  "code_path": os.path.join(trialdir, "gen297_011919.npy")})
+
+save_dir = os.path.join(this_exp_dir, "gradient_map_data1.npz")
+np.savez(save_dir, {"maximum_pos_array": maximum_pos_array, "maximum_score_array": maximum_score_array,
+ "end_score_array": end_score_array,
+ "code_path": os.path.join(trialdir, "gen297_011910.npy")})
+#%%
+coordinate_grad_list = np.argsort(end_score_array.min(axis=0))
+# find the perturbation axis yielding the largest change in score.
+#%%
+for i in range(10):
+    entry_n = coordinate_grad_list[i]
+    perturb_visulize_contrast(curr_code, entry_n, interv=10)
+#%%
+entry_n = 1855  # 1642, 2567, 1689
+perturb_visulize(curr_code, entry_n, interv=20, code_num=15886)
+#%% Title: Image Difference map
+entry_n = 1689
+increment = np.zeros(curr_code.shape)
+increment[entry_n] = 20
+img_1 = generator.visualize(curr_code)
+img_2 = generator.visualize(curr_code + increment)
+#%%
+plt.figure(figsize=[8,3])
+plt.subplot(1,3,1)
+plt.imshow(img_1)
+plt.subplot(1,3,2)
+plt.imshow(img_2)
+plt.subplot(1,3,3)
+diff_map = np.abs(img_1.astype(np.int)-img_2.astype(np.int)).max(axis=2)
+plt.imshow(diff_map)
+plt.colorbar()
+plt.show()
+
+#%%
+def perturb_visulize_contrast(curr_code, entry_n, interv=10, total_num=11, code_num = None):
+    # curr_score = score_total_list[num]
+    img_orig = generator.visualize(curr_code)
+    img_width = total_num * 1.5+2
+    fig, axes = plt.subplots(2, total_num, figsize=[img_width, 4])
+    increment = np.zeros(curr_code.shape)
+    for id in range(total_num):
+        increment[entry_n] = (id - (total_num-1) / 2)*interv
+        tmp_code = curr_code + increment
+        img_tmp = generator.visualize(tmp_code)
+        ax = axes[0, id]
+        ax.imshow(img_tmp)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_axis_off()
+        ax.set_title("%.1f, %.2f" % (tmp_code[entry_n], TestScorer.test_score(img_tmp)[0]))
+        ax = axes[1, id]
+        diff_map = np.abs(img_tmp.astype(np.int)-img_orig.astype(np.int)).max(axis=2)
+        ax.imshow(diff_map)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_axis_off()
+    if code_num is not None:
+        plt.suptitle("Code %d, Perturb Along Coordinate %d, interval=%.1f" % (code_num, entry_n, interv))
+    else:
+        plt.suptitle("Perturb Along Coordinate %d, interval=%.1f" % (entry_n, interv))
+    plt.show()
+    return fig
+#%%
+entry_n = 581
+perturb_visulize_contrast(curr_code, entry_n, interv=20)#, code_num=15886)
 
 #%% Gradient Map of Activation function
 
-
-#%% Interpolate bridge between
+#%% Title: Interpolate bridge between islands
 img_tuple = 7303, 7310
 
 img_tmp = [generator.visualize(simplex_interpolate( i/40, code_total_array[img_tuple, :])) for i in range(41)]
@@ -103,7 +294,7 @@ img_tuple = 1000,1002
 interpolate_score_curve(code_total_array[img_tuple, :], img_tuple)
 
 
-#%% The distance relationship between hot spots.
+#%% Title Distance Matrix calc
 img_id_list = np.arange(0, 15000, 5, dtype=np.int)#[1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]
 
 img_n = len(img_id_list)
@@ -135,7 +326,8 @@ interp_min_score_mat = np.zeros((img_n, img_n), dtype=np.float)
 interp_min_pos_mat = np.zeros((img_n, img_n), dtype=np.float)
 convex_flag_mat = np.zeros((img_n, img_n), dtype=np.bool)
 concave_flag_mat = np.zeros((img_n, img_n), dtype=np.bool)
-for i in range(img_n):
+#%%
+for i in range(1453, img_n):
     for j in range(i):
         id_tuple = (img_id_list[i], img_id_list[j])
         img_tmp = [generator.visualize(simplex_interpolate(i / interp_n, code_total_array[id_tuple, :])) for i in range(interp_n + 1)]
@@ -169,8 +361,38 @@ data_sets = {"dist_mat": dist_mat,
              "interp_min_pos_mat": interp_min_pos_mat ,
              "convex_flag_mat": convex_flag_mat ,
              "concave_flag_ma": concave_flag_mat}
-np.savez(os.path.join(this_exp_dir, "Hotspot_dist_conv_mat.npz"), data_sets)
-
+np.savez(os.path.join(this_exp_dir, "Hotspot_dist_conv_mat_data.npz"), data_sets)
+# stop at 1452, start from 1453
+#%% Visualization of the Conv/Concave matrix
+plt.figure(figsize=[23, 10])
+gs = gridspec.GridSpec(2, 4)#, height_ratios=[1,1])
+plt.subplot(gs[0,0])  #(2, 1, 1)
+plt.matshow(dist_mat, fignum=False)
+plt.title("distance matrix")
+plt.colorbar()
+plt.subplot(gs[0,2])
+plt.matshow(interp_max_score_mat, fignum=False)
+plt.title("max_score_interpolated")
+plt.colorbar()
+plt.subplot(gs[1,2])
+plt.matshow(interp_min_score_mat, fignum=False)
+plt.title("min_score_interpolated")
+plt.colorbar()
+plt.subplot(gs[0,1])
+plt.matshow(convex_flag_mat, fignum=False)
+plt.title("Convexity")
+plt.subplot(gs[1,1])
+plt.matshow(concave_flag_mat, fignum=False)
+plt.title("Concavity")
+plt.subplot(gs[0,3])
+plt.matshow(interp_max_pos_mat, fignum=False)
+plt.title("maximum_pos_interp")
+plt.colorbar()
+plt.subplot(gs[1,3])
+plt.matshow(interp_min_pos_mat, fignum=False)
+plt.title("minimum_pos_interp")
+plt.colorbar()
+plt.show()
 #%% ########################################################################
 #  Title: Dimension Reduction of Image Islands
 #   #######################################################################
