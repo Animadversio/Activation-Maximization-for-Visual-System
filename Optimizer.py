@@ -724,7 +724,12 @@ class CholeskyCMAES(Optimizer):
             # Clever way to generate multivariate gaussian!!
             # Stretch the guassian hyperspher with D and transform the
             # ellipsoid by B mat linear transform between coordinates
-            new_ids.append("gen%03d_%06d" % (self._istep, self.counteval))
+            if self._thread is None:
+                new_ids.append("gen%03d_%06d" % (self._istep, self.counteval))
+            else:
+                new_ids.append('thread%02d_gen%03d_%06d' %
+                        (self._thread, self._istep, self.counteval))
+            # FIXME A little inconsistent with the naming at line 173/175/305/307 esp. for gen000 code
             # assign id to newly generated images. These will be used as file names at 2nd round
             self.counteval += 1
 
@@ -758,8 +763,13 @@ class CholeskyCMAES(Optimizer):
         self._init_population_dir = initcodedir
         self._init_population_fns = genealogy    # a list of '*.npy' file names
         self._curr_samples = self._init_population.copy()
-        self._curr_sample_ids = genealogy.copy()
-        # self._curr_samples = self._curr_samples.T
+        if self._thread is None:
+            self._curr_sample_ids = ['gen%03d_%06d' % (self._istep, idx) for idx in range(size)]
+        else:
+            self._curr_sample_ids = ['thread%02d_gen%03d_%06d' %
+                                     (self._thread, self._istep, idx) for idx in range(size)]
+        # Note: FIXED on Nov. 14th in consistant with former version of code.
+        # self._curr_sample_ids = genealogy.copy()  # FIXED: @Nov.14 keep the nomenclatuere the same
         # no update for idc, idx, ids because popsize unchanged
         try:
             self._prepare_images()
