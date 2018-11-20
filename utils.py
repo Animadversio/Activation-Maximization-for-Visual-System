@@ -3,6 +3,7 @@ import re
 from time import time, sleep
 
 import h5py
+from  scipy.io import loadmat
 import numpy as np
 from PIL import Image
 from cv2 import imread, resize, INTER_CUBIC, INTER_AREA
@@ -163,6 +164,24 @@ def load_block_mat(matfpath):
                 scores = np.array(f['tEvokedResp'])    # shape = (imgs, channels)
             return imgids, scores
         except (KeyError, IOError, OSError):    # if broken mat file or unable to access
+            attempts += 1
+            if attempts % 100 == 0:
+                print('%d failed attempts to read .mat file' % attempts)
+            sleep(0.001)
+
+
+def load_block_mat_code(matfpath):
+    attempts = 0
+    while True:
+        try:
+            data = loadmat(matfpath)  # need the mat file to be saved in a older version
+            codes = data['codes']
+            ids = data['ids']
+            imgids = []
+            for id in ids[0]:
+                imgids.append(id[0])
+            return imgids, codes
+        except (KeyError, IOError, OSError):  # if broken mat file or unable to access
             attempts += 1
             if attempts % 100 == 0:
                 print('%d failed attempts to read .mat file' % attempts)
