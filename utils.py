@@ -17,7 +17,7 @@ def read_image(image_fpath):
     return imarr
 
 
-def write_images(imgs, names, path, size=None, timeout=0.5):
+def write_images(imgs, names, path, size=None, timeout=0.5, format='bmp'):
     """
     Saves images as 24-bit bmp files to given path with given names
     :param imgs: list of images as numpy arrays with shape (w, h, c) and dtype uint8
@@ -36,8 +36,8 @@ def write_images(imgs, names, path, size=None, timeout=0.5):
         img = Image.fromarray(im_arr)
         trying = True
         t0 = time()
-        if name.rfind('.bmp') != len(name) - 4:
-            name += '.bmp'
+        if name.rfind("."+format ) != len(name) - 4:
+            name += "."+format
         while trying and time() - t0 < timeout:
             try:
                 img.save(os.path.join(path, name))
