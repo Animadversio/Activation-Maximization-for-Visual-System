@@ -591,7 +591,7 @@ class CholeskyCMAES(Optimizer):
     #         load_init_population(initcodedir, size=population_size)
     #         save_init_population()
     #         step()
-    # Note this is a variant of CMAES Cholesky
+    """ Note this is a variant of CMAES Cholesky suitable for high dimensional optimization"""
     def __init__(self, recorddir, space_dimen, init_sigma=None, init_code=None, population_size=None, Aupdate_freq=None,
                  maximize=True, random_seed=None, thread=None):
         super(CholeskyCMAES, self).__init__(recorddir, random_seed, thread)
