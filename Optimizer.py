@@ -660,11 +660,12 @@ class CholeskyCMAES(Optimizer):
     def step(self, scores):
         # Note it's important to decide which variable is to be saved in the `Optimizer` object
         # Note to conform with other code, this part is transposed.
+
+        # set short name for everything to simplify equations
         N = self.space_dimen
         lambda_, mu, mueff, chiN = self.lambda_, self.mu, self.mueff, self.chiN
         cc, cs, c1, damps = self.cc, self.cs, self.c1, self.damps
         sigma, A, Ainv, ps, pc, = self.sigma, self.A, self.Ainv, self.ps, self.pc,
-        # set short name for everything
 
         # Sort by fitness and compute weighted mean into xmean
         if self.maximize is False:
@@ -681,9 +682,9 @@ class CholeskyCMAES(Optimizer):
                 self.xmean = self.init_x
         else:
             self.xold = self.xmean
-            self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]   # Weighted recombination, new mean value
+            self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]  # Weighted recombination, new mean value
 
-            # Cumulation: Update evolution paths
+            # Cumulation statistics through steps: Update evolution paths
             randzw = self.weights @ self.randz[code_sort_index[0:mu], :]
             ps = (1 - cs) * ps + sqrt(cs * (2 - cs) * mueff) * randzw
             pc = (1 - cc) * pc + sqrt(cc * (2 - cc) * mueff) * randzw @ A
@@ -694,11 +695,12 @@ class CholeskyCMAES(Optimizer):
             print("sigma: %.2f" % sigma)
 
             # Decomposition of C into B*diag(D.^2)*B' (diagonalization)
-            if self.counteval - self.eigeneval > self.update_crit:  # to achieve O(N ^ 2)
+            if self.counteval - self.eigeneval > self.update_crit:  # to achieve O(N ^ 2) do decomposition less frequently
                 self.eigeneval = self.counteval
                 t1 = time()
                 v = pc @ Ainv
                 normv = v @ v.T
+                # Directly update the A Ainv instead of C itself
                 A = sqrt(1-c1) * A + sqrt(1-c1)/normv*(sqrt(1+normv*c1/(1-c1))-1) * v@pc.T
                 Ainv = 1/sqrt(1-c1) * Ainv - 1/sqrt(1-c1)/normv*(1-1/sqrt(1+normv*c1/(1-c1))) * Ainv@v.T@v
                 t2 = time()
@@ -741,7 +743,8 @@ class CholeskyCMAES(Optimizer):
 
 
     def save_optimizer_state(self):
-        # if needed, a save Optimizer status function. Automatic save the optimization parameters at 1st step.
+        """a save Optimizer status function.
+        Automatic save the optimization parameters at 1st step.save the changing parameters if not"""
         if self._istep == 1:
             optim_setting = {"space_dimen": self.space_dimen, "population_size": self.lambda_,
                               "select_num": self.mu, "weights": self.weights,
