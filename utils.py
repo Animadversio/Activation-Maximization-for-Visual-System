@@ -3,6 +3,7 @@ import re
 from time import time, sleep
 
 import h5py
+from  scipy.io import loadmat
 import numpy as np
 from PIL import Image
 from cv2 import imread, resize, INTER_CUBIC, INTER_AREA
@@ -16,11 +17,11 @@ def read_image(image_fpath):
     return imarr
 
 
-def write_images(imgs, names, path, size=None, timeout=0.5):
+def write_images(imgs, names, path, size=None, timeout=0.5, format='bmp'):
     """
     Saves images as 24-bit bmp files to given path with given names
     :param imgs: list of images as numpy arrays with shape (w, h, c) and dtype uint8
-    :param names: filenames of images including or excluding '.bmp'
+    :param names: filenames of images **including or excluding** '.bmp'
     :param path: path to save to
     :param size: size (pixels) to resize image to; default is unchanged
     :param timeout: timeout for trying to write each image
@@ -35,8 +36,8 @@ def write_images(imgs, names, path, size=None, timeout=0.5):
         img = Image.fromarray(im_arr)
         trying = True
         t0 = time()
-        if name.rfind('.bmp') != len(name) - 4:
-            name += '.bmp'
+        if name.rfind("."+format ) != len(name) - 4:
+            name += "."+format
         while trying and time() - t0 < timeout:
             try:
                 img.save(os.path.join(path, name))
@@ -123,6 +124,7 @@ def load_codes2(codedir, size):
     codes = np.array(codes)
     return codes, codefns
 
+
 def load_codes_search(codedir, srckey, size=None):
     """Load the code files with `srckey` in its name.
 
@@ -162,6 +164,24 @@ def load_block_mat(matfpath):
                 scores = np.array(f['tEvokedResp'])    # shape = (imgs, channels)
             return imgids, scores
         except (KeyError, IOError, OSError):    # if broken mat file or unable to access
+            attempts += 1
+            if attempts % 100 == 0:
+                print('%d failed attempts to read .mat file' % attempts)
+            sleep(0.001)
+
+
+def load_block_mat_code(matfpath):
+    attempts = 0
+    while True:
+        try:
+            data = loadmat(matfpath)  # need the mat file to be saved in a older version
+            codes = data['codes']
+            ids = data['ids']
+            imgids = []
+            for id in ids[0]:
+                imgids.append(id[0])
+            return imgids, codes
+        except (KeyError, IOError, OSError):  # if broken mat file or unable to access
             attempts += 1
             if attempts % 100 == 0:
                 print('%d failed attempts to read .mat file' % attempts)
@@ -220,3 +240,416 @@ def sort_nicely(l):
     newl = l[:]
     newl.sort(key=alphanum_key)
     return newl
+
+#%% Dir name manipulation (for experimental code)
+
+
+def add_neuron_subdir(neuron, exp_dir):
+    ''' Add neuron name to the exp_dir, in the form of ('caffe-net', 'fc6', 30). (make the dir in case it doesn't exist) '''
+    if len(neuron) == 5:
+        subdir = '%s_%s_%04d_%d,%d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2], neuron[3], neuron[4])
+    else:
+        subdir = '%s_%s_%04d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2])
+    this_exp_dir = os.path.join(exp_dir, subdir)
+    for dir_ in (this_exp_dir,):
+        if not os.path.isdir(dir_):
+            os.mkdir(dir_)
+    return this_exp_dir
+
+
+def add_trial_subdir(neuron_dir, trial_title):
+    ''' Add trial title to the directory with neuron name on it (make the dir in case it doesn't exist) '''
+    trialdir = os.path.join(neuron_dir, trial_title)
+    if not os.path.isdir(trialdir):
+        os.mkdir(trialdir)
+    return trialdir
+#%% Code Geometrical Manipulation
+
+
+def simplex_interpolate(wvec, code_array):
+    '''Do simplex interpolate/extrapolate between several codes
+    Codes can be input in array (each row is a code) or in list
+    wvec: weight vector can be a scalar for 2 codes. or same length list / array for more codes.
+    '''
+    if type(code_array) is list:
+        code_array = np.asarray(code_array)
+    code_n = code_array.shape[0]
+    if np.isscalar(wvec):
+        w_vec = np.asarray([1-wvec, wvec])  # changed @oct.30th, 0 for the 1st vector, 1 for the 2nd vector
+    elif len(wvec) == code_n:
+        w_vec = np.asarray(wvec)
+    elif len(wvec) == code_n - 1:
+        w_vec = np.zeros(code_n)
+        w_vec[1:] = wvec
+        w_vec[0] = 1 - sum(w_vec[:-1])
+    else:
+        raise ValueError
+    code = w_vec @ code_array
+    return code
+#%%
+
+def scores_summary(CurDataDir, steps = 300, population_size = 40, regenerate=False):
+
+    ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
+    ImagefnTable = [[""] * population_size for i in range(steps)]
+    fncatalog = os.listdir(CurDataDir)
+    if "scores_summary_table.npz" in fncatalog and (not regenerate):
+        # if the summary table exist, just read from it!
+        with np.load(os.path.join(CurDataDir, "scores_summary_table.npz")) as data:
+            ScoreEvolveTable = data['ScoreEvolveTable']
+            ImagefnTable = data['ImagefnTable']
+        return ScoreEvolveTable, ImagefnTable
+    startnum = 0
+    for stepi in range(startnum, steps):
+        try:
+            with np.load(os.path.join(CurDataDir, "scores_end_block{0:03}.npz".format(stepi))) as data:
+                score_tmp = data['scores']
+                image_ids = data['image_ids']
+                ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
+                if stepi==0:
+                    image_fns = image_ids
+                else:
+                    image_fns = []
+                    for imgid in image_ids:
+                        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and ('.npy' in fn)]
+                        assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+                        image_fns.append(fn_tmp_list[0])
+                ImagefnTable[stepi][0:len(score_tmp)] = image_fns
+                # FIXME: 1st generation natural stimuli is not in the directory! so it's not possible to get the file name there. Here just put the codeid
+        except FileNotFoundError:
+            if stepi == 0:
+                startnum += 1
+                steps += 1
+                continue
+            else:
+                print("maximum steps is %d." % stepi)
+                ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
+                ImagefnTable = ImagefnTable[0:stepi]
+                steps = stepi
+                break
+        ImagefnTable = np.asarray(ImagefnTable)
+    savez(os.path.join(CurDataDir, "scores_summary_table.npz"),
+                {"ScoreEvolveTable": ScoreEvolveTable, "ImagefnTable": ImagefnTable})
+    return ScoreEvolveTable, ImagefnTable
+
+
+def select_image(CurDataDir, lb=None, ub=None, trial_rng = None):
+    '''Filter the Samples that has Score in a given range
+    Can be used to find level sets of activation function
+    trial_rng slice the trial number direction
+    '''
+    fncatalog = os.listdir(CurDataDir)
+    ScoreEvolveTable, ImageidTable = scores_summary(CurDataDir)
+    # it will automatic read the existing summary or generate one.
+    if ub is None:
+        ub = np.nanmax(ScoreEvolveTable)+1
+    if lb is None:
+        lb = np.nanmin(ScoreEvolveTable)-1
+    if trial_rng is not None:
+        assert type(trial_rng) is tuple
+        assert len(trial_rng) is 2
+        ScoreEvolveTable = ScoreEvolveTable[slice(*trial_rng), :]
+        ImageidTable = ImageidTable[slice(*trial_rng), :]
+    imgid_list = ImageidTable[np.logical_and(ScoreEvolveTable > lb, ScoreEvolveTable < ub)]
+    score_list = ScoreEvolveTable[np.logical_and(ScoreEvolveTable > lb, ScoreEvolveTable < ub)]
+    image_fn= []
+    for imgid in imgid_list:
+        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and '.npy' in fn]
+        assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+        image_fn.append(fn_tmp_list[0])
+    code_array = []
+    for imagefn in image_fn:
+        code = np.load(os.path.join(CurDataDir, imagefn), allow_pickle=False).flatten()
+        code_array.append(code.copy())
+        # img_tmp = utils.generator.visualize(code_tmp)
+    return code_array, score_list, imgid_list
+
+#%% Visualization Routines
+
+import matplotlib.pyplot as plt
+
+def visualize_score_trajectory(CurDataDir, steps=300, population_size=40, title_str="",
+                               save=False, exp_title_str='', savedir=''):
+    ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
+    startnum=0
+    for stepi in range(startnum, steps):
+        try:
+            with np.load(os.path.join(CurDataDir, "scores_end_block{0:03}.npz".format(stepi))) as data:
+                score_tmp = data['scores']
+                ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
+        except FileNotFoundError:
+            if stepi == 0:
+                startnum += 1
+                steps += 1
+                continue
+            else:
+                print("maximum steps is %d." % stepi)
+                ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
+                steps = stepi
+                break
+
+    gen_slice = np.arange(startnum, steps).reshape((-1, 1))
+    gen_num = np.repeat(gen_slice, population_size, 1)
+
+    AvgScore = np.nanmean(ScoreEvolveTable, axis=1)
+    MaxScore = np.nanmax(ScoreEvolveTable, axis=1)
+
+    figh = plt.figure()
+    plt.scatter(gen_num, ScoreEvolveTable, s=16, alpha=0.6, label="all score")
+    plt.plot(gen_slice, AvgScore, color='black', label="Average score")
+    plt.plot(gen_slice, MaxScore, color='red', label="Max score")
+    plt.xlabel("generation #")
+    plt.ylabel("CNN unit score")
+    plt.title("Optimization Trajectory of Score\n" + title_str)
+    plt.legend()
+    if save:
+        if savedir=='':
+            savedir = CurDataDir
+        plt.savefig(os.path.join(savedir, exp_title_str + "score_traj"))
+    plt.show()
+    return figh
+
+def visualize_score_trajectory_cmp (CurDataDir_list, steps=300, population_size=40, title_str_list="",
+                               save=False, exp_title_str='', savedir=''):
+    assert len(CurDataDir_list) == len(title_str_list)
+    figh = plt.figure()
+    for CurDataDir, title_str in zip(CurDataDir_list, title_str_list):
+        ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
+        startnum=0
+        for stepi in range(startnum, steps):
+            try:
+                with np.load(os.path.join(CurDataDir, "scores_end_block{0:03}.npz".format(stepi))) as data:
+                    score_tmp = data['scores']
+                    ScoreEvolveTable[stepi, :len(score_tmp)] = score_tmp
+            except FileNotFoundError:
+                if stepi == 0:
+                    startnum += 1
+                    steps += 1
+                    continue
+                else:
+                    print("maximum steps is %d." % stepi)
+                    ScoreEvolveTable = ScoreEvolveTable[0:stepi, :]
+                    steps = stepi
+                    break
+
+        gen_slice = np.arange(startnum, steps).reshape((-1, 1))
+        gen_num = np.repeat(gen_slice, population_size, 1)
+
+        AvgScore = np.nanmean(ScoreEvolveTable, axis=1)
+        MaxScore = np.nanmax(ScoreEvolveTable, axis=1)
+
+
+        plt.scatter(gen_num, ScoreEvolveTable, s=16, alpha=0.3, label="all score "+ title_str)
+        plt.plot(gen_slice, AvgScore, color='black', label="Average score")
+        plt.plot(gen_slice, MaxScore, color='red', label="Max score")
+
+    plt.xlabel("generation #")
+    plt.ylabel("CNN unit score")
+    plt.title("Optimization Trajectory of Score Comparison\n" + exp_title_str)
+    plt.legend()
+    if save:
+        if savedir=='':
+            savedir = CurDataDir
+        plt.savefig(os.path.join(savedir, exp_title_str + "score_traj"))
+    plt.show()
+    return figh
+
+
+def visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_title_str='', title_cmap=plt.cm.viridis, col_n=6, savedir=''):
+    '''
+    # CurDataDir:  "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/"
+    # block_num: the number of block to visualize 20
+    # title_cmap: define the colormap to do the code, plt.cm.viridis
+    # col_n: number of column in a plot 6
+    # FIXED: on Oct. 7th support new name format, and align the score are image correctly
+    '''
+    fncatalog = os.listdir(CurDataDir)
+    fn_score_gen = [fn for fn in fncatalog if
+                    (".npz" in fn) and ("score" in fn) and ("block{0:03}".format(block_num) in fn)]
+    assert len(fn_score_gen) is 1, "not correct number of score files"
+    with np.load(os.path.join(CurDataDir, fn_score_gen[0])) as data:
+        score_gen = data['scores']
+        image_ids = data['image_ids']
+    fn_image_gen = []
+    for imgid in image_ids:
+        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and '.bmp' in fn]
+        assert len(fn_tmp_list) is 1, "Image file not found or wrong Image file number"
+        fn_image_gen.append(fn_tmp_list[0])
+    image_num = len(fn_image_gen)
+
+    assert len(score_gen) is image_num, "image and score number do not match"
+    lb = score_gen.min()
+    ub = score_gen.max()
+    if ub == lb:
+        cmap_flag = False
+    else:
+        cmap_flag = True
+
+    row_n = np.ceil(image_num / col_n)
+    figW = 12
+    figH = figW / col_n * row_n + 1
+    # figs, axes = plt.subplots(int(row_n), col_n, figsize=[figW, figH])
+    fig = plt.figure(figsize=[figW, figH])
+    for i, imagefn in enumerate(fn_image_gen):
+        img_tmp = plt.imread(os.path.join(CurDataDir, imagefn))
+        score_tmp = score_gen[i]
+        plt.subplot(row_n, col_n, i + 1)
+        plt.imshow(img_tmp)
+        plt.xticks([])
+        plt.yticks([])
+        plt.axis('off')
+        if cmap_flag:  # color the titles with a heatmap!
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16,
+                      color=title_cmap((score_tmp - lb) / (ub - lb)))  # normalize a value between [0,1]
+        else:
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+
+    plt.suptitle(exp_title_str + "Block{0:03}".format(block_num), fontsize=16)
+    plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
+    if save:
+        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+    plt.show()
+    return fig
+
+from Generator import Generator
+generator = Generator()
+def gen_visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_title_str='', title_cmap=plt.cm.viridis, col_n=6, savedir=''):
+    '''
+    # CurDataDir:  "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/"
+    # block_num: the number of block to visualize 20
+    # title_cmap: define the colormap to do the code, plt.cm.viridis
+    # col_n: number of column in a plot 6
+    # FIXED: on Oct. 7th support new name format, and align the score are image correctly
+    '''
+    fncatalog = os.listdir(CurDataDir)
+    fn_score_gen = [fn for fn in fncatalog if
+                    (".npz" in fn) and ("score" in fn) and ("block{0:03}".format(block_num) in fn)]
+    assert len(fn_score_gen) is 1, "not correct number of score files"
+    with np.load(os.path.join(CurDataDir, fn_score_gen[0])) as data:
+        score_gen = data['scores']
+        image_ids = data['image_ids']
+    fn_image_gen = []
+    for imgid in image_ids:
+        fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and '.npy' in fn]
+        assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+        fn_image_gen.append(fn_tmp_list[0])
+    image_num = len(fn_image_gen)
+
+    assert len(score_gen) is image_num, "image and score number do not match"
+    lb = score_gen.min()
+    ub = score_gen.max()
+    if ub == lb:
+        cmap_flag = False
+    else:
+        cmap_flag = True
+
+    row_n = np.ceil(image_num / col_n)
+    figW = 12
+    figH = figW / col_n * row_n + 1
+    fig = plt.figure(figsize=[figW, figH])
+    for i, imagefn in enumerate(fn_image_gen):
+        code_tmp = np.load(os.path.join(CurDataDir, imagefn), allow_pickle=False).flatten()
+        img_tmp = generator.visualize(code_tmp)
+        # img_tmp = plt.imread(os.path.join(CurDataDir, imagefn))
+        score_tmp = score_gen[i]
+        plt.subplot(row_n, col_n, i + 1)
+        plt.imshow(img_tmp)
+        plt.xticks([])
+        plt.yticks([])
+        plt.axis('off')
+        if cmap_flag:  # color the titles with a heatmap!
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16,
+                      color=title_cmap((score_tmp - lb) / (ub - lb)))  # normalize a value between [0,1]
+        else:
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+
+    plt.suptitle(exp_title_str + "\nBlock{0:03}".format(block_num), fontsize=16)
+    plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
+    if save:
+        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+    plt.show()
+    return fig
+
+
+def visualize_all(CurDataDir, save=True, title_str=''):
+    SaveImgDir = os.path.join(CurDataDir, "sum_img/")
+    if not os.path.isdir(SaveImgDir):
+        os.mkdir(SaveImgDir)
+    for num in range(1, 301):
+        try:
+            fig = visualize_image_score_each_block(CurDataDir, block_num=num,
+                                                         save=save, savedir=SaveImgDir, exp_title_str=title_str)
+            fig.clf()
+        except AssertionError:
+            print("Show and Save %d number of image visualizations. " % (num) )
+            break
+    visualize_score_trajectory(CurDataDir, title_str="Normal_CNN: No noise",
+                                     save=save, savedir=SaveImgDir, exp_title_str=title_str)
+
+
+def cmp_image_score_across_trial(neuron_dir, trial_list, vis_image_num=10, block_num = 299,
+                                 exp_title_str="Method evolving result compare", save=False, savedir=''):
+    ''' Generated image comparison across different methods.
+    neuron_dir = "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0010/"
+    trial_list = ['choleskycma_sgm3_trial2', 'choleskycma_sgm1_trial2', 'choleskycma_sgm3_uf10_trial0', 'choleskycma_sgm3_uf5_trial0', 'cma_trial0_noeig_sgm5', 'genetic_trial0']
+    vis_image_num : how many images to show in a row
+    block_num : the image block to show.
+    '''
+    figW = vis_image_num * 2.5
+    figH = len(trial_list) * 2.5 + 1
+    col_n = vis_image_num
+    row_n = len(trial_list)
+    fig = plt.figure(figsize=[figW, figH])
+    for trial_j, trial_title in enumerate(trial_list):
+        CurDataDir = os.path.join(neuron_dir, trial_title)
+        fncatalog = os.listdir(CurDataDir)
+        fn_score_gen = [fn for fn in fncatalog if
+                        (".npz" in fn) and ("score" in fn) and ("block{0:03}".format(block_num) in fn)]
+        assert len(fn_score_gen) is 1, "not correct number of score files"
+        with np.load(os.path.join(CurDataDir, fn_score_gen[0])) as data:
+            score_gen = data['scores']
+            image_ids = data['image_ids']
+        idx = np.argsort(
+            - score_gen)  # Note the minus sign for best scores sorting. use positive sign for worst score sorting
+        score_gen = score_gen[idx]
+        image_ids = image_ids[idx]
+        fn_image_gen = []
+        use_img = not (len([fn for fn in fncatalog if (image_ids[0] in fn) and ('.bmp' in fn)]) == 0)
+        # True, if there is bmp rendered files. False, if there is only code, we have to render it through Generator
+        for imgid in image_ids[0: vis_image_num]:
+            if use_img:
+                fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and ('.bmp' in fn)]
+                assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+                fn_image_gen.append(fn_tmp_list[0])
+            if not use_img:
+                fn_tmp_list = [fn for fn in fncatalog if (imgid in fn) and ('.npy' in fn)]
+                assert len(fn_tmp_list) is 1, "Code file not found or wrong Code file number"
+                fn_image_gen.append(fn_tmp_list[0])
+        image_num = len(fn_image_gen)
+        for i, imagefn in enumerate(fn_image_gen):
+            if use_img:
+                img_tmp = plt.imread(os.path.join(CurDataDir, imagefn))
+            else:
+                code_tmp = np.load(os.path.join(CurDataDir, imagefn), allow_pickle=False).flatten()
+                img_tmp = generator.visualize(code_tmp)
+            score_tmp = score_gen[i]
+            plt.subplot(row_n, col_n, trial_j * col_n + i + 1)
+            plt.imshow(img_tmp)
+            plt.xticks([])
+            plt.yticks([])
+            if i == 0:
+                plt.ylabel(trial_title)
+            else:
+                plt.axis('off')
+            plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+            # if cmap_flag:  # color the titles with a heatmap!
+            #     plt.title("{0:.2f}".format(score_tmp), fontsize=16,
+            #               color=title_cmap((score_tmp - lb) / (ub - lb)))  # normalize a value between [0,1]
+            # else:
+            #     plt.title("{0:.2f}".format(score_tmp), fontsize=16)
+
+    plt.suptitle(exp_title_str + "\nBlock{0:03}".format(block_num), fontsize=16)
+    if save:
+        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+    plt.show()
+    return fig

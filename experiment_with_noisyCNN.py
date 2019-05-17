@@ -19,7 +19,7 @@ target_neuron = ('caffe-net', 'fc6', 1)
 homedir = os.path.expanduser('~')
 initcodedir = os.path.join(homedir, 'Documents/stimuli/texture006')
 natstimdir = os.path.join(homedir, 'Documents/stimuli/natimages-guapoCh9')
-blockwritedir = os.path.join(homedir, 'Documents/data/with_CNN_noisy')  # add indicator
+blockwritedir = os.path.join(homedir, 'Documents/data/with_CNN_noisy_gauss_5')  # add indicator
 for dir_ in (blockwritedir, ):
     if not os.path.isdir(dir_):
         os.mkdir(dir_)
@@ -39,7 +39,7 @@ random_seed = 0
 n_natural_stimuli = 40
 #   Note Param for noise generator
 noise_scheme = "norm"
-noise_param = {'loc': 0, 'scale': 3}# (0, 1)
+noise_param = {'loc': 0, 'scale': 5}  # (0, 3)
 noise_rand_seed = 0
 
 # auto assign directory

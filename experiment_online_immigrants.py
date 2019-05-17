@@ -1,5 +1,5 @@
 from ExperimentBase import ExperimentBase
-from Optimizer import Genetic
+from Optimizer import Genetic, CholeskyCMAES
 from Scorer import EPhysScorer
 from utils import set_dynamic_parameters_by_file, write_dynamic_parameters_to_file
 import numpy as np
@@ -47,8 +47,11 @@ immi_size = 10
 #   for overall
 random_seed = 0             # seed for all random generators used in the experiment (to ensure reproducibility)
 n_natural_stimuli = None    # number of natural stimuli to show; None means default to however many is in natstimdir
-
-
+#   for cholesky cmaes optimizer
+# init_sigma = 3
+# Aupdate_freq = 10
+# init_code = None
+# code_length = 4096
 class OnlineWithImmigrationExperiment(ExperimentBase):
     def __init__(self, logdir, random_seed=None):
         super(OnlineWithImmigrationExperiment, self).__init__(logdir, random_seed)
@@ -62,6 +65,8 @@ class OnlineWithImmigrationExperiment(ExperimentBase):
         optimizer = Genetic(population_size=population_size, mutation_rate=mutation_rate, mutation_size=mutation_size,
                             n_conserve=n_conserve, kT_multiplier=kT_multiplier, parental_skew=parental_skew,
                             random_seed=random_seed, recorddir=recorddir)
+        # optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma,
+        #                           init_code=init_code, Aupdate_freq=Aupdate_freq)
         optimizer.load_init_population(initcodedir, size=population_size)
         optimizer.save_init_population()
         scorer = EPhysScorer(writedir=blockwritedir, backupdir=recorddir, respdir=matdir,

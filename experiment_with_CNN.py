@@ -1,9 +1,12 @@
 import os
 from time import time
 import numpy as np
-from CNNScorer import WithIOCNNScorer
+from CNNScorer import WithIOCNNScorer, NoIOCNNScorer
 from ExperimentBase import ExperimentBase
 from Optimizer import Genetic
+
+# import importlib
+# importlib.reload(NoIOCNNScorer)  # Reload the modules after changing them, or they will not affect the codes.
 
 np.set_printoptions(precision=4, suppress=True)
 
@@ -19,23 +22,6 @@ homedir = os.path.expanduser('~')
 initcodedir = os.path.join(homedir, 'Documents/stimuli/texture006')
 natstimdir = os.path.join(homedir, 'Documents/stimuli/natimages-guapoCh9')
 blockwritedir = os.path.join(homedir, 'Documents/data/with_CNN')
-recorddir = os.path.join(blockwritedir, 'backup')
-
-# set parameters
-#   for scorer, which does image I/O
-image_size = 83
-# target_neuron = ('caffe-net', 'fc8', 1)
-#   for optimizer
-population_size = 36
-mutation_rate = 0.25
-mutation_size = 0.75
-kT_multiplier = 2
-n_conserve = 10
-parental_skew = 0.75
-#   for overall
-max_steps = 300
-random_seed = 0
-n_natural_stimuli = 40
 
 # auto assign directory
 neuron = target_neuron
@@ -43,8 +29,7 @@ if len(neuron) == 5:
     subdir = '%s_%s_%04d_%d,%d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2], neuron[3], neuron[4])
 else:
     subdir = '%s_%s_%04d' % (neuron[0], neuron[1].replace('/', '_'), neuron[2])
-# natstimdir = os.path.join(natstimdir, subdir)
-blockwritedir = os.path.join(blockwritedir, subdir)
+blockwritedir = os.path.join(blockwritedir, subdir)  # specific to the neuron and to the experimental code
 recorddir = os.path.join(blockwritedir, 'backup')
 
 # make dir if needed
@@ -58,8 +43,27 @@ for dir_ in (initcodedir, natstimdir, blockwritedir, recorddir):
         raise OSError('directory not found: %s' % dir_)
 
 
+# set parameters
+#   for scorer, which does image I/O
+image_size = 83
+# target_neuron = ('caffe-net', 'fc8', 1)
+
+#   for optimizer
+population_size = 36
+mutation_rate = 0.25
+mutation_size = 0.75
+kT_multiplier = 2
+n_conserve = 10
+parental_skew = 0.75
+
+#   for overall
+max_steps = 300
+n_natural_stimuli = 40
+
+random_seed = 0
+
 class WithCNNExperiment(ExperimentBase):
-    def __init__(self, logdir, random_seed=None):
+    def __init__(self, recorddir, logdir, random_seed=None):
         super(WithCNNExperiment, self).__init__(logdir, random_seed)
 
         # initialize optimizer and scorer
@@ -68,9 +72,10 @@ class WithCNNExperiment(ExperimentBase):
                             random_seed=random_seed, recorddir=recorddir)
         optimizer.load_init_population(initcodedir, size=population_size)
         optimizer.save_init_population()
-        scorer = WithIOCNNScorer(target_neuron=target_neuron, writedir=blockwritedir, backupdir=recorddir,
-                                 image_size=image_size, random_seed=random_seed)
-        self.attach_optimizer(optimizer) # TODO: Maybe we can attach more than one optimizer here?
+        # scorer = WithIOCNNScorer(target_neuron=target_neuron, writedir=blockwritedir, backupdir=recorddir,
+        #                          image_size=image_size, random_seed=random_seed, record_pattern=True)
+        scorer = NoIOCNNScorer(target_neuron=target_neuron, writedir=recorddir, record_pattern=True)
+        self.attach_optimizer(optimizer)  # TODO: Maybe we can attach more than one optimizer here?
         self.attach_scorer(scorer)
 
         # load & backup_images natural stimuli
@@ -97,6 +102,13 @@ class WithCNNExperiment(ExperimentBase):
         # use results to update optimizer
         self.optimizer.step(synscores)`
 
+        Note:
+        The only methods that a `scorer` module should get are
+            `scorer.score(stimuli, stimuli_ids)`,
+            `scorer.save_current_scores()`
+            `scorer.load_classifier()`
+        So to realize a `scorer` class just make these 3 functions. that's enough
+
         '''
         self.load_nets()    # nets are not loaded in __init__; this enables exp to be run with multiprocessing
         self.istep = 0
@@ -121,7 +133,8 @@ class WithCNNExperiment(ExperimentBase):
                 synscores = self.scorer.score(self.optimizer.current_images, self.optimizer.current_image_ids)
                 t1 = time()
                 # before update, backup_images codes (optimizer) and scores (scorer)
-                self.optimizer.save_current_codes()
+                # self.optimizer.save_current_codes()  # current code only save code.
+                self.optimizer.save_current_state()  # current state save code and image
                 self.optimizer.save_current_genealogy()
                 self.scorer.save_current_scores()
                 t2 = time()
@@ -137,7 +150,30 @@ class WithCNNExperiment(ExperimentBase):
             self.logger.flush()
             self.istep += 1
 
+import utils
+
+def visualize_all(CurDataDir, save=True, title_str=''):
+    SaveImgDir = os.path.join(CurDataDir, "sum_img/")
+    if not os.path.isdir(SaveImgDir):
+        os.mkdir(SaveImgDir)
+    for num in range(1, 301):
+        try:
+            fig = utils.visualize_image_score_each_block(CurDataDir, block_num=num,
+                                                         save=save, savedir=SaveImgDir, exp_title_str=title_str)
+            fig.clf()
+        except AssertionError:
+            print("Show and Save %d number of image visualizations. " % (num) )
+            break
+    utils.visualize_score_trajectory(CurDataDir, title_str="Normal_CNN: No noise",
+                                     save=save, savedir=SaveImgDir, exp_title_str=title_str)
+
 
 if __name__ == '__main__':
-    experiment = WithCNNExperiment(logdir=recorddir, random_seed=random_seed)
-    experiment.run()
+    for i in range(20):
+        trialdir = os.path.join(blockwritedir, 'trial%d'%(i))
+        if not os.path.isdir(trialdir):
+            os.mkdir(trialdir)
+        experiment = WithCNNExperiment(recorddir=trialdir, logdir=trialdir, random_seed=int(time()))  # random_seed)
+        experiment.run()
+        visualize_all(trialdir)
+#%% Multiple trials

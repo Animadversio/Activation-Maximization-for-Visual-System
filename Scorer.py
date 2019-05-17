@@ -75,9 +75,10 @@ class BlockWriter:
             print('random seed set to %d for %s' % (random_seed, self.__class__.__name__))
 
     def cleanup(self):
+        '''clean up every .bmp file in `writedir` '''
         for image_fn in [fn for fn in os.listdir(self._writedir) if '.bmp' in fn]:
             try:
-                if self._cleanupdir is None:
+                if self._cleanupdir is None:  # if there is a cleanup cache, then move, or just remove
                     os.remove(os.path.join(self._writedir, image_fn))
                 else:
                     shutil.move(os.path.join(self._writedir, image_fn), os.path.join(self._cleanupdir, image_fn))
@@ -116,6 +117,7 @@ class BlockWriter:
         block_imgfns = ['%s_%s.bmp' % (blockid, imgid) for blockid, imgid in zip(block_ids, block_imgids)]
         imgfn_2_imgid = {name: imgid for name, imgid in zip(block_imgfns, block_imgids)}
         utils.write_images(block_images, block_imgfns, self._writedir, self._imsize)
+        #  the order of `block_ids` is not the same as `imgid` !
 
         self._curr_block_imgfns = block_imgfns
         self._imgfn_2_imgid = imgfn_2_imgid
@@ -123,6 +125,7 @@ class BlockWriter:
         return imgfn_2_imgid
 
     def backup_images(self):
+        '''copy image from _writedir to _backupdir'''
         for imgfn in self._curr_block_imgfns:
             try:
                 shutil.copyfile(os.path.join(self._writedir, imgfn), os.path.join(self._backupdir, imgfn))
@@ -183,6 +186,8 @@ class WithIOScorer(Scorer):
         self._verbose = False
 
     def score(self, images, image_ids):
+        '''Input all images and corresponding identifier, '''
+        # Parameter Validity testing
         nimgs = len(images)
         assert len(image_ids) == nimgs
         if self._blockwriter.block_size is not None:
@@ -201,7 +206,8 @@ class WithIOScorer(Scorer):
         self._curr_listscores = [[] for _ in range(nimgs)]
         self._curr_cumuscores = np.zeros((nimgs, *self._score_shape), dtype='float')
         self._curr_nscores = np.zeros(nimgs, dtype='int')
-        while not blockwriter.done:  # iterate until all images has been shown `blockwriter._reps` times to Scorer
+        while not blockwriter.done:
+            # iterate until all images has been shown `blockwriter._reps` times to Scorer
             t0 = time()
 
             self._curr_imgfn_2_imgid = blockwriter.write_block()
@@ -272,6 +278,12 @@ class WithIOScorer(Scorer):
         save_kwargs = {'image_ids': self._curr_imgids, 'scores': self._curr_scores,
                        'scores_mat': self._curr_scores_mat, 'nscores': self._curr_nscores}
         print('saving scores to %s' % savefpath)
+        utils.save_scores(savefpath, save_kwargs)
+
+    def save_block_stats(self, save_kwargs, namestr):
+        '''More general version of save_current_scores. save anything you like'''
+        savefpath = os.path.join(self._backupdir, '%s_block%03d.npz' % (namestr, self._blockwriter.iblock) )
+        print('saving %s to %s' % (namestr, savefpath))
         utils.save_scores(savefpath, save_kwargs)
 
         
