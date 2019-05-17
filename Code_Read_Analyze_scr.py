@@ -5,6 +5,8 @@ import importlib
 import os
 importlib.reload(utils)  # Reload the modules after changing them, or they will not affect the codes.
 
+
+#%%
 utils.load_codes("/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/", 10)
 utils.load_codes_search("/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/", "gen100")
 
