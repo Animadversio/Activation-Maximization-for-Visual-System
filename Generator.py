@@ -18,3 +18,7 @@ class Generator:
         x = self._detransformer.deprocess('data', x)
         x = np.clip(x, 0, 1)  # use clip to bound all the image output in interval [0,1]
         return (x * 255).astype('uint8')  # rescale to uint in [0,255]
+
+    def raw_output(self, code):
+        x = self._GNN.forward(feat=code.reshape(-1, 4096))['deconv0']
+        return x
