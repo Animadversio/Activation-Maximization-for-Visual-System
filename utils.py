@@ -287,6 +287,22 @@ def simplex_interpolate(wvec, code_array):
     code = w_vec @ code_array
     return code
 #%%
+def codes_summary(codedir, savefile=False):
+    """ unlike load_codes, also returns name of load """
+    # make sure enough codes for requested size
+    codefns = sorted([fn for fn in os.listdir(codedir) if '.npy' in fn])
+    codes = []
+    generations = []
+    for codefn in codefns:
+        code = np.load(os.path.join(codedir, codefn), allow_pickle=False).flatten()
+        codes.append(code)
+        geni = re.findall(r"gen(\d+)_\d+", codefn)
+        generations.append(int(geni[0]))
+    codes = np.array(codes)
+    generations = np.array(generations)
+    if savefile:
+        np.savez(os.path.join(codedir, "codes_all.npz"), codes_all=codes, generations=generations)
+    return codes, generations
 
 def scores_summary(CurDataDir, steps = 300, population_size = 40, regenerate=False):
 

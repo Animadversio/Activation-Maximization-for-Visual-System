@@ -593,7 +593,7 @@ class CholeskyCMAES(Optimizer):
     #         step()
     """ Note this is a variant of CMAES Cholesky suitable for high dimensional optimization"""
     def __init__(self, recorddir, space_dimen, init_sigma=None, init_code=None, population_size=None, Aupdate_freq=None,
-                 maximize=True, random_seed=None, thread=None):
+                 maximize=True, random_seed=None, thread=None, optim_params={}):
         super(CholeskyCMAES, self).__init__(recorddir, random_seed, thread)
         # --------------------  Initialization --------------------------------
         # assert len(initX) == N or initX.size == N
@@ -629,9 +629,15 @@ class CholeskyCMAES(Optimizer):
         # self.c1 = 2 / ((N + 1.3) ** 2 + mueff)  # learning rate for rank-one update of C
         # self.cmu = min(1 - self.c1, 2 * (mueff - 2 + 1 / mueff) / ((N + 2) ** 2 + mueff))  # and for rank-mu update
         # self.damps = 1 + 2 * max(0, sqrt((mueff - 1) / (N + 1)) - 1) + self.cs  # damping for sigma
-        self.cc = 4 / (N + 4)
-        self.cs = sqrt(mueff) / (sqrt(mueff) + sqrt(N))
-        self.c1 = 2 / (N + sqrt(2)) ** 2
+        self.cc = 4 / (N + 4)  # defaultly  0.0009756
+        self.cs = sqrt(mueff) / (sqrt(mueff) + sqrt(N))  # 0.0499
+        self.c1 = 2 / (N + sqrt(2)) ** 2  # 1.1912701410022985e-07
+        if "cc" in optim_params.keys():  # if there is outside value for these parameter, overwrite them
+            self.cc = optim_params["cc"]
+        if "cs" in optim_params.keys():
+            self.cs = optim_params["cs"]
+        if "c1" in optim_params.keys():
+            self.c1 = optim_params["c1"]
         self.damps = 1 + self.cs + 2 * max(0, sqrt((mueff - 1) / (N + 1)) - 1)  # damping for sigma usually  close to 1
 
         print("cc=%.3f, cs=%.3f, c1=%.3f damps=%.3f" % (self.cc, self.cs, self.c1, self.damps))
