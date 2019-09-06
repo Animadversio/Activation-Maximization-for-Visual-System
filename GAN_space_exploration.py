@@ -102,6 +102,10 @@ plt.show()
 plt.scatter(codes_all[3500, :], codes_all[4000, :])
 plt.show()
 #%%
-plt.pcolor(codes_all)
+plt.figure(figsize=[8, 10])
+plt.pcolor(codes_all.transpose())
+plt.xlabel("Image id by generation")
+plt.ylabel("code_entry")
 plt.show()
-plt.axes()
+
+
