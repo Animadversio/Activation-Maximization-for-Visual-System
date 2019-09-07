@@ -108,4 +108,4 @@ plt.xlabel("Image id by generation")
 plt.ylabel("code_entry")
 plt.show()
 
-
+#%%
