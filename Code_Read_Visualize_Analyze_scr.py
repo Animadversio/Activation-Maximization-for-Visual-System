@@ -754,3 +754,6 @@ fig=utils.visualize_score_trajectory_cmp(CurDataDir_list=[neuron_dir+trial_title
                                      save=True, savedir=neuron_dir)
 fig.set_size_inches(8,6)
 fig.show()
+
+#%%
+

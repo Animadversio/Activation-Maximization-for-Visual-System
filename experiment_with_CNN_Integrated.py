@@ -580,26 +580,84 @@ if __name__ == '__main__':
     #     experiment.run()
     #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
     #     utils.gen_visualize_image_score_each_block(trialdir, block_num=298, exp_title_str=trial_title,save=True,savedir=trialdir)
-    neuron = ('caffe-net', 'fc8', 1)
-    this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+    #%% Test Gold fish neuron with different momentum
+    # neuron = ('caffe-net', 'fc8', 1)
+    # this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+    #
+    # optim_params = {}
+    # random_seed = int(time())
+    # trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (0.00097, 0.0499)
+    # trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    # experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
+    #                                     optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10, optim_params=optim_params,
+    #                                     random_seed=random_seed, saveimg=False, record_pattern=False, )
+    # experiment.run()
+    # utils.codes_summary(trialdir, True)
+    # utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    # utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
+    #
+    # optim_params = {'cc': 1 / 100, 'cs': 1 / 10}
+    # random_seed = int(time())
+    # trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
+    # trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    # experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
+    #                                     optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+    #                                     optim_params=optim_params,
+    #                                     random_seed=random_seed, saveimg=False, record_pattern=False, )
+    # experiment.run()
+    # utils.codes_summary(trialdir, True)
+    # utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    # utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
+    #
+    # optim_params = {'cc': 1 / 10, 'cs': 1 / 10}
+    # random_seed = int(time())
+    # trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
+    # trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    # experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
+    #                                     optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+    #                                     optim_params=optim_params,
+    #                                     random_seed=random_seed, saveimg=False, record_pattern=False, )
+    # experiment.run()
+    # utils.codes_summary(trialdir, True)
+    # utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    # utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
+    #
+    # optim_params = {'cc': 1 / 10, 'cs': 1 / 5}
+    # random_seed = int(time())
+    # trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
+    # trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    # experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
+    #                                     optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+    #                                     optim_params=optim_params,
+    #                                     random_seed=random_seed, saveimg=False, record_pattern=False, )
+    # experiment.run()
+    # utils.codes_summary(trialdir, True)
+    # utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    # utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
+    #
+    # optim_params = {'cc': 1 / 5, 'cs': 1 / 3}
+    # random_seed = int(time())
+    # trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
+    # trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    # experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
+    #                                     optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+    #                                     optim_params=optim_params,
+    #                                     random_seed=random_seed, saveimg=False, record_pattern=False, )
+    # experiment.run()
+    # utils.codes_summary(trialdir, True)
+    # utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    # utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
 
-    optim_params = {}
+
+    #%%  Pure noise experiment
+    neuron = None
+    this_exp_dir = os.path.join(exp_dir, "purenoise")
+
+    optim_params = {} # Original case
     random_seed = int(time())
     trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (0.00097, 0.0499)
     trialdir = add_trial_subdir(this_exp_dir, trial_title)
     experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
-                                        optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10, optim_params=optim_params,
-                                        random_seed=random_seed, saveimg=False, record_pattern=False, )
-    experiment.run()
-    utils.codes_summary(trialdir, True)
-    utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-    utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
-
-    optim_params = {'cc': 1 / 100, 'cs': 1 / 10}
-    random_seed = int(time())
-    trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
-    trialdir = add_trial_subdir(this_exp_dir, trial_title)
-    experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
                                         optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
                                         optim_params=optim_params,
                                         random_seed=random_seed, saveimg=False, record_pattern=False, )
@@ -608,41 +666,20 @@ if __name__ == '__main__':
     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
     utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
 
-    optim_params = {'cc': 1 / 10, 'cs': 1 / 10}
-    random_seed = int(time())
-    trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
-    trialdir = add_trial_subdir(this_exp_dir, trial_title)
-    experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
-                                        optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
-                                        optim_params=optim_params,
-                                        random_seed=random_seed, saveimg=False, record_pattern=False, )
-    experiment.run()
-    utils.codes_summary(trialdir, True)
-    utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-    utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
-
-    optim_params = {'cc': 1 / 10, 'cs': 1 / 5}
-    random_seed = int(time())
-    trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
-    trialdir = add_trial_subdir(this_exp_dir, trial_title)
-    experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
-                                        optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
-                                        optim_params=optim_params,
-                                        random_seed=random_seed, saveimg=False, record_pattern=False, )
-    experiment.run()
-    utils.codes_summary(trialdir, True)
-    utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-    utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
-
-    optim_params = {'cc': 1 / 5, 'cs': 1 / 3}
-    random_seed = int(time())
-    trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
-    trialdir = add_trial_subdir(this_exp_dir, trial_title)
-    experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
-                                        optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
-                                        optim_params=optim_params,
-                                        random_seed=random_seed, saveimg=False, record_pattern=False, )
-    experiment.run()
-    utils.codes_summary(trialdir, True)
-    utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-    utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
+    optim_params_list = [{'cc': 1 / 100, 'cs': 1 / 10},
+                         {'cc': 1 / 10, 'cs': 1 / 10},
+                         {'cc': 1 / 10, 'cs': 1 / 5},
+                         {'cc': 1 / 5, 'cs': 1 / 3}]
+    for optim_params in optim_params_list:
+        random_seed = int(time())
+        trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
+        trialdir = add_trial_subdir(this_exp_dir, trial_title)
+        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
+                                            optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+                                            optim_params=optim_params,
+                                            random_seed=random_seed, saveimg=False, record_pattern=False, )
+        experiment.run()
+        utils.codes_summary(trialdir, True)
+        utils.scores_imgname_summary(trialdir, True)
+        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+        utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)

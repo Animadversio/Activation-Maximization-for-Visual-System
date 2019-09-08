@@ -304,8 +304,35 @@ def codes_summary(codedir, savefile=False):
         np.savez(os.path.join(codedir, "codes_all.npz"), codes_all=codes, generations=generations)
     return codes, generations
 
-def scores_summary(CurDataDir, steps = 300, population_size = 40, regenerate=False):
+def scores_imgname_summary(trialdir, savefile=True):
+    """ """
+    if "scores_all.npz" in os.listdir(trialdir):
+        # if the summary table exist, just read from it!
+        with np.load(os.path.join(trialdir, "scores_all.npz")) as data:
+            scores = data["scores"]
+            generations = data["generations"]
+            image_ids = data["image_ids"]
+        return scores, image_ids, generations
 
+    scorefns = sorted([fn for fn in os.listdir(trialdir) if '.npz' in fn and 'scores_end_block' in fn])
+    scores = []
+    generations = []
+    image_ids = []
+    for scorefn in scorefns:
+        geni = re.findall(r"scores_end_block(\d+).npz", scorefn)
+        scoref = np.load(os.path.join(trialdir, scorefn), allow_pickle=False)
+        cur_score = scoref['scores']
+        scores.append(cur_score)
+        image_ids.extend(list(scoref['image_ids']))
+        generations.extend([int(geni[0])] * len(cur_score))
+    scores = np.array(scores)
+    generations = np.array(generations)
+    if savefile:
+        np.savez(os.path.join(trialdir, "scores_all.npz"), scores=scores, generations=generations, image_ids=image_ids)
+    return scores, image_ids, generations
+
+def scores_summary(CurDataDir, steps = 300, population_size = 40, regenerate=False):
+    """Obsolete for the one above! better and more automatic"""
     ScoreEvolveTable = np.full((steps, population_size,), np.NAN)
     ImagefnTable = [[""] * population_size for i in range(steps)]
     fncatalog = os.listdir(CurDataDir)

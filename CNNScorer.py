@@ -212,17 +212,21 @@ class NoIOCNNScorer(Scorer):
         """
         super(NoIOCNNScorer, self).__init__(writedir)  # writedir goes to self._backupdir
         # parse `target_neuron` parameter syntax i.e. `('caffe-net', 'fc8', 1)`
-        self._classifier_name = str(target_neuron[0])
-        self._net_layer = str(target_neuron[1])
-        # `self._net_layer` is used to determine which layer to stop forwarding
-        self._net_iunit = int(target_neuron[2])
-        # this index is used to extract the scalar response `self._net_iunit`
-        if len(target_neuron) == 5:
-            self._net_unit_x = int(target_neuron[3])
-            self._net_unit_y = int(target_neuron[4])
+        if target_neuron == None:
+            self._purenoise = True
         else:
-            self._net_unit_x = None
-            self._net_unit_y = None
+            self._purenoise = False
+            self._classifier_name = str(target_neuron[0])
+            self._net_layer = str(target_neuron[1])
+            # `self._net_layer` is used to determine which layer to stop forwarding
+            self._net_iunit = int(target_neuron[2])
+            # this index is used to extract the scalar response `self._net_iunit`
+            if len(target_neuron) == 5:
+                self._net_unit_x = int(target_neuron[3])
+                self._net_unit_y = int(target_neuron[4])
+            else:
+                self._net_unit_x = None
+                self._net_unit_y = None
 
         self.record_pattern = record_pattern  # control if record the activation pattern of the whole layer
         self._pattern_array = None  # record activation pattern
@@ -282,10 +286,11 @@ class NoIOCNNScorer(Scorer):
         # input("Press any key to confirm the noise setting.")
 
     def load_classifier(self):
-        classifier = net_utils.load(self._classifier_name)
-        transformer = net_utils.get_transformer(classifier, scale=1)
-        self._classifier = classifier
-        self._transformer = transformer
+        if self._purenoise == False:
+            classifier = net_utils.load(self._classifier_name)
+            transformer = net_utils.get_transformer(classifier, scale=1)
+            self._classifier = classifier
+            self._transformer = transformer
 
     def noise_generator(self, shape=1):
         return self.noise_dist.rvs(size=shape)
@@ -304,25 +309,28 @@ class NoIOCNNScorer(Scorer):
         if self.record_pattern:
             self._pattern_array = [None] * nimgs
 
-        for i, img in enumerate(images):
-            # Note: now only support single repetition
-            tim = self._transformer.preprocess('data', img)  # shape=(3, 227, 227)
-            self._classifier.blobs['data'].data[...] = tim
-            self._classifier.forward(end=self._net_layer)  # propagate the image the target layer
+        if not self._purenoise:  # if not pure noise
+            for i, img in enumerate(images):
+                # Note: now only support single repetition
+                tim = self._transformer.preprocess('data', img)  # shape=(3, 227, 227)
+                self._classifier.blobs['data'].data[...] = tim
+                self._classifier.forward(end=self._net_layer)  # propagate the image the target layer
 
-            if self.record_pattern:  # record the whole layer's activation
-                score_full = self._classifier.blobs[self._net_layer].data[0, :]
-                # self._pattern_array.append(score_full)
-                self._pattern_array[i] = score_full.copy()
+                if self.record_pattern:  # record the whole layer's activation
+                    score_full = self._classifier.blobs[self._net_layer].data[0, :]
+                    # self._pattern_array.append(score_full)
+                    self._pattern_array[i] = score_full.copy()
 
-            # record only the neuron intended
-            score = self._classifier.blobs[self._net_layer].data[0, self._net_iunit]
+                # record only the neuron intended
+                score = self._classifier.blobs[self._net_layer].data[0, self._net_iunit]
 
-            if self._net_unit_x is not None:
-                # if `self._net_unit_x/y` (inside dimension) are provided, then use them to slice the output score
-                score = score[self._net_unit_x, self._net_unit_y]
+                if self._net_unit_x is not None:
+                    # if `self._net_unit_x/y` (inside dimension) are provided, then use them to slice the output score
+                    score = score[self._net_unit_x, self._net_unit_y]
 
-            scores[i] = score
+                scores[i] = score
+        else:
+            pass  # if it's pure noise then it's all zero
         if self._addnoise is True:
             scores = scores + self.noise_generator(scores.shape)  # TOCHECK
         self._curr_scores = scores

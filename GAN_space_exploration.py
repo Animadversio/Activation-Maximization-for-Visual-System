@@ -3,22 +3,21 @@ import os
 import numpy as np
 from  scipy.io import loadmat
 from shutil import copy, copyfile
-from utils import generator
-from Optimizer import CMAES, Genetic, CholeskyCMAES
+from utils import generator, add_trial_subdir
+# from Optimizer import CMAES, Genetic, CholeskyCMAES
 from cv2 import imread, imwrite
 import matplotlib.pylab as plt
+import re
 #%%
-
 matdata = loadmat(r"C:\Users\ponce\OneDrive\Documents\MATLAB\CodesEvolution1.mat")
 codes_all = matdata['codes_all']
 generations = matdata['generations']
 del matdata
 #%% Cropping effect
-
 imgs = generator.visualize(codes_all[1000, :])
 plt.figure()
 plt.hist(np.reshape(imgs, (-1, 1)), 255, (0, 255))
-plt.xlim((0,255))
+plt.xlim((0, 255))
 plt.show()
 
 #%%
@@ -27,7 +26,7 @@ plt.show()
 #%%
 raw_img = generator.raw_output(0.1 * codes_all[4000, :])
 deproc_raw_img = generator._detransformer.deprocess('data', raw_img)
-plt.hist(deproc_raw_img.flatten(), 255)#, (0, 255))
+plt.hist(deproc_raw_img.flatten(), 255)  # (0, 255))
 #plt.xlim((0,255))
 plt.show()
 #%%
@@ -109,3 +108,40 @@ plt.ylabel("code_entry")
 plt.show()
 
 #%%
+exp_dir = r"D:\Generator_DB_Windows\data\with_CNN"
+this_exp_dir = os.path.join(exp_dir, "purenoise")
+trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (0.00097, 0.0499)
+trialdir = add_trial_subdir(this_exp_dir, trial_title)
+
+#%%
+def scores_imgname_summary(trialdir, savefile=True):
+    """ """
+    if "scores_all.npz" in os.listdir(trialdir):
+        # if the summary table exist, just read from it!
+        with np.load(os.path.join(trialdir, "scores_all.npz")) as data:
+            scores = data["scores"]
+            generations = data["generations"]
+            image_ids = data["image_ids"]
+        return scores, image_ids, generations
+
+    scorefns = sorted([fn for fn in os.listdir(trialdir) if '.npz' in fn and 'scores_end_block' in fn])
+    scores = []
+    generations = []
+    image_ids = []
+    for scorefn in scorefns:
+        geni = re.findall(r"scores_end_block(\d+).npz", scorefn)
+        scoref = np.load(os.path.join(trialdir, scorefn), allow_pickle=False)
+        cur_score = scoref['scores']
+        scores.append(cur_score)
+        image_ids.extend(list(scoref['image_ids']))
+        generations.extend([int(geni[0])] * len(cur_score))
+    scores = np.array(scores)
+    generations = np.array(generations)
+    if savefile:
+        np.savez(os.path.join(trialdir, "scores_all.npz"), scores=scores, generations=generations, image_ids=image_ids)
+    return scores, image_ids, generations
+
+
+#%%
+import utils
+codes_all, generations = utils.codes_summary(trialdir)
