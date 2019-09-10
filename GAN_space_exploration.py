@@ -145,3 +145,110 @@ def scores_imgname_summary(trialdir, savefile=True):
 #%%
 import utils
 codes_all, generations = utils.codes_summary(trialdir)
+
+#%%
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.decomposition import PCA
+
+def clear_codes(codedir):
+    """ unlike load_codes, also returns name of load """
+    # make sure enough codes for requested size
+    codefns = sorted([fn for fn in os.listdir(codedir) if '.npy' in fn and 'gen' in fn])
+    if not os.path.isfile(os.path.join(codedir, "codes_all.npz")):
+        utils.codes_summary(codedir, savefile=True)
+    for fn in codefns:
+        os.remove(os.path.join(codedir, fn))
+    return
+
+def clear_scores(trialdir):
+    """ unlike load_codes, also returns name of load """
+    # make sure enough codes for requested size
+    scorefns = sorted([fn for fn in os.listdir(trialdir) if '.npz' in fn and 'scores_end_block' in fn])
+    if not os.path.isfile(os.path.join(trialdir, "scores_all.npz")):
+        utils.scores_imgname_summary(trialdir, savefile=True)
+    for fn in scorefns:
+        os.remove(os.path.join(trialdir, fn))
+    return
+
+def PC_space_analysis_plot(trialdir, trial_title):
+    codes_all, generations = utils.codes_summary(trialdir)
+    code_norm_curve_plot(codes_all, generations, trialdir, trial_title)
+    code_PC_plots(codes_all, generations, trialdir, trial_title)
+
+def code_norm_curve_plot(codes_all, generations, trialdir, trial_title):
+    code_norm = np.sum(codes_all**2, axis=1)  # np.sqrt()
+    model = LinearRegression().fit(generations.reshape(-1, 1), code_norm)
+    plt.figure(figsize=[10, 6])
+    plt.scatter(generations, code_norm, s=10, alpha=0.6)
+    plt.title("Code Norm Square ~ Gen \n %s\n  Linear Coefficient %.f Intercept %.f" % (trial_title, model.coef_[0], model.intercept_))
+    plt.ylabel("Code Norm^2")
+    plt.xlabel("Generations")
+    plt.savefig(os.path.join(trialdir, "code_norm_evolution.png"))
+    plt.show()
+
+def code_PC_plots(codes_all, generations, trialdir, trial_title):
+    pca = PCA(n_components=50, copy=True)
+    PC_codes = pca.fit_transform(codes_all)
+    plt.figure(figsize=[10, 6])
+    for i in range(10):
+        plt.scatter(generations, PC_codes[:, i], s=6, alpha=0.6)
+    plt.xlabel("Generations")
+    plt.ylabel("PC projection")
+    plt.title("PC Projections \n %s" % (trial_title ))
+    plt.savefig(os.path.join(trialdir, "PC_Proj_evolution.png"))
+    plt.show()
+
+    plt.figure(figsize=[8, 8])
+    cumsumvar = np.cumsum(pca.explained_variance_ratio_)
+    plt.plot(cumsumvar)
+    for mark in [5, 10, 25, 50]:
+        plt.hlines(cumsumvar[mark-1], 0, mark-1, 'r')
+    plt.ylabel("Ratio")
+    plt.xlabel("PC number")
+    plt.title("%s\n Explained Variance %.2f in 10 PC \nExplained Variance %.2f in 25 PC" % (trial_title,
+                                                                                            sum(pca.explained_variance_ratio_[:10]),
+                                                                                            sum(pca.explained_variance_ratio_[:20])))
+    plt.savefig(os.path.join(trialdir, "exp_variance.png"))
+    plt.show()
+
+    plt.figure(figsize=[15, 5])
+    for i in range(30):
+        plt.subplot(3, 10, i+1)
+        img = generator.visualize(100*pca.components_[i, :])
+        plt.imshow(img.copy())
+        plt.axis("off")
+    plt.suptitle("Visualize first 10 PC's images \n %s" % (trial_title, ))
+    plt.savefig(os.path.join(trialdir, "PC_visualization.png"))
+    plt.show()
+#%%
+from utils import add_neuron_subdir, add_trial_subdir
+exp_dir = r"D:\Generator_DB_Windows\data\with_CNN"
+this_exp_dir = os.path.join(exp_dir, "purenoise")
+optim_params_list = [{'cc': 0.00097, 'cs': 0.0499},
+                     {'cc': 1 / 100, 'cs': 1 / 10},
+                     {'cc': 1 / 10, 'cs': 1 / 10},
+                     {'cc': 1 / 10, 'cs': 1 / 5},
+                     {'cc': 1 / 5, 'cs': 1 / 3}]
+t1 = time()
+for optim_params in optim_params_list:
+    trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
+    trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    PC_space_analysis_plot(trialdir, trial_title)
+    clear_codes(trialdir)
+    print("%.1fs" % (time()-t1))
+#%%
+this_exp_dir = add_neuron_subdir(('caffe-net', 'fc8', 1), exp_dir, )
+optim_params_list = [{'cc': 0.00097, 'cs': 0.0499},
+                     {'cc': 1 / 100, 'cs': 1 / 10},
+                     {'cc': 1 / 10, 'cs': 1 / 10},
+                     {'cc': 1 / 10, 'cs': 1 / 5},
+                     {'cc': 1 / 5, 'cs': 1 / 3}]
+t1 = time()
+for optim_params in optim_params_list:
+    trial_title = 'choleskycma_sgm3_uf10_cc%.2f_cs%.2f' % (optim_params["cc"], optim_params["cs"])
+    trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    PC_space_analysis_plot(trialdir, trial_title)
+    clear_codes(trialdir)
+    print("%.1fs" % (time()-t1))
+

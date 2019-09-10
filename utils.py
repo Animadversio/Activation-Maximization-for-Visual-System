@@ -290,6 +290,12 @@ def simplex_interpolate(wvec, code_array):
 def codes_summary(codedir, savefile=False):
     """ unlike load_codes, also returns name of load """
     # make sure enough codes for requested size
+    if "codes_all.npz" in os.listdir(codedir):
+        # if the summary table exist, just read from it!
+        with np.load(os.path.join(codedir, "codes_all.npz")) as data:
+            codes_all = data["codes_all"]
+            generations = data["generations"]
+        return codes_all, generations
     codefns = sorted([fn for fn in os.listdir(codedir) if '.npy' in fn])
     codes = []
     generations = []
