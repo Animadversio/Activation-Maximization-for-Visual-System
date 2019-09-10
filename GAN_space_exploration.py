@@ -8,12 +8,15 @@ from utils import generator, add_trial_subdir
 from cv2 import imread, imwrite
 import matplotlib.pylab as plt
 import re
+
 #%%
+
 matdata = loadmat(r"C:\Users\ponce\OneDrive\Documents\MATLAB\CodesEvolution1.mat")
 codes_all = matdata['codes_all']
 generations = matdata['generations']
 del matdata
 #%% Cropping effect
+
 imgs = generator.visualize(codes_all[1000, :])
 plt.figure()
 plt.hist(np.reshape(imgs, (-1, 1)), 255, (0, 255))
