@@ -227,10 +227,14 @@ class NoIOCNNScorer(Scorer):
             else:
                 self._net_unit_x = None
                 self._net_unit_y = None
-
-        self.record_pattern = record_pattern  # control if record the activation pattern of the whole layer
-        self._pattern_array = None  # record activation pattern
-
+        if record_pattern is not None:
+            self.do_record_activity = True # control if record the activation pattern of the whole layer
+            self.record_pattern = record_pattern  # Control which layer(s) it record
+            self._pattern_array = None  # record activation pattern
+        else:
+            self.do_record_activity = False
+            self.record_pattern = None
+            self._pattern_array = None
         self._istep = -1  # Instead of record block number in BlockWriter,
 
         self._classifier = None
@@ -306,8 +310,9 @@ class NoIOCNNScorer(Scorer):
 
         self._istep += 1
         scores = np.zeros(nimgs)
-        if self.record_pattern:
-            self._pattern_array = [None] * nimgs
+        if self.do_record_activity:
+            for layername in self.record_pattern:
+                self._pattern_array[layername] = []
 
         if not self._purenoise:  # if not pure noise
             for i, img in enumerate(images):
@@ -316,10 +321,11 @@ class NoIOCNNScorer(Scorer):
                 self._classifier.blobs['data'].data[...] = tim
                 self._classifier.forward(end=self._net_layer)  # propagate the image the target layer
 
-                if self.record_pattern:  # record the whole layer's activation
-                    score_full = self._classifier.blobs[self._net_layer].data[0, :]
-                    # self._pattern_array.append(score_full)
-                    self._pattern_array[i] = score_full.copy()
+                if self.do_record_activity:  # record the whole layer's activation
+                    for layername in self.record_pattern:
+                        score_full = self._classifier.blobs[layername].data[0, :]
+                        # self._pattern_array.append(score_full)
+                        self._pattern_array[layername].append(score_full.copy())
 
                 # record only the neuron intended
                 score = self._classifier.blobs[self._net_layer].data[0, self._net_iunit]
@@ -334,9 +340,10 @@ class NoIOCNNScorer(Scorer):
         if self._addnoise is True:
             scores = scores + self.noise_generator(scores.shape)  # TOCHECK
         self._curr_scores = scores
-        if self.record_pattern:
-            self._pattern_array = np.asarray(self._pattern_array)
-            self.save_block_stats({'image_ids': self._curr_imgids, 'pattern_array': self._pattern_array}, "ActivPattArr")
+        if self.do_record_activity:
+            for layername in self.record_pattern:
+                self._pattern_array[layername] = np.asarray(self._pattern_array[layername])
+            self.save_block_stats({'image_ids': self._curr_imgids, 'pattern_dict': self._pattern_array}, "ActivPattArr")
 
         return scores
 
@@ -351,18 +358,20 @@ class NoIOCNNScorer(Scorer):
             nimgs = 1
             images = [images]
         scores = np.zeros(nimgs)
-        if self.record_pattern:
-            self._pattern_array = [None] * nimgs
+        if self.do_record_activity:
+            for layername in self.record_pattern:
+                self._pattern_array[layername] = []
         for i, img in enumerate(images):
             # Note: now only support single repetition
             tim = self._transformer.preprocess('data', img)  # shape=(3, 227, 227)
             self._classifier.blobs['data'].data[...] = tim
             self._classifier.forward(end=self._net_layer)  # propagate the image the target layer
 
-            if self.record_pattern:  # record the whole layer's activation
-                score_full = self._classifier.blobs[self._net_layer].data[0, :]
-                # self._pattern_array.append(score_full)
-                self._pattern_array[i] = score_full.copy()
+            if self.do_record_activity:  # record the whole layer's activation
+                for layername in self.record_pattern:
+                    score_full = self._classifier.blobs[layername].data[0, :]
+                    # self._pattern_array.append(score_full)
+                    self._pattern_array[layername].append(score_full.copy())
 
             # record only the neuron intended
             score = self._classifier.blobs[self._net_layer].data[0, self._net_iunit]
@@ -374,8 +383,9 @@ class NoIOCNNScorer(Scorer):
             scores[i] = score
         # if self._addnoise is True:
         #     scores = scores + self.noise_generator(scores.shape)  # TOCHECK
-        if self.record_pattern:
-            self._pattern_array = np.asarray(self._pattern_array)
+        if self.do_record_activity:
+            for layername in self.record_pattern:
+                self._pattern_array[layername] = np.asarray(self._pattern_array[layername])
             return scores, self._pattern_array
         else:
             return scores
