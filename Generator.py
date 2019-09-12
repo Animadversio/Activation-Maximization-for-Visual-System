@@ -20,6 +20,7 @@ class Generator:
         return (x * 255).astype('uint8')  # rescale to uint in [0,255]
 
     def visualize_norm(self, code):
+        """Add to visualize the un-cropped but min-max normalized image distribution"""
         x = self._GNN.forward(feat=code.reshape(1, 4096))['deconv0']
         x = self._detransformer.deprocess('data', x)
         # x = np.clip(x, 0, 1)  # use clip to bound all the image output in interval [0,1]
