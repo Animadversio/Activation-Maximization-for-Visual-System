@@ -132,10 +132,29 @@ class CNNExperiment_Simplify(ExperimentBase):
             self.logger.flush()
             self.istep += 1
 
-from CNNScorer import NoIOCNNScorer
+
 
 if __name__ == '__main__':
-    code = np.random.randn(1, 4096)
-    img = utils.generator.visualize(code)
-    target_neuron = ('caffe-net', 'fc8', 1)
-    scorer = NoIOCNNScorer(target_neuron, exp_dir, record_pattern=['conv5', 'fc6', 'fc7', 'fc8'])
+    # from CNNScorer import NoIOCNNScorer
+    # code = np.random.randn(1, 4096)
+    # img = utils.generator.visualize(code)
+    # target_neuron = ('caffe-net', 'fc8', 1)
+    # scorer = NoIOCNNScorer(target_neuron, exp_dir, record_pattern=['conv5', 'fc6', 'fc7', 'fc8'])
+    # scorer.load_classifier()
+    # score, pattern_dict = scorer.test_score(img)
+    neuron = ('caffe-net', 'fc8', 1)
+    this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+    optim_params = {}  # Original case
+    for i in range(5, 10):
+        random_seed = int(time())
+        trial_title = 'choleskycma_norm_trial%d' % (i)
+        trialdir = add_trial_subdir(this_exp_dir, trial_title)
+        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=200,
+                                            optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+                                            optim_params=optim_params,
+                                            random_seed=random_seed, saveimg=False,
+                                            record_pattern=['conv5', 'fc6', 'fc7', 'fc8'], )
+        experiment.run()
+        utils.codes_summary(trialdir, True)
+        utils.scores_imgname_summary(trialdir, True)
+        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)

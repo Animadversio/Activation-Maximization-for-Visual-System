@@ -230,7 +230,7 @@ class NoIOCNNScorer(Scorer):
         if record_pattern is not None:
             self.do_record_activity = True # control if record the activation pattern of the whole layer
             self.record_pattern = record_pattern  # Control which layer(s) it record
-            self._pattern_array = None  # record activation pattern
+            self._pattern_array = {}  # record activation pattern
         else:
             self.do_record_activity = False
             self.record_pattern = None
