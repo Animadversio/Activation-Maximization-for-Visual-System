@@ -235,7 +235,7 @@ class Genetic(Optimizer):
         for fn in self._init_population_fns:
             copyfile(os.path.join(self._init_population_dir, fn), os.path.join(recorddir, fn))
 
-    def step(self, scores):
+    def step(self, scores, no_image=False):
         # clean variables
         assert len(scores) == len(self._curr_samples), \
             'number of scores (%d) != population size (%d)' % (len(scores), len(self._curr_samples))
@@ -307,7 +307,8 @@ class Genetic(Optimizer):
         else:
             self._curr_sample_ids = ['thread%02d_gen%03d_%06d' %
                                      (self._thread, self._istep, idx) for idx in self._curr_sample_idc]
-        self._prepare_images()
+        if not no_image:
+            self._prepare_images()
 
     # def step_with_immigration(self, scores, immigrants, immigrant_scores):
     #     assert len(immigrants.shape) == 2, 'population is not batch sized (dim != 2)'
@@ -663,7 +664,7 @@ class CholeskyCMAES(Optimizer):
         self.chiN = sqrt(N) * (1 - 1 / (4 * N) + 1 / (21 * N ** 2))
         # expectation of ||N(0,I)|| == norm(randn(N,1)) in 1/N expansion formula
 
-    def step(self, scores):
+    def step(self, scores, no_image=False):
         # Note it's important to decide which variable is to be saved in the `Optimizer` object
         # Note to conform with other code, this part is transposed.
 
@@ -745,7 +746,8 @@ class CholeskyCMAES(Optimizer):
         self._istep += 1
         self._curr_samples = new_samples
         self._curr_sample_ids = new_ids
-        self._prepare_images()
+        if not no_image:
+            self._prepare_images()
 
 
     def save_optimizer_state(self):
