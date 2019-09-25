@@ -348,7 +348,7 @@ class NoIOCNNScorer(Scorer):
         return scores
 
     def test_score(self, images, ):
-        '''Just score the image and record nothing. For testing usage'''
+        '''Just score the image and record nothing. For testing and isolated usage'''
 
         # Check the input
         if type(images) is list:

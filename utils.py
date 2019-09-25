@@ -310,6 +310,32 @@ def codes_summary(codedir, savefile=False):
         np.savez(os.path.join(codedir, "codes_all.npz"), codes_all=codes, generations=generations)
     return codes, generations
 
+def load_codes_mat(backup_dir, savefile=False):
+    """ unlike load_codes, also returns name of load """
+    # make sure enough codes for requested size
+    if "codes_all.npz" in os.listdir(backup_dir):
+        # if the summary table exist, just read from it!
+        with np.load(os.path.join(backup_dir, "codes_all.npz")) as data:
+            codes_all = data["codes_all"]
+            generations = data["generations"]
+        return codes_all, generations
+    codes_fns = sorted([fn for fn in os.listdir(backup_dir) if "_code.mat" in fn])
+    codes_all = []
+    img_ids = []
+    for i, fn in enumerate(codes_fns[:]):
+        matdata = loadmat(os.path.join(backup_dir, fn))
+        codes_all.append(matdata["codes"])
+        img_ids.extend(list(matdata["ids"]))
+
+    # %%
+    codes_all = np.concatenate(tuple(codes_all), axis=0)
+    img_ids = np.concatenate(tuple(img_ids), axis=0)
+    img_ids = [img_ids[i][0] for i in range(len(img_ids))]
+    generations = [int(re.findall("gen(\d+)", img_id)[0]) if 'gen' in img_id else -1 for img_id in img_ids]
+    if savefile:
+        np.savez(os.path.join(backup_dir, "codes_all.npz"), codes_all=codes_all, generations=generations)
+    return codes_all, generations
+
 def scores_imgname_summary(trialdir, savefile=True):
     """ """
     if "scores_all.npz" in os.listdir(trialdir):
