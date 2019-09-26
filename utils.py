@@ -311,7 +311,7 @@ def codes_summary(codedir, savefile=False):
     return codes, generations
 
 def load_codes_mat(backup_dir, savefile=False):
-    """ unlike load_codes, also returns name of load """
+    """ load all the code mat file in the experiment folder and summarize it into nparrays"""
     # make sure enough codes for requested size
     if "codes_all.npz" in os.listdir(backup_dir):
         # if the summary table exist, just read from it!
@@ -327,7 +327,6 @@ def load_codes_mat(backup_dir, savefile=False):
         codes_all.append(matdata["codes"])
         img_ids.extend(list(matdata["ids"]))
 
-    # %%
     codes_all = np.concatenate(tuple(codes_all), axis=0)
     img_ids = np.concatenate(tuple(img_ids), axis=0)
     img_ids = [img_ids[i][0] for i in range(len(img_ids))]
@@ -583,6 +582,32 @@ def visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_titl
     plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
     if save:
         plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+    plt.show()
+    return fig
+
+def visualize_img_list(img_list, scores=None, ncol=11, nrow=11, title_cmap=plt.cm.viridis):
+    """Visualize images from a list and maybe label the score on it!"""
+    if scores is not None and not title_cmap == None:
+        cmap_flag = True
+        ub = scores.max()
+        lb = scores.min()
+    else:
+        cmap_flag = False
+    assert len(img_list) <= ncol * nrow
+    figW = 30
+    figH = figW / ncol * nrow + 1
+    fig = plt.figure(figsize=[figW, figH])
+    for i, img in enumerate(img_list):
+        plt.subplot(ncol, nrow, i + 1)
+        plt.imshow(img[:])
+        plt.axis('off')
+        if cmap_flag:  # color the titles with a heatmap!
+            plt.title("{0:.2f}".format(scores[i]), fontsize=16,
+                      color=title_cmap((scores[i] - lb) / (ub - lb)))  # normalize a value between [0,1]
+        elif scores != None:
+            plt.title("{0:.2f}".format(scores[i]), fontsize=16)
+        else:
+            pass
     plt.show()
     return fig
 

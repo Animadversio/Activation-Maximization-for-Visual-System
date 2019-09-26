@@ -27,8 +27,32 @@ fig = visualize_img_list(img_list, scores)
 img_list = GAN_interp_sphere_ang(PC_vectors[[0,48,49], :], sphere_norm=300, theta_ang_step= 180/10, phi_ang_step=180/10)
 scores = scorer.test_score(img_list)
 fig = visualize_img_list(img_list, scores)
-
 #%%
+
+phi = np.linspace(-np.pi/2, np.pi/2, 21)
+theta = np.linspace(-np.pi/2, np.pi/2, 21)
+img_list = GAN_interp_sphere_ang(PC_vectors[[0,3,4], :], sphere_norm=300, grid_shape=(21, 21),
+                                 theta_ang_step= 180/20, phi_ang_step=180/20)
+scores = scorer.test_score(img_list)
+fig = visualize_img_list(img_list, scores, ncol=21, nrow=21)
+plt.pcolor(theta, phi, scores.reshape((21, 21)))
+plt.colorbar()
+plt.axis("image")
+plt.show()
+#%%
+phi = np.linspace(-np.pi/2, np.pi/2, 21)
+theta = np.linspace(-np.pi/2, np.pi/2, 21)
+img_list = GAN_interp_sphere_ang(PC_vectors[[0, 48, 49], :], sphere_norm=300, grid_shape=(21, 21),
+                                 theta_ang_step= 180/20, phi_ang_step=180/20)
+scores = scorer.test_score(img_list)
+plt.pcolor(theta, phi, scores.reshape((21, 21)))
+plt.colorbar()
+plt.axis("image")
+plt.show()
+
+# %%%%%%%%%%%%%%%%%%%%
+#%% Visualize tuning on a sphere!
+# %%%%%%%%%%%%%%%%%%%%
 from matplotlib import cm, colors
 from mpl_toolkits.mplot3d import Axes3D
 phi = np.linspace(-np.pi/2, np.pi/2, 11)
@@ -51,25 +75,4 @@ ax = fig3d.add_subplot(111, projection='3d')
 ax.plot_surface(x, y, z,  rstride=1, cstride=1, facecolors=cm.seismic(fcolors))
 # Turn off the axis planes
 ax.set_axis_off()
-plt.show()
-#%%
-
-phi = np.linspace(-np.pi/2, np.pi/2, 21)
-theta = np.linspace(-np.pi/2, np.pi/2, 21)
-img_list = GAN_interp_sphere_ang(PC_vectors[:3, :], sphere_norm=300, grid_shape=(21, 21),
-                                 theta_ang_step= 180/20, phi_ang_step=180/20)
-scores = scorer.test_score(img_list)
-plt.pcolor(theta, phi, scores.reshape((21, 21)))
-plt.colorbar()
-plt.axis("image")
-plt.show()
-#%%
-phi = np.linspace(-np.pi/2, np.pi/2, 21)
-theta = np.linspace(-np.pi/2, np.pi/2, 21)
-img_list = GAN_interp_sphere_ang(PC_vectors[[0,48,49], :], sphere_norm=300, grid_shape=(21, 21),
-                                 theta_ang_step= 180/20, phi_ang_step=180/20)
-scores = scorer.test_score(img_list)
-plt.pcolor(theta, phi, scores.reshape((21, 21)))
-plt.colorbar()
-plt.axis("image")
 plt.show()
