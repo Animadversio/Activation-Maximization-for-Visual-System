@@ -708,7 +708,7 @@ class CholeskyCMAES(Optimizer):
                 v = pc @ Ainv
                 normv = v @ v.T
                 # Directly update the A Ainv instead of C itself
-                A = sqrt(1-c1) * A + sqrt(1-c1)/normv*(sqrt(1+normv*c1/(1-c1))-1) * v@pc.T
+                A = sqrt(1-c1) * A + sqrt(1-c1)/normv*(sqrt(1+normv*c1/(1-c1))-1) * v@pc.T # FIXME, dimension error
                 Ainv = 1/sqrt(1-c1) * Ainv - 1/sqrt(1-c1)/normv*(1-1/sqrt(1+normv*c1/(1-c1))) * Ainv@v.T@v
                 t2 = time()
                 print("A, Ainv update! Time cost: %.2f s" % (t2-t1))

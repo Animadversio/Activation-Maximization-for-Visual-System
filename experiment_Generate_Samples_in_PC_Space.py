@@ -68,7 +68,7 @@ for j in range(-5, 6):
         phi = PC3_ang_step * k / 180 * np.pi
         code_vec = np.array([[PC1_sign* np.cos(theta) * np.cos(phi),
                                         np.sin(theta) * np.cos(phi),
-                                        np.sin(phi)]]) @ PC_vectors[0:3, :]
+                                        np.sin(phi)]]) @ PC_vectors[PC_nums, :]
         code_vec = code_vec / np.sqrt((code_vec**2).sum()) * sphere_norm
         img = generator.visualize(code_vec)
         img_list.append(img.copy())
