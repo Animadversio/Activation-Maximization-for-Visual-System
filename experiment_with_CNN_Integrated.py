@@ -3,7 +3,7 @@ from time import time
 import numpy as np
 from CNNScorer import NoIOCNNScorer
 from ExperimentBase import ExperimentBase
-from Optimizer import CMAES, Genetic, CholeskyCMAES
+from Optimizer import CMAES, Genetic, CholeskyCMAES, CholeskyCMAES_Sphere
 import utils
 from utils import add_neuron_subdir, add_trial_subdir
 
@@ -11,7 +11,7 @@ target_neuron = ('caffe-net', 'fc6', 1)
 np.set_printoptions(precision=4, suppress=True)
 code_length = 4096
 
-homedir = r"D:\Generator_DB_Windows" #os.path.expanduser('~')
+homedir = r"D:\Generator_DB_Windows" # os.path.expanduser('~')
 initcodedir = os.path.join(homedir, 'stimuli/texture006')
 natstimdir = os.path.join(homedir, 'stimuli/natimages-guapoCh9')
 exp_dir = os.path.join(homedir, 'data/with_CNN')
@@ -44,6 +44,9 @@ class CNNExperiment_Simplify(ExperimentBase):
             optimizer = CMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma)
         elif optimizer_name == 'cholcmaes':
             optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma, init_code=init_code,
+                                      Aupdate_freq=Aupdate_freq, optim_params=optim_params)
+        elif optimizer_name == 'cholcmaes_sphere':
+            optimizer = CholeskyCMAES_Sphere(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma, init_code=init_code,
                                       Aupdate_freq=Aupdate_freq, optim_params=optim_params)
         elif optimizer_name == "genetic":
             optimizer = Genetic(population_size=population_size, random_seed=random_seed, recorddir=recorddir, **optim_params)
@@ -125,6 +128,7 @@ class CNNExperiment_Simplify(ExperimentBase):
                 # TODO: may add optimizer status saving function
                 # summarize scores & delays
                 print('synthetic img scores: mean {}, all {}'.format(np.nanmean(synscores), synscores))
+
                 print(('step %d time: total %.2fs | ' +
                        'wait for results %.2fs  write records %.2fs  optimizer update %.2fs')
                       % (self.istep, t3 - t0, t1 - t0, t2 - t1, t3 - t2))
@@ -132,10 +136,11 @@ class CNNExperiment_Simplify(ExperimentBase):
             self.logger.flush()
             self.istep += 1
 
+        self.logger.propagate = False  # stop logging
 
+#%%
 
-
-if __name__ == '__main__':
+#if __name__ == '__main__':
     '''Below is the experiment running script recording every parameter it is using at each trial.'''
     # random_seed = int(time())
     # neuron = ('caffe-net', 'fc6', 5)
@@ -684,13 +689,82 @@ if __name__ == '__main__':
     #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
     #     utils.gen_visualize_image_score_each_block(trialdir, block_num=198, exp_title_str=trial_title)
 
-neuron = ('caffe-net', 'fc8', 1)
-this_exp_dir = add_neuron_subdir(neuron, exp_dir)
-for i in range(1):
-    random_seed = int(time())
-    trial_title = 'choleskycma_sgm3_uf10_trial%d_optim' % i
-    trialdir = add_trial_subdir(this_exp_dir, trial_title)
-    experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=100,
-                                        optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
-                                        random_seed=random_seed, saveimg=False, record_pattern=False, record_optim=True)
-    experiment.run()
+# neuron = ('caffe-net', 'fc8', 1)
+# this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+# for i in range(1):
+#     random_seed = int(time())
+#     trial_title = 'choleskycma_sgm3_uf10_trial%d_optim' % i
+#     trialdir = add_trial_subdir(this_exp_dir, trial_title)
+#     experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=100,
+#                                         optimizer_name='cholcmaes', init_sigma=3, Aupdate_freq=10,
+#                                         random_seed=random_seed, saveimg=False, record_pattern=False, record_optim=True)
+#     experiment.run()
+
+#%%
+if __name__ == '__main__':
+
+
+
+    # optim_params = {"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-3}
+    # init_sigma = 0.7
+    # trial_i = 0
+    # random_seed = int(time())
+    # trial_title = 'choleskycma_sphere%d_sgm%.2f_MAXSGM%d_uf10_c1%.2E_trial%d' % (optim_params["sphere_norm"], init_sigma,
+    #                                                         optim_params["MAXSGM"], optim_params["c1"], trial_i)
+    # trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    # experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+    #                                     optimizer_name='cholcmaes_sphere', init_sigma=init_sigma, Aupdate_freq=10, optim_params=optim_params,
+    #                                     random_seed=random_seed, saveimg=True, record_pattern=False, record_optim=True)
+    # experiment.run()
+    # utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    # utils.gen_visualize_image_score_each_block(trialdir, block_num=299, exp_title_str=trial_title,save=True,
+    #                                            savedir=trialdir)
+
+#%%
+    neuron = ('caffe-net', 'fc8', 1)
+    this_exp_dir = add_neuron_subdir(neuron, exp_dir)
+    optim_params_list = [{"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-1},
+                         {"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-2},
+                         {"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-3},
+                         {"sphere_norm": 400, "MAXSGM": 0.7, "c1": 1E-1},
+                         {"sphere_norm": 400, "MAXSGM": 0.7, "c1": 1E-2},
+                         {"sphere_norm": 400, "MAXSGM": 0.7, "c1": 1E-3},
+                         {"sphere_norm": 500, "MAXSGM": 0.7, "c1": 1E-1},
+                         {"sphere_norm": 500, "MAXSGM": 0.7, "c1": 1E-2},
+                         {"sphere_norm": 500, "MAXSGM": 0.7, "c1": 1E-3},
+                         {"sphere_norm": 300, "MAXSGM": 1, "c1": 1E-1},
+                         {"sphere_norm": 300, "MAXSGM": 1, "c1": 1E-2},
+                         {"sphere_norm": 300, "MAXSGM": 1, "c1": 1E-3},]
+    for optim_params in optim_params_list:
+        init_sigma = 0.7
+        trial_i = 0
+        random_seed = int(time())
+        trial_title = 'choleskycma_sphere%d_sgm%.2f_MAXSGM%d_uf10_c1%.2E_trial%d' % (
+                            optim_params["sphere_norm"], init_sigma,
+                            optim_params["MAXSGM"], optim_params["c1"], trial_i)
+        trialdir = add_trial_subdir(this_exp_dir, trial_title)
+        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+                                            optimizer_name='cholcmaes_sphere', init_sigma=init_sigma, Aupdate_freq=10,
+                                            optim_params=optim_params,
+                                            random_seed=random_seed, saveimg=True, record_pattern=False, record_optim=True)
+        experiment.run()
+        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+        utils.gen_visualize_image_score_each_block(trialdir, block_num=299, exp_title_str=trial_title, save=True,
+                                                   savedir=trialdir)
+
+    for optim_params in optim_params_list:
+        init_sigma = 0.7
+        trial_i = 0
+        random_seed = int(time())
+        trial_title = 'choleskycma_sphere%d_sgm%.2f_MAXSGM%d_uf2_c1%.2E_trial%d' % (
+                            optim_params["sphere_norm"], init_sigma,
+                            optim_params["MAXSGM"], optim_params["c1"], trial_i)
+        trialdir = add_trial_subdir(this_exp_dir, trial_title)
+        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+                                            optimizer_name='cholcmaes_sphere', init_sigma=init_sigma, Aupdate_freq=2,
+                                            optim_params=optim_params,
+                                            random_seed=random_seed, saveimg=True, record_pattern=False, record_optim=True)
+        experiment.run()
+        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+        utils.gen_visualize_image_score_each_block(trialdir, block_num=299, exp_title_str=trial_title, save=True,
+                                                   savedir=trialdir)

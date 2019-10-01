@@ -203,7 +203,6 @@ class NoIOCNNScorer(Scorer):
                             for 'expon' distribution noise_param = {'loc': 0, 'scale': 5}
         :param noise_rand_seed: random seed in int
     '''
-
     def __init__(self, target_neuron, writedir, record_pattern=False,
                  noise_scheme=None, noise_param=None, noise_rand_seed=0):
         """

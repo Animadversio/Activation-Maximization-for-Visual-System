@@ -394,7 +394,8 @@ class Genetic(Optimizer):
 from numpy.linalg import norm
 from numpy.random import randn
 from numpy import exp, floor, log, log2, sqrt, zeros, eye, ones, diag
-
+from numpy import exp, sqrt, real, eye, zeros, dot, cos, sin
+# from numpy.linalg import norm
 
 class CMAES(Optimizer):
     # functions to be added
@@ -818,10 +819,75 @@ class CholeskyCMAES_Sphere(CholeskyCMAES):
     #         save_init_population()
     #         step()
     """ Note this is a variant of CMAES Cholesky suitable for high dimensional optimization"""
-    def __init__(self, recorddir, space_dimen, init_sigma=None, init_code=None, population_size=None, Aupdate_freq=None,
+    def __init__(self, recorddir, space_dimen, init_sigma=None, init_code=None, population_size=None, Aupdate_freq=None, sphere_norm=300,
                  maximize=True, random_seed=None, thread=None, optim_params={}):
-        super(CholeskyCMAES_Sphere, self).__init__(recorddir, random_seed, thread)
+        super(CholeskyCMAES_Sphere, self).__init__(recorddir, space_dimen, init_sigma=init_sigma, init_code=init_code,
+                    population_size=population_size, Aupdate_freq=Aupdate_freq,
+                    maximize=maximize, random_seed=random_seed, thread=thread, optim_params=optim_params)
+        N = space_dimen
+        self.space_dimen = space_dimen
+        # Overall control parameter
+        self.maximize = maximize  # if the program is to maximize or to minimize
 
+        # Strategy parameter setting: Selection
+        if population_size is None:
+            self.lambda_ = int(4 + floor(3 * log2(N)))  # population size, offspring number
+            # the relation between dimension and population size.
+        else:
+            self.lambda_ = population_size  # use custom specified population size
+        mu = self.lambda_ / 2  # number of parents/points for recombination
+        #  Select half the population size as parents
+        weights = log(mu + 1 / 2) - (log(np.arange(1, 1 + floor(mu))))  # muXone array for weighted recombination
+        self.mu = int(floor(mu))
+        self.weights = weights / sum(weights)  # normalize recombination weights array
+        mueff = self.weights.sum() ** 2 / sum(self.weights ** 2)  # variance-effectiveness of sum w_i x_i
+        self.weights.shape = (1, -1)  # Add the 1st dim 1 to the weights mat
+        self.mueff = mueff  # add to class variable
+        self.sigma = init_sigma  # Note by default, sigma is None here.
+        print("Space dimension: %d, Population size: %d, Select size:%d, Optimization Parameters:\nInitial sigma: %.3f"
+              % (self.space_dimen, self.lambda_, self.mu, self.sigma))
+
+        # Strategy parameter settiself.weightsng: Adaptation
+        self.cc = 4 / (N + 4)  # defaultly  0.0009756
+        self.cs = sqrt(mueff) / (sqrt(mueff) + sqrt(N))  # 0.0499
+        self.c1 = 2 / (N + sqrt(2)) ** 2  # 1.1912701410022985e-07
+        if "cc" in optim_params.keys():  # if there is outside value for these parameter, overwrite them
+            self.cc = optim_params["cc"]
+        if "cs" in optim_params.keys():
+            self.cs = optim_params["cs"]
+        if "c1" in optim_params.keys():
+            self.c1 = optim_params["c1"]
+        self.damps = 1 + self.cs + 2 * max(0, sqrt((mueff - 1) / (N + 1)) - 1)  # damping for sigma usually  close to 1
+        self.MAXSGM = 0.5
+        if "MAXSGM" in optim_params.keys():
+            self.MAXSGM = optim_params["MAXSGM"]
+        self.sphere_norm = sphere_norm
+        if "sphere_norm" in optim_params.keys():
+            self.sphere_norm = optim_params["sphere_norm"]
+        print("cc=%.3f, cs=%.3f, c1=%.3f damps=%.3f" % (self.cc, self.cs, self.c1, self.damps))
+        print("Maximum Sigma %.2f" % self.MAXSGM)
+
+        if init_code is not None:
+            self.init_x = np.asarray(init_code)
+            self.init_x.shape = (1, N)
+        else:
+            self.init_x = None  # FIXED Nov. 1st
+        self.xmean = zeros((1, N))
+        self.xold = zeros((1, N))
+        # Initialize dynamic (internal) strategy parameters and constants
+        self.pc = zeros((1, N))
+        self.ps = zeros((1, N))  # evolution paths for C and sigma
+        self.A = eye(N, N)  # covariant matrix is represent by the factors A * A '=C
+        self.Ainv = eye(N, N)
+        self.tang_codes = zeros((self.lambda_, N))
+
+        self.eigeneval = 0  # track update of B and D
+        self.counteval = 0
+        if Aupdate_freq is None:
+            self.update_crit = self.lambda_ / self.c1 / N / 10
+        else:
+            self.update_crit = Aupdate_freq * self.lambda_
+        self.chiN = sqrt(N) * (1 - 1 / (4 * N) + 1 / (21 * N ** 2))
 
     def step(self, scores, no_image=False):
         # Note it's important to decide which variable is to be saved in the `Optimizer` object
@@ -832,71 +898,140 @@ class CholeskyCMAES_Sphere(CholeskyCMAES):
         lambda_, mu, mueff, chiN = self.lambda_, self.mu, self.mueff, self.chiN
         cc, cs, c1, damps = self.cc, self.cs, self.c1, self.damps
         sigma, A, Ainv, ps, pc, = self.sigma, self.A, self.Ainv, self.ps, self.pc,
-
+        
+        # obj.codes = codes;
+            
         # Sort by fitness and compute weighted mean into xmean
         if self.maximize is False:
             code_sort_index = np.argsort(scores)  # add - operator it will do maximization.
         else:
             code_sort_index = np.argsort(-scores)
-        # scores = scores[code_sort_index]  # Ascending order. minimization
-
+        sorted_score = scores[code_sort_index]
+        # print(sorted_score)
         if self._istep == 0:
+            print('First generation\n')
             # Population Initialization: if without initialization, the first xmean is evaluated from weighted average all the natural images
             if self.init_x is None:
-                self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]
+                if mu<=len(scores):
+                    self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]
+                else:  # if ever the obj.mu (selected population size) larger than the initial population size (init_population is 1 ?)
+                    tmpmu = max(floor(len(scores)/2), 1) # make sure at least one element!
+                    self.xmean = self.weights[:tmpmu] @ self._curr_samples[code_sort_index[:tmpmu], :] / sum(self.weights[:tmpmu])
+                self.xmean = self.xmean / norm(self.xmean)
             else:
                 self.xmean = self.init_x
-        else:
+            
+        else:  # if not first step
+            
+            # print('Not First generation\n')
             self.xold = self.xmean
-            self.xmean = self.weights @ self._curr_samples[code_sort_index[0:mu], :]  # Weighted recombination, new mean value
+            xold = self.xold
+            # Weighted recombination, move the mean value
+            # mean_tangent = self.weights * self.tang_codes(code_sort_index(1:self.mu), :);
+            # self.xmean = ExpMap(self.xmean, mean_tangent); # Map the mean tangent onto sphere
+            # Do spherical mean in embedding space, not in tangent
+            # vector space! 
+#                 self.xmean = self.weights * self.codes(code_sort_index(1:self.mu), :);
+#                 self.xmean = self.xmean / norm(self.xmean); # Spherical Mean
+            # [vtan_old, vtan_new] = InvExpMap(xold, self.xmean); # Tangent vector of the arc between old and new mean
+            
+            vtan_old = self.weights @ self.tang_codes[code_sort_index[0:mu], :]  # mean in Tangent Space for tang_codes in last generation
+            xmean = ExpMap(xold, vtan_old) # Project to new tangent space
+            self.xmean = xmean
 
-            # Cumulation statistics through steps: Update evolution paths
-            randzw = self.weights @ self.randz[code_sort_index[0:mu], :]
-            ps = (1 - cs) * ps + sqrt(cs * (2 - cs) * mueff) * randzw
-            pc = (1 - cc) * pc + sqrt(cc * (2 - cc) * mueff) * randzw @ A
+            print(norm(vtan_old))
+            vtan_new = VecTransport(xold, xmean, vtan_old); # Transport this vector to new spot
+            uni_vtan_old = vtan_old / norm(vtan_old);
+            uni_vtan_new = vtan_new / norm(vtan_new); # uniform the tangent vector
+            ps_transp = VecTransport(xold, xmean, ps); # transport the path vector from old to new mean
+            pc_transp = VecTransport(xold, xmean, pc);
+            # Cumulation: Update evolution paths
+            # In the sphereical case we have to transport the vector to
+            # the new center
+            # FIXME, pc explode problem???? 
 
-            # Adapt step size sigma
-            sigma = sigma * exp((cs / damps) * (norm(ps) / chiN - 1))
-            # self.sigma = self.sigma * exp((self.cs / self.damps) * (norm(ps) / self.chiN - 1))
-            print("sigma: %.2f" % sigma)
-
-            # Update A and Ainv with search path
-            if self.counteval - self.eigeneval > self.update_crit:  # to achieve O(N ^ 2) do decomposition less frequently
+            # randzw = weights * randz(code_sort_index(1:mu), :); # Note, use the randz saved from last generation
+            # ps = (1 - cs) * ps + sqrt(cs * (2 - cs) * mueff) * randzw; 
+            # pc = (1 - cc) * pc + sqrt(cc * (2 - cc) * mueff) * randzw * A;
+            pc = (1 - cc) * pc_transp + sqrt(cc * (2 - cc) * mueff) * vtan_new / sigma; # do the update in the new tangent space
+            # Transport the A and Ainv to the new tangent space 
+            A = A + A @ uni_vtan_old.T @ (uni_vtan_new - uni_vtan_old) + A @ xold.T @ (xmean - xold)  # transport the A mapping from old to new mean
+            Ainv = Ainv + (uni_vtan_new - uni_vtan_old).T @ uni_vtan_old @ Ainv + (xmean - xold).T @ xold @ Ainv
+            # Use the new Ainv to transform ps to z space 
+            ps = (1 - cs) * ps_transp + sqrt(cs * (2 - cs) * mueff) * vtan_new @ Ainv / sigma
+            # Adapt step size sigma. 
+            # Decide whether to grow sigma or shrink sigma by comparing
+            # the cumulated path length norm(ps) with expectation chiN 
+            # chiN = RW_Step_Size_Sphere(lambda, sigma, N);
+            sigma = min(self.MAXSGM, sigma * exp((cs / damps) * (norm(real(ps)) * sqrt(N) / chiN - 1)))
+            if sigma == self.MAXSGM:
+                print("Reach upper limit for sigma! ")
+            print("Step %d, sigma: %0.2e, Scores\n"%(self._istep, sigma))
+            # disp(A * Ainv)
+            # Update the A and Ainv mapping
+            if self.counteval - self.eigeneval > self.update_crit:  # to achieve O(N ^ 2)
                 self.eigeneval = self.counteval
                 t1 = time()
-                v = pc @ Ainv  # convert the search path direction back to spherical coordinate
+                v = pc @ Ainv
                 normv = v @ v.T
-                # Directly update the A Ainv instead of C itself
-                A = sqrt(1-c1) * A + sqrt(1-c1)/normv*(sqrt(1+normv*c1/(1-c1))-1) * v@pc.T
-                Ainv = 1/sqrt(1-c1) * Ainv - 1/sqrt(1-c1)/normv*(1-1/sqrt(1+normv*c1/(1-c1))) * Ainv@v.T@v
-                t2 = time()
-                print("A, Ainv update! Time cost: %.2f s" % (t2-t1))
-
+                A = sqrt(1-c1) * A + sqrt(1-c1)/normv*(sqrt(1+normv*c1/(1-c1))-1) * v.T @ pc  # FIXED! dimension error
+                Ainv = 1/sqrt(1-c1) * Ainv - 1/sqrt(1-c1)/normv*(1-1/sqrt(1+normv*c1/(1-c1))) * Ainv @ v.T @ v
+                print("A, Ainv update! Time cost: %.2f s" % (time()-t1))
+                print("A Ainv Deiviation Norm from identity %.2E", norm(eye(N) - self.A * self.Ainv)) # Deviation from being inverse to each other
+        # of first step
+        
+        # Generate new sample by sampling from Multivar Gaussian distribution
+        self.tang_codes = zeros((self.lambda_, N))
         new_samples = zeros((self.lambda_, N))
         new_ids = []
         self.randz = randn(self.lambda_, N)  # save the random number for generating the code.
+        # For optimization path update in the next generation.
+        self.tang_codes = self.sigma * (self.randz @ self.A) / sqrt(N) # sig * Normal(0,C)
+        # Clever way to generate multivariate gaussian!!
+        self.tang_codes = self.tang_codes - (self.tang_codes @ self.xmean.T) @ self.xmean
+        # FIXME, wrap back problem
+        # DO SOLVED, by limiting the sigma to small value?
+        new_samples = ExpMap(self.xmean, self.tang_codes)
+        # Exponential map the tang vector from center to the sphere 
         for k in range(self.lambda_):
-            new_samples[k:k + 1, :] = self.xmean + sigma * (self.randz[k, :] @ A)  # m + sig * Normal(0,C)
-            # Clever way to generate multivariate gaussian!!
-            # Stretch the guassian hyperspher with D and transform the
-            # ellipsoid by B mat linear transform between coordinates
             if self._thread is None:
                 new_ids.append("gen%03d_%06d" % (self._istep, self.counteval))
             else:
                 new_ids.append('thread%02d_gen%03d_%06d' %
-                        (self._thread, self._istep, self.counteval))
-            # FIXME A little inconsistent with the naming at line 173/175/305/307 esp. for gen000 code
+                        (self._thread, self._istep, self.counteval)) 
+            # FIXME self.A little inconsistent with the naming at line 173/175/305/307 esp. for gen000 code
             # assign id to newly generated images. These will be used as file names at 2nd round
-            self.counteval += 1
+            self.counteval = self.counteval + 1
+        
+        # self._istep = self._istep + 1
 
         self.sigma, self.A, self.Ainv, self.ps, self.pc = sigma, A, Ainv, ps, pc,
         self._istep += 1
-        self._curr_samples = new_samples
+        self._curr_samples = new_samples * self.sphere_norm
         self._curr_sample_ids = new_ids
         if not no_image:
             self._prepare_images()
 
 
+def ExpMap(x, tang_vec):
+    '''Assume x is (1, N)'''
+    # EPS = 1E-3;
+    # assert(abs(norm(x)-1) < EPS)
+    # assert(sum(x * tang_vec') < EPS)
+    angle_dist = sqrt((tang_vec**2).sum(axis=1)) # vectorized
+    angle_dist = angle_dist[:, np.newaxis]
+    uni_tang_vec = tang_vec / angle_dist
+    # x = repmat(x, size(tang_vec, 1), 1); # vectorized
+    y = cos(angle_dist) @ x[:] + sin(angle_dist) * uni_tang_vec
+    return y
+
+def VecTransport(xold, xnew, v):
+    xold = xold / norm(xold)
+    xnew = xnew / norm(xnew)
+    x_symm_axis = xold + xnew
+    v_transport = v - 2 * v @ x_symm_axis.T/norm(x_symm_axis)**2 * x_symm_axis  # Equation for vector parallel transport along geodesic
+    # Don't use dot in numpy, it will have wierd behavior if the array is not single dimensional
+    return v_transport
 #
 # class FDGD(Optimizer):
 #     def __init__(self, nsamples, mutation_size, learning_rate, antithetic=True, init_code=None):

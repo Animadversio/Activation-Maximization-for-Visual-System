@@ -666,10 +666,45 @@ def gen_visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_
     plt.suptitle(exp_title_str + "\nBlock{0:03}".format(block_num), fontsize=16)
     plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
     if save:
-        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
+        plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num) + ".png"))
     plt.show()
     return fig
 
+# def visualize_image_evolution(CurDataDir, save=True, exp_title_str='', col_n=10, savedir='', cmap_flag=True, title_cmap=plt.cm.viridis):
+#     '''
+#     # CurDataDir:  "/home/poncelab/Documents/data/with_CNN/caffe-net_fc6_0001/backup/"
+#     # block_num: the number of block to visualize 20
+#     # title_cmap: define the colormap to do the code, plt.cm.viridis
+#     # col_n: number of column in a plot 6
+#     # FIXED: on Oct. 7th support new name format, and align the score are image correctly
+#     '''
+#
+#     image_num = len(self.img_ids)
+#     gen_num = self.generations.max() + 1
+#     row_n = np.ceil(gen_num / col_n)
+#     figW = 12
+#     figH = figW / col_n * row_n + 1
+#     fig = plt.figure(figsize=[figW, figH])
+#     for geni in range(gen_num):
+#         code_tmp = self.codes_all[self.generations == geni, :].mean(axis=0)
+#         img_tmp = generator.visualize(code_tmp)
+#         plt.subplot(row_n, col_n, geni + 1)
+#         plt.imshow(img_tmp)
+#         plt.axis('off')
+#         if cmap_flag:  # color the titles with a heatmap!
+#             plt.title("{:d} {0:.2f}".format(geni, score_tmp), fontsize=16,
+#                       color=title_cmap((score_tmp - lb) / (ub - lb)))  # normalize a value between [0,1]
+#         else:
+#             plt.title("{:d} {0:.2f}".format(geni, score_tmp), fontsize=16)
+#
+#
+#     plt.suptitle(exp_title_str, fontsize=16)
+#     plt.tight_layout(h_pad=0.1, w_pad=0, rect=(0, 0, 0.95, 0.9))
+#     if save:
+#         plt.savefig(os.path.join(savedir, exp_title_str + ".png"))
+#     # plt.show()
+#     return fig
+#
 # def visualize_image_evolution(CurDataDir, save=False, exp_title_str='', title_cmap=plt.cm.viridis,
 #                               col_n=6, savedir=''):
 #     '''
