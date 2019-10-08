@@ -723,9 +723,9 @@ if __name__ == '__main__':
 #%%
     neuron = ('caffe-net', 'fc8', 1)
     this_exp_dir = add_neuron_subdir(neuron, exp_dir)
-    optim_params_list = [{"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-1},
-                         {"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-2},
-                         {"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-3},
+    optim_params_list = [#{"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-1},
+                         #{"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-2},
+                         #{"sphere_norm": 300, "MAXSGM": 0.7, "c1": 1E-3},
                          {"sphere_norm": 400, "MAXSGM": 0.7, "c1": 1E-1},
                          {"sphere_norm": 400, "MAXSGM": 0.7, "c1": 1E-2},
                          {"sphere_norm": 400, "MAXSGM": 0.7, "c1": 1E-3},
@@ -735,22 +735,22 @@ if __name__ == '__main__':
                          {"sphere_norm": 300, "MAXSGM": 1, "c1": 1E-1},
                          {"sphere_norm": 300, "MAXSGM": 1, "c1": 1E-2},
                          {"sphere_norm": 300, "MAXSGM": 1, "c1": 1E-3},]
-    for optim_params in optim_params_list:
-        init_sigma = 0.7
-        trial_i = 0
-        random_seed = int(time())
-        trial_title = 'choleskycma_sphere%d_sgm%.2f_MAXSGM%d_uf10_c1%.2E_trial%d' % (
-                            optim_params["sphere_norm"], init_sigma,
-                            optim_params["MAXSGM"], optim_params["c1"], trial_i)
-        trialdir = add_trial_subdir(this_exp_dir, trial_title)
-        experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
-                                            optimizer_name='cholcmaes_sphere', init_sigma=init_sigma, Aupdate_freq=10,
-                                            optim_params=optim_params,
-                                            random_seed=random_seed, saveimg=True, record_pattern=False, record_optim=True)
-        experiment.run()
-        utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
-        utils.gen_visualize_image_score_each_block(trialdir, block_num=299, exp_title_str=trial_title, save=True,
-                                                   savedir=trialdir)
+    # for optim_params in optim_params_list:
+    #     init_sigma = 0.7
+    #     trial_i = 0
+    #     random_seed = int(time())
+    #     trial_title = 'choleskycma_sphere%d_sgm%.2f_MAXSGM%d_uf10_c1%.2E_trial%d' % (
+    #                         optim_params["sphere_norm"], init_sigma,
+    #                         optim_params["MAXSGM"], optim_params["c1"], trial_i)
+    #     trialdir = add_trial_subdir(this_exp_dir, trial_title)
+    #     experiment = CNNExperiment_Simplify(recorddir=trialdir, logdir=trialdir, target_neuron=neuron, max_steps=300,
+    #                                         optimizer_name='cholcmaes_sphere', init_sigma=init_sigma, Aupdate_freq=10,
+    #                                         optim_params=optim_params,
+    #                                         random_seed=random_seed, saveimg=True, record_pattern=False, record_optim=True)
+    #     experiment.run()
+    #     utils.visualize_score_trajectory(trialdir, save=True, title_str=trial_title)
+    #     utils.gen_visualize_image_score_each_block(trialdir, block_num=299, exp_title_str=trial_title, save=True,
+    #                                                savedir=trialdir)
 
     for optim_params in optim_params_list:
         init_sigma = 0.7

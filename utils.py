@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 from cv2 import imread, resize, INTER_CUBIC, INTER_AREA
 
-
+#%%
 def read_image(image_fpath):
     # BGR is flipped to RGB. why BGR?:
     #     Note In the case of color images, the decoded images will have the channels stored in B G R order.
@@ -839,3 +839,177 @@ def cmp_image_score_across_trial(neuron_dir, trial_list, vis_image_num=10, block
         plt.savefig(os.path.join(savedir, exp_title_str + "Block{0:03}".format(block_num)))
     plt.show()
     return fig
+#%%
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.decomposition import PCA
+class ExpDataManage:
+    '''The structure to load the data from one experiment and do analysis to the codes
+    and generate figures out of it!'''
+    def __init__(self, work_dir, trial_title):
+        self.work_dir = work_dir
+        self.trial_title = trial_title
+        self.load_codes()  # codes_all, generations
+        self.load_scores()  # img_ids, scores, score_generations
+        # Normally the first 2 generations are filler
+        # if len(self.score_generations) < len(self.generations):
+        #     codes_all = codes_all[]
+        # self.generations
+        # self.codes_all
+        # self.img_ids
+        # self.scores
+
+
+    def load_codes(self, codedir=None, savefile=True):
+        """ unlike load_codes, also returns name of load
+        Like score summary
+        """
+        if codedir == None:
+            codedir = self.work_dir
+        if "codes_all.npz" in os.listdir(codedir):
+            # if the summary table exist, just read from it!
+            with np.load(os.path.join(codedir, "codes_all.npz")) as data:
+                codes_all = data["codes_all"]
+                generations = data["generations"]
+            self.generations, self.codes_all = generations, codes_all
+            return codes_all, generations
+
+        codefns = sorted([fn for fn in os.listdir(codedir) if '.npy' in fn])
+        codes = []
+        generations = []
+        for codefn in codefns:
+            code = np.load(os.path.join(codedir, codefn), allow_pickle=False).flatten()
+            codes.append(code)
+            geni = re.findall(r"gen(\d+)_\d+", codefn)
+            generations.append(int(geni[0]))
+        codes = np.array(codes)
+        generations = np.array(generations)
+        if savefile:
+            np.savez(os.path.join(codedir, "codes_all.npz"), codes_all=codes, generations=generations)
+        self.generations, self.codes_all = generations, codes
+        return codes, generations
+
+    def load_scores(self, trialdir=None, savefile=True):
+        """ adapt from scores imagename summary"""
+        if trialdir == None:
+            trialdir = self.work_dir
+        if "scores_all.npz" in os.listdir(trialdir):
+            # if the summary table exist, just read from it!
+            with np.load(os.path.join(trialdir, "scores_all.npz")) as data:
+                scores = data["scores"]
+                generations = data["generations"]
+                image_ids = data["image_ids"]
+            self.scores, self.image_ids = scores, image_ids
+            self.score_generations = generations
+            return scores, image_ids, generations
+
+        scorefns = sorted([fn for fn in os.listdir(trialdir) if '.npz' in fn and 'scores_end_block' in fn])
+        scores = []
+        generations = []
+        image_ids = []
+        for scorefn in scorefns:
+            geni = re.findall(r"scores_end_block(\d+).npz", scorefn)
+            scoref = np.load(os.path.join(trialdir, scorefn), allow_pickle=False)
+            cur_score = scoref['scores']
+            scores.extend(list(cur_score))
+            image_ids.extend(list(scoref['image_ids']))
+            generations.extend([int(geni[0])] * len(cur_score))
+        scores = np.array(scores)  # 1d array
+        generations = np.array(generations)  # 1d array
+        if savefile:
+            np.savez(os.path.join(trialdir, "scores_all.npz"), scores=scores, generations=generations,
+                     image_ids=image_ids)
+        self.scores, self.image_ids = scores, image_ids
+        self.score_generations = generations
+        return scores, image_ids, generations
+
+    def clear_codes(self, codedir=None):
+        """ unlike load_codes, also returns name of load """
+        if codedir == None:
+            codedir = self.work_dir
+        # make sure enough codes for requested size
+        codefns = sorted([fn for fn in os.listdir(codedir) if '.npy' in fn and 'gen' in fn])
+        if not os.path.isfile(os.path.join(codedir, "codes_all.npz")):
+            self.load_codes(codedir, savefile=True)
+        for fn in codefns:
+            os.remove(os.path.join(codedir, fn))
+        return
+
+    def clear_scores(self, trialdir=None):
+        """ unlike load_codes, also returns name of load """
+        if trialdir == None:
+            trialdir = self.work_dir
+        # make sure enough codes for requested size
+        scorefns = sorted([fn for fn in os.listdir(trialdir) if '.npz' in fn and 'scores_end_block' in fn])
+        if not os.path.isfile(os.path.join(trialdir, "scores_all.npz")):
+            self.load_scores(trialdir, savefile=True)
+        for fn in scorefns:
+            os.remove(os.path.join(trialdir, fn))
+        return
+
+    def visualize_score_trajectory(self, save=False, title_str="", exp_title_str='', savedir=''):
+        if title_str == "":
+            title_str = self.trial_title
+        AvgScore = []
+        MaxScore = []
+        for geni in range(self.generations.min(), self.generations.max() + 1):
+            AvgScore.append(np.nanmean(self.scores[self.generations == geni]))
+            MaxScore.append(np.nanmax(self.scores[self.generations == geni]))
+        AvgScore = np.array(AvgScore)
+        MaxScore = np.array(MaxScore)
+
+        figh = plt.figure()
+        plt.scatter(self.generations, self.scores, s=16, alpha=0.6, label="all score")
+        plt.plot(self.generations, AvgScore, color='black', label="Average score")
+        plt.plot(self.generations, MaxScore, color='red', label="Max score")
+        plt.xlabel("generation #")
+        plt.ylabel("CNN unit score")
+        plt.title("Optimization Trajectory of Score\n" + title_str)
+        plt.legend()
+        if save:
+            if savedir == '':
+                savedir = self.work_dir
+            plt.savefig(os.path.join(savedir, exp_title_str + "score_traj.png"))
+        plt.show()
+        return figh
+
+    def code_norm_evolve(self, generations, codes_all, savefig=True, show=False, savedir="", trial_title=""):
+        code_norm = np.sum(self.codes_all ** 2, axis=1)  # np.sqrt()
+        model = LinearRegression().fit(self.generations.reshape(-1, 1), code_norm)
+        if savefig or show:
+            plt.figure(figsize=[10, 6])
+            plt.scatter(self.generations, code_norm, s=10, alpha=0.7)
+            plt.title("Code Norm Square ~ Gen \n %s\n  Linear Coefficient %.f Intercept %.f" % (
+            self.trial_title, model.coef_[0], model.intercept_))
+            plt.ylabel("Code Norm Squared")
+            plt.xlabel("Generations")
+            if savefig:
+                plt.savefig(os.path.join(savedir, "code_norm_evolution.png"))
+            if show:
+                plt.show()
+        return model.coef_[0], model.intercept_
+
+    def visualize_norm_trajectory(self):
+        figh = plt.figure()
+        code_norm = np.sum(self.codes_all ** 2, axis=1)  # np.sqrt()
+        model = LinearRegression().fit(self.generations.reshape(-1, 1), code_norm)
+        plt.figure(figsize=[10, 6])
+        plt.scatter(self.generations, code_norm, s=10, alpha=0.7)
+        plt.title("Code Norm Square ~ Gen \n %s\n  Linear Coefficient %.f Intercept %.f" % (
+        self.trial_title, model.coef_[0], model.intercept_))
+        plt.ylabel("Code Norm^2")
+        plt.xlabel("Generations")
+        plt.savefig("code_norm_evolution.png")
+        plt.show()
+        return figh
+
+    def visualize_image_evolution(self):
+        figh = plt.figure()
+        return figh
+
+    def visualize_image_gen(self):
+        figh = plt.figure()
+        return figh
+
+
+
