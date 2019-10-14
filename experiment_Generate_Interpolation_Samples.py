@@ -55,7 +55,7 @@ print("Computing PCs of the orthogonal space")
 ortho_code_pca = PCA(n_components=50)
 ortho_code_pca.fit(ortho_codes_all)
 ortho_PC_vectors = ortho_code_pca.components_
-ortho_code_pca.transform()
+# ortho_code_pca.transform()
 #%%
 plt.figure()
 # plt.imshow(generator.visualize((ortho_final_vec2 + ortho_PC_vectors[0:1, :])*400))
@@ -66,12 +66,15 @@ plt.show()
 coord_vectors = np.concatenate((unit_final_vec1, ortho_final_vec2, ortho_PC_vectors[0:1, :]), axis=0)
 interp_ang_step = 180 / 10
 PC3_ang_step = 180 / 10
-sphere_norm = 300 # mean_final_norm
+sphere_norm = mean_final_norm
 print("Generating images on interpolating  sphere (rad = %d)" % sphere_norm)
 img_list = []
 for k in range(-5, 6):
     for j in range(-5, 11):
-
+        if PC3_ang_step * k == -90 and j != 0:
+            continue
+        if PC3_ang_step * k ==  90 and j != 0:
+            continue
         theta = interp_ang_step * j / 180 * np.pi
         phi = PC3_ang_step * k / 180 * np.pi
         code_vec = np.array([[np.cos(theta) * np.cos(phi),
