@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Experimental Code to generate samples in selected PC space from an experiment
 depending on `utils` for code loading things
@@ -15,16 +16,26 @@ import utils
 '''
 Input the experimental backup folder containing the mat codes files. 
 '''
-backup_dir = r"\\storage1.ris.wustl.edu\crponce\Active\Stimuli\2019-06-Evolutions\beto-191001a\backup_10_01_2019_14_55_34"
-#r"\\storage1.ris.wustl.edu\crponce\Active\Stimuli\2019-06-Evolutions\beto-190925a\backup_09_25_2019_16_05_18"
-newimg_dir = os.path.join(backup_dir, "PC_imgs")
+backup_dir = r"C:\Users\Poncelab-ML2a\Documents\Python\Generator_DB_Windows\shared\backup_10_03_2019_13_42_32"
+backup_dir = r"C:\Users\Poncelab-ML2a\Documents\Python\Generator_DB_Windows\shared\backup_10_11_2019_13_17_02"
+# r"\\storage1.ris.wustl.edu\crponce\Active\Stimuli\2019-06-Evolutions\beto-190925a\backup_09_25_2019_16_05_18"
+newimg_dir = os.path.join(backup_dir,"PC_imgs")
+
 #%%
 os.makedirs(newimg_dir, exist_ok=True)
 print("Save new images to folder %s", newimg_dir)
 #%%
 print("Loading the codes from experiment folder %s", backup_dir)
 codes_all, generations = utils.load_codes_mat(backup_dir)
+generations = np.array(generations)
 print("Shape of code", codes_all.shape)
+#%%
+final_gen_norms = np.linalg.norm(codes_all[generations==max(generations), :], axis=1)
+final_gen_norm = final_gen_norms.mean()
+print("Average norm of the last generation samples %.2f" % final_gen_norm)
+
+sphere_norm = final_gen_norm
+print("Set sphere norm to the last generations norm!")
 #%%
 print("Computing PCs")
 code_pca = PCA(n_components=50)
@@ -40,7 +51,7 @@ else:
 
 PC2_ang_step = 180 / 10
 PC3_ang_step = 180 / 10
-sphere_norm = 300
+# sphere_norm = 300
 print("Generating images on PC1, PC2, PC3 sphere (rad = %d)" % sphere_norm)
 img_list = []
 for j in range(-5, 6):
@@ -55,11 +66,11 @@ for j in range(-5, 6):
         img_list.append(img.copy())
         plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (sphere_norm, PC2_ang_step * j, PC3_ang_step* k)), img)
 
-fig1 = utils.visualize_img_list(img_list)  # rows are PC3(PC50,RND_vec2) direction, columns are PC2(PC49 RND_vec1) directions
+fig1 = utils.visualize_img_list(img_list)
 # %% Spherical interpolation
 PC2_ang_step = 180 / 10
 PC3_ang_step = 180 / 10
-sphere_norm = 300
+# sphere_norm = 300
 print("Generating images on PC1, PC49, PC50 sphere (rad = %d)" % sphere_norm)
 PC_nums = [0, 48, 49]  # can tune here to change the selected PC to generate images
 img_list = []
@@ -76,12 +87,12 @@ for j in range(-5, 6):
         plt.imsave(os.path.join(newimg_dir, "norm_%d_PC%d_%d_PC%d_%d.jpg" % (sphere_norm,
                                                                             PC_nums[1] + 1, PC2_ang_step * j,
                                                                             PC_nums[2] + 1, PC3_ang_step * k)), img)
-fig2 = utils.visualize_img_list(img_list) # rows are PC3(PC50,RND_vec2) direction, columns are PC2(PC49 RND_vec1) directions
+fig2 = utils.visualize_img_list(img_list)
 
 # %% Spherical interpolation
 PC2_ang_step = 180 / 10
 PC3_ang_step = 180 / 10
-sphere_norm = 300
+# sphere_norm = 300
 print("Generating images on PC1, Random vector1, Random vector2 sphere (rad = %d)" % sphere_norm)
 # Random select and orthogonalize the vectors to form the sphere
 rand_vec2 = np.random.randn(2, 4096)
@@ -100,7 +111,10 @@ for j in range(-5, 6):
         img = generator.visualize(code_vec)
         img_list.append(img.copy())
         plt.imsave(os.path.join(newimg_dir, "norm_%d_RND1_%d_RND2_%d.jpg" % (sphere_norm, PC2_ang_step * j, PC3_ang_step * k)), img)
-fig3 = utils.visualize_img_list(img_list)  # rows are PC3(PC50,RND_vec2) direction, columns are PC2(PC49 RND_vec1) directions
+fig3 = utils.visualize_img_list(img_list)
 
+fig1.savefig(os.path.join(backup_dir,"Norm%d_PC12_Montage.png"%sphere_norm))
+fig2.savefig(os.path.join(backup_dir,"Norm%d_PC4950_Montage.png"%sphere_norm))
+fig3.savefig(os.path.join(backup_dir,"Norm%d_RND12_Montage.png"%sphere_norm))
 np.savez(os.path.join(newimg_dir, "PC_vector_data.npz"), PC_vecs=PC_vectors, rand_vec2=rand_vec2,
          sphere_norm=sphere_norm, PC2_ang_step=PC2_ang_step, PC3_ang_step=PC3_ang_step)
