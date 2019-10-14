@@ -119,5 +119,7 @@ for k in range(-5, 6):
 
 fig2 = utils.visualize_img_list(img_list, ncol=16, nrow=11)  # rows are PC3(PC50,RND_vec2) direction, columns are PC2(PC49 RND_vec1) directions
 
+fig1.savefig(os.path.join(backup_dir,"Norm%d_PC3_Interp_Montage.png"%sphere_norm))
+fig2.savefig(os.path.join(backup_dir,"Norm%d_PC4_Interp_Montage.png"%sphere_norm))
 np.savez(os.path.join(newimg_dir, "PC_vector_data.npz"), coord_vectors=coord_vectors, ortho_PC_vectors=ortho_PC_vectors[:2, :],
              sphere_norm=sphere_norm, interp_ang_step=interp_ang_step, PC3_ang_step=PC3_ang_step)
