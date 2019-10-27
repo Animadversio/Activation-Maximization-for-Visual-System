@@ -616,7 +616,7 @@ def visualize_image_score_each_block(CurDataDir, block_num, save=False, exp_titl
     plt.show()
     return fig
 
-def visualize_img_list(img_list, scores=None, ncol=11, nrow=11, title_cmap=plt.cm.viridis):
+def visualize_img_list(img_list, scores=None, ncol=11, nrow=11, title_cmap=plt.cm.viridis, show=True):
     """Visualize images from a list and maybe label the score on it!"""
     if scores is not None and not title_cmap == None:
         cmap_flag = True
@@ -624,7 +624,8 @@ def visualize_img_list(img_list, scores=None, ncol=11, nrow=11, title_cmap=plt.c
         lb = scores.min()
     else:
         cmap_flag = False
-    assert len(img_list) <= ncol * nrow
+    if not len(img_list) <= ncol * nrow:
+        nrow = int(np.ceil(len(img_list) / ncol))
     figW = 30
     figH = figW / ncol * nrow + 1
     fig = plt.figure(figsize=[figW, figH])
@@ -639,7 +640,8 @@ def visualize_img_list(img_list, scores=None, ncol=11, nrow=11, title_cmap=plt.c
             plt.title("{0:.2f}".format(scores[i]), fontsize=16)
         else:
             pass
-    plt.show()
+    if not show:
+        plt.show()
     return fig
 
 from Generator import Generator

@@ -749,7 +749,72 @@ class CholeskyCMAES(Optimizer):
         self._curr_sample_ids = new_ids
         if not no_image:
             self._prepare_images()
+        return new_samples
 
+    def step_simple(self, scores, codes):
+        # Note it's important to decide which variable is to be saved in the `Optimizer` object
+        # Note to conform with other code, this part is transposed.
+
+        # set short name for everything to simplify equations
+        N = self.space_dimen
+        lambda_, mu, mueff, chiN = self.lambda_, self.mu, self.mueff, self.chiN
+        cc, cs, c1, damps = self.cc, self.cs, self.c1, self.damps
+        sigma, A, Ainv, ps, pc, = self.sigma, self.A, self.Ainv, self.ps, self.pc,
+
+        # Sort by fitness and compute weighted mean into xmean
+        if self.maximize is False:
+            code_sort_index = np.argsort(scores)  # add - operator it will do maximization.
+        else:
+            code_sort_index = np.argsort(-scores)
+        # scores = scores[code_sort_index]  # Ascending order. minimization
+
+        if self._istep == 0:
+            # Population Initialization: if without initialization, the first xmean is evaluated from weighted average all the natural images
+            if self.init_x is None:
+                self.xmean = self.weights @ codes[code_sort_index[0:mu], :]
+            else:
+                self.xmean = self.init_x
+        else:
+            self.xold = self.xmean
+            self.xmean = self.weights @ codes[code_sort_index[0:mu], :]  # Weighted recombination, new mean value
+
+            # Cumulation statistics through steps: Update evolution paths
+            randzw = self.weights @ self.randz[code_sort_index[0:mu], :]
+            ps = (1 - cs) * ps + sqrt(cs * (2 - cs) * mueff) * randzw
+            pc = (1 - cc) * pc + sqrt(cc * (2 - cc) * mueff) * randzw @ A
+
+            # Adapt step size sigma
+            sigma = sigma * exp((cs / damps) * (norm(ps) / chiN - 1))
+            # self.sigma = self.sigma * exp((self.cs / self.damps) * (norm(ps) / self.chiN - 1))
+            print("sigma: %.2f" % sigma)
+
+            # Update A and Ainv with search path
+            if self.counteval - self.eigeneval > self.update_crit:  # to achieve O(N ^ 2) do decomposition less frequently
+                self.eigeneval = self.counteval
+                t1 = time()
+                v = pc @ Ainv
+                normv = v @ v.T
+                # Directly update the A Ainv instead of C itself
+                A = sqrt(1-c1) * A + sqrt(1-c1)/normv*(sqrt(1+normv*c1/(1-c1))-1) * v@pc.T # FIXME, dimension error
+                Ainv = 1/sqrt(1-c1) * Ainv - 1/sqrt(1-c1)/normv*(1-1/sqrt(1+normv*c1/(1-c1))) * Ainv@v.T@v
+                t2 = time()
+                print("A, Ainv update! Time cost: %.2f s" % (t2-t1))
+
+        # Generate new sample by sampling from Gaussian distribution
+        new_samples = zeros((self.lambda_, N))
+        self.randz = randn(self.lambda_, N)  # save the random number for generating the code.
+        for k in range(self.lambda_):
+            new_samples[k:k + 1, :] = self.xmean + sigma * (self.randz[k, :] @ A)  # m + sig * Normal(0,C)
+            # Clever way to generate multivariate gaussian!!
+            # Stretch the guassian hyperspher with D and transform the
+            # ellipsoid by B mat linear transform between coordinates
+            # FIXME A little inconsistent with the naming at line 173/175/305/307 esp. for gen000 code
+            # assign id to newly generated images. These will be used as file names at 2nd round
+            self.counteval += 1
+
+        self.sigma, self.A, self.Ainv, self.ps, self.pc = sigma, A, Ainv, ps, pc,
+        self._istep += 1
+        return new_samples
 
     def save_optimizer_state(self):
         """a save Optimizer status function.
