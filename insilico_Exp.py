@@ -206,7 +206,7 @@ class ExperimentRestrictEvolve:
         for self.istep in range(self.max_steps):
             if self.istep == 0:
                 if init_code is None:
-                    coords = np.zeros([1, subspace_d])
+                    coords = np.zeros([1, self.sub_d])
                 else:
                     coords = init_code
             codes = coords @ self.basis
