@@ -5,15 +5,20 @@ import caffe
 # So if another High level platform of CNN is to be used, only change this file
 
 caffe.set_mode_gpu()
-if os.environ['COMPUTERNAME'] == 'DESKTOP-9DDE2RH': # PonceLab-Desktop 3 
-    homedir = "D:/Generator_DB_Windows"
-    netsdir = os.path.join(homedir, 'nets')
-elif os.environ['COMPUTERNAME'] == 'DESKTOP-MENSD6S': # Home_WorkStation
-    homedir = "D:/Monkey_Data/Generator_DB_Windows"
-    netsdir = os.path.join(homedir, 'nets')
-else:
+from sys import platform
+if platform == "linux":  # CHPC cluster
     homedir = os.path.expanduser('~')
-    netsdir = os.path.join(homedir, 'Documents/nets')
+    netsdir = os.path.join(homedir, 'Generate_DB/nets')
+else:
+    if os.environ['COMPUTERNAME'] == 'DESKTOP-9DDE2RH':  # PonceLab-Desktop 3
+        homedir = "D:/Generator_DB_Windows"
+        netsdir = os.path.join(homedir, 'nets')
+    elif os.environ['COMPUTERNAME'] == 'DESKTOP-MENSD6S':  # Home_WorkStation
+        homedir = "D:/Monkey_Data/Generator_DB_Windows"
+        netsdir = os.path.join(homedir, 'nets')
+    else:
+        homedir = os.path.expanduser('~')
+        netsdir = os.path.join(homedir, 'Documents/nets')
 
 if not os.path.isdir(netsdir):
     raise OSError('path for nets is invalid: %s' % netsdir)
