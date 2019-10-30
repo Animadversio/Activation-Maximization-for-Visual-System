@@ -1,4 +1,4 @@
-
+"""Supporting classes and experimental code for in-silico experiment"""
 # Manifold_experiment
 import utils
 import net_utils
@@ -44,7 +44,7 @@ class CNNmodel:
             self._net_unit_y = None
 
     def set_recording(self, record_layers):
-        self.artiphys = True
+        self.artiphys = True  # flag to record the neural activity in one layer
         self.record_layers = record_layers
         self.recordings = {}
         for layername in record_layers:  # will be arranged in a dict of lists
@@ -218,7 +218,7 @@ class ExperimentManifold:
         self.scores_all = np.array(self.scores_all)
         self.generations = np.array(self.generations)
 
-    def analyze_trag(self):
+    def analyze_traj(self):
         '''Get the trajectory and the PCs and the structures of it'''
         final_gen_norms = np.linalg.norm(self.codes_all[self.generations == max(self.generations), :], axis=1)
         self.sphere_norm = final_gen_norms.mean()
@@ -234,24 +234,54 @@ class ExperimentManifold:
             self.PC1_sign = 1
             pass
 
-    def run_manifold(self, subspace, interval=9):
+    def run_manifold(self, subspace_list, interval=9):
         '''Generate examples on manifold and run'''
-        print("Generating images on PC1, PC2, PC3 sphere (rad = %d)" % self.sphere_norm)
-        img_list = []
-        for j in range(-5, 6):
-            for k in range(-5, 6):
-                theta = interval * j / 180 * np.pi
-                phi = interval * k / 180 * np.pi
-                code_vec = np.array([[np.cos(theta) * np.cos(phi),
-                                      np.sin(theta) * np.cos(phi),
-                                      np.sin(phi)]]) @ self.PC_vectors[0:3, :]
-                code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
-                img = generator.visualize(code_vec)
-                img_list.append(img.copy())
-                plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (
-                self.sphere_norm, interval * j, interval * k)), img)
-
-        fig1 = utils.visualize_img_list(img_list)
+        score_sum = []
+        figsum = plt.figure(figsize=[5, 10])
+        for subspace in subspace_list:
+            if subspace == "RND":
+                title = "Norm%dRND%dRND%d" % (self.sphere_norm, 0 + 1, 1 + 1)
+                print("Generating images on PC1, Random vector1, Random vector2 sphere (rad = %d)" % self.sphere_norm)
+                rand_vec2 = np.random.randn(2, 4096)
+                rand_vec2 = rand_vec2 - (rand_vec2 @ self.PC_vectors.T) @ self.PC_vectors
+                rand_vec2 = rand_vec2 / np.sqrt((rand_vec2 ** 2).sum(axis=1))[:, np.newaxis]
+                rand_vec2[1, :] = rand_vec2[1, :] - (rand_vec2[1, :] @ rand_vec2[0, :].T) * rand_vec2[0, :]
+                rand_vec2[1, :] = rand_vec2[1, :] / np.linalg.norm(rand_vec2[1, :])
+                vectors = np.concatenate((self.PC_vectors[0:1, :], rand_vec2), axis=0)
+                img_list = []
+                interv_n = int(90 / interval)
+                for j in range(-interv_n, interv_n + 1):
+                    for k in range(-interv_n, interv_n + 1):
+                        theta = interval * j / 180 * np.pi
+                        phi = interval * k / 180 * np.pi
+                        code_vec = np.array([[np.cos(theta) * np.cos(phi),
+                                              np.sin(theta) * np.cos(phi),
+                                              np.sin(phi)]]) @ vectors
+                        code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
+                        img = generator.visualize(code_vec)
+                        img_list.append(img.copy())
+            else:
+                PCi, PCj = subspace
+                title = "Norm%dPC%dPC%d" % (self.sphere_norm, PCi + 1, PCj + 1)
+                print("Generating images on PC1, PC%d, PC%d sphere (rad = %d)" % (self.sphere_norm, PCi + 1, PCj + 1))
+                img_list = []
+                interv_n = int(90 / interval)
+                for j in range(-interv_n, interv_n + 1):
+                    for k in range(-interv_n, interv_n + 1):
+                        theta = interval * j / 180 * np.pi
+                        phi = interval * k / 180 * np.pi
+                        code_vec = np.array([[np.cos(theta) * np.cos(phi),
+                                              np.sin(theta) * np.cos(phi),
+                                              np.sin(phi)]]) @ self.PC_vectors[[0, PCi, PCj], :]
+                        code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
+                        img = generator.visualize(code_vec)
+                        img_list.append(img.copy())
+                        # plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (
+                        # self.sphere_norm, interval * j, interval * k)), img)
+            scores = self.CNNmodel.score(img_list)
+            scores = np.array(scores).reshape((interv_n, interv_n))
+            score_sum.append(scores)
+            fig1 = utils.visualize_img_list(img_list)
 
 class ExperimentRestrictEvolve:
     def __init__(self, subspace_d, model_unit, max_step=200):
@@ -534,26 +564,26 @@ if __name__ == "__main__":
     #     best_scores_col = np.array(best_scores_col)
     #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
 
-    for unit in unit_arr:
-        savedir = os.path.join(recorddir, "%s_%s_%d_subspac%d" % (unit[0], unit[1], unit[2], subspace_d))
-        os.makedirs(savedir, exist_ok=True)
-        best_scores_col = []
-        for triali in range(100):
-            experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
-            experiment.get_basis()
-            experiment.run()
-            fig0 = experiment.visualize_best(show=False)
-            fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
-            fig = experiment.visualize_trajectory(show=False)
-            fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
-            fig2 = experiment.visualize_exp(show=False)
-            fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
-            plt.close('all')
-            np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
-                     generations=experiment.generations,
-                     scores_all=experiment.scores_all)
-            lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-             range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-            best_scores_col.append(lastgen_max)
-        best_scores_col = np.array(best_scores_col)
-        np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    # for unit in unit_arr:
+    #     savedir = os.path.join(recorddir, "%s_%s_%d_subspac%d" % (unit[0], unit[1], unit[2], subspace_d))
+    #     os.makedirs(savedir, exist_ok=True)
+    #     best_scores_col = []
+    #     for triali in range(100):
+    #         experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
+    #         experiment.get_basis()
+    #         experiment.run()
+    #         fig0 = experiment.visualize_best(show=False)
+    #         fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
+    #         fig = experiment.visualize_trajectory(show=False)
+    #         fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
+    #         fig2 = experiment.visualize_exp(show=False)
+    #         fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
+    #         plt.close('all')
+    #         np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
+    #                  generations=experiment.generations,
+    #                  scores_all=experiment.scores_all)
+    #         lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+    #          range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+    #         best_scores_col.append(lastgen_max)
+    #     best_scores_col = np.array(best_scores_col)
+    #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
