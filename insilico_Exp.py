@@ -6,6 +6,7 @@ from utils import generator
 from time import time
 import numpy as np
 from Optimizer import CholeskyCMAES
+from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import os
 from os.path import join
@@ -171,9 +172,86 @@ class ExperimentEvolve:
             plt.show()
         return figh
 
-# class ExperimentManifold:
-#     def __init__(self):
-#
+class ExperimentManifold:
+    def __init__(self, model_unit, max_step=100):
+        self.recording = []
+        self.scores_all = []
+        self.codes_all = []
+        self.generations = []
+        self.CNNmodel = CNNmodel(model_unit[0])  # 'caffe-net'
+        self.CNNmodel.select_unit(model_unit)
+        self.optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma,
+                                       init_code=np.zeros([1, code_length]),
+                                       Aupdate_freq=Aupdate_freq)  # , optim_params=optim_params
+        self.max_steps = max_step
+        return
+
+    def run(self, init_code=None):
+        self.recording = []
+        self.scores_all = []
+        self.codes_all = []
+        self.generations = []
+        for self.istep in range(self.max_steps):
+            if self.istep == 0:
+                if init_code is None:
+                    codes = np.zeros([1, code_length])
+                else:
+                    codes = init_code
+            print('\n>>> step %d' % self.istep)
+            t0 = time()
+            self.current_images = render(codes)
+            t1 = time()  # generate image from code
+            synscores = self.CNNmodel.score(self.current_images)
+            t2 = time()  # score images
+            codes_new = self.optimizer.step_simple(synscores, codes)
+            t3 = time()  # use results to update optimizer
+            self.codes_all.append(codes)
+            self.scores_all = self.scores_all + list(synscores)
+            self.generations = self.generations + [self.istep] * len(synscores)
+            codes = codes_new
+            # summarize scores & delays
+            print('synthetic img scores: mean {}, all {}'.format(np.nanmean(synscores), synscores))
+            print(('step %d time: total %.2fs | ' +
+                   'code visualize %.2fs  score %.2fs  optimizer step %.2fs')
+                  % (self.istep, t3 - t0, t1 - t0, t2 - t1, t3 - t2))
+        self.codes_all = np.concatenate(tuple(self.codes_all), axis=0)
+        self.scores_all = np.array(self.scores_all)
+        self.generations = np.array(self.generations)
+
+    def analyze_trag(self):
+        '''Get the trajectory and the PCs and the structures of it'''
+        final_gen_norms = np.linalg.norm(self.codes_all[self.generations == max(self.generations), :], axis=1)
+        self.sphere_norm = final_gen_norms.mean()
+        code_pca = PCA(n_components=50)
+        PC_Proj_codes = code_pca.fit_transform(self.codes_all)
+        self.PC_vectors = code_pca.components_
+        if PC_Proj_codes[-1, 0] < 0:  # decide which is the positive direction for PC1
+            inv_PC1 = True
+            self.PC_vectors[0, :] = - self.PC_vectors[0, :]
+            self.PC1_sign = -1
+        else:
+            inv_PC1 = False
+            self.PC1_sign = 1
+            pass
+
+    def run_manifold(self, subspace, interval=9):
+        '''Generate examples on manifold and run'''
+        print("Generating images on PC1, PC2, PC3 sphere (rad = %d)" % self.sphere_norm)
+        img_list = []
+        for j in range(-5, 6):
+            for k in range(-5, 6):
+                theta = interval * j / 180 * np.pi
+                phi = interval * k / 180 * np.pi
+                code_vec = np.array([[np.cos(theta) * np.cos(phi),
+                                      np.sin(theta) * np.cos(phi),
+                                      np.sin(phi)]]) @ self.PC_vectors[0:3, :]
+                code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
+                img = generator.visualize(code_vec)
+                img_list.append(img.copy())
+                plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (
+                self.sphere_norm, interval * j, interval * k)), img)
+
+        fig1 = utils.visualize_img_list(img_list)
 
 class ExperimentRestrictEvolve:
     def __init__(self, subspace_d, model_unit, max_step=200):
