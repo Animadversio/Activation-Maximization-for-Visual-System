@@ -279,202 +279,203 @@ class ExperimentRestrictEvolve:
 # experiment = ExperimentEvolve()
 # experiment.run()
 #%%
-# subspace_d = 50
-# for triali in range(100):
-#     experiment = ExperimentRestrictEvolve(subspace_d, ('caffe-net', 'fc8', 1))
-#     experiment.get_basis()
-#     experiment.run()
-#     fig = experiment.visualize_trajectory(show=False)
-#     fig.savefig(os.path.join(recorddir, "Subspc%dScoreTrajTrial%03d" % (subspace_d, triali) + ".png"))
-#     fig2 = experiment.visualize_exp(show=False)
-#     fig2.savefig(os.path.join(recorddir, "Subspc%dEvolveTrial%03d"%(subspace_d, triali) + ".png"))
-#
-# #%%
-# #%% Restricted evolution for the 5 examplar layerse
-# subspace_d = 50
-# unit = ('caffe-net', 'conv5', 5, 10, 10)
-# savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
-# os.makedirs(savedir, exist_ok=True)
-# best_scores_col = []
-# for triali in range(100):
-#     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
-#     experiment.get_basis()
-#     experiment.run()
-#     fig0 = experiment.visualize_best(show=False)
-#     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
-#     fig = experiment.visualize_trajectory(show=False)
-#     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
-#     fig2 = experiment.visualize_exp(show=False)
-#     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
-#     plt.close("all")
-#     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
-#              generations=experiment.generations,
-#              scores_all=experiment.scores_all)
-#     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-#      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-#     best_scores_col.append(lastgen_max)
-# best_scores_col = np.array(best_scores_col)
-# np.save(join(savedir, "best_scores.npy"), best_scores_col)
-# #%%
-# subspace_d = 50
-# unit = ('caffe-net', 'conv3', 5, 10, 10)
-# savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
-# os.makedirs(savedir, exist_ok=True)
-# best_scores_col = []
-# for triali in range(0, 100):
-#     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
-#     experiment.get_basis()
-#     experiment.run()
-#     fig0 = experiment.visualize_best(show=False)
-#     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
-#     fig = experiment.visualize_trajectory(show=False)
-#     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
-#     fig2 = experiment.visualize_exp(show=False)
-#     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
-#     plt.close("all")
-#     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
-#              generations=experiment.generations,
-#              scores_all=experiment.scores_all)
-#     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-#      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-#     best_scores_col.append(lastgen_max)
-# best_scores_col = np.array(best_scores_col)
-# np.save(join(savedir, "best_scores.npy"), best_scores_col)
-#
-# subspace_d = 50
-# unit = ('caffe-net', 'fc6', 1)
-# savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
-# os.makedirs(savedir, exist_ok=True)
-# best_scores_col = []
-# for triali in range(100):
-#     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
-#     experiment.get_basis()
-#     experiment.run()
-#     fig0 = experiment.visualize_best(show=False)
-#     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
-#     fig = experiment.visualize_trajectory(show=False)
-#     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
-#     fig2 = experiment.visualize_exp(show=False)
-#     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
-#     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
-#              generations=experiment.generations,
-#              scores_all=experiment.scores_all)
-#     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-#      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-#     best_scores_col.append(lastgen_max)
-# best_scores_col = np.array(best_scores_col)
-# np.save(join(savedir, "best_scores.npy"), best_scores_col)
-#
-# subspace_d = 50
-# unit = ('caffe-net', 'fc7', 1)
-# savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
-# os.makedirs(savedir, exist_ok=True)
-# best_scores_col = []
-# for triali in range(100):
-#     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
-#     experiment.get_basis()
-#     experiment.run()
-#     fig0 = experiment.visualize_best(show=False)
-#     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
-#     fig = experiment.visualize_trajectory(show=False)
-#     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
-#     fig2 = experiment.visualize_exp(show=False)
-#     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
-#     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
-#              generations=experiment.generations,
-#              scores_all=experiment.scores_all)
-#     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-#      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-#     best_scores_col.append(lastgen_max)
-# best_scores_col = np.array(best_scores_col)
-# np.save(join(savedir, "best_scores.npy"), best_scores_col)
+if __name__ == "__main__":
+    # subspace_d = 50
+    # for triali in range(100):
+    #     experiment = ExperimentRestrictEvolve(subspace_d, ('caffe-net', 'fc8', 1))
+    #     experiment.get_basis()
+    #     experiment.run()
+    #     fig = experiment.visualize_trajectory(show=False)
+    #     fig.savefig(os.path.join(recorddir, "Subspc%dScoreTrajTrial%03d" % (subspace_d, triali) + ".png"))
+    #     fig2 = experiment.visualize_exp(show=False)
+    #     fig2.savefig(os.path.join(recorddir, "Subspc%dEvolveTrial%03d"%(subspace_d, triali) + ".png"))
+    #
+    # #%%
+    # #%% Restricted evolution for the 5 examplar layerse
+    # subspace_d = 50
+    # unit = ('caffe-net', 'conv5', 5, 10, 10)
+    # savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
+    # os.makedirs(savedir, exist_ok=True)
+    # best_scores_col = []
+    # for triali in range(100):
+    #     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
+    #     experiment.get_basis()
+    #     experiment.run()
+    #     fig0 = experiment.visualize_best(show=False)
+    #     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
+    #     fig = experiment.visualize_trajectory(show=False)
+    #     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
+    #     fig2 = experiment.visualize_exp(show=False)
+    #     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
+    #     plt.close("all")
+    #     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
+    #              generations=experiment.generations,
+    #              scores_all=experiment.scores_all)
+    #     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+    #      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+    #     best_scores_col.append(lastgen_max)
+    # best_scores_col = np.array(best_scores_col)
+    # np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    # #%%
+    # subspace_d = 50
+    # unit = ('caffe-net', 'conv3', 5, 10, 10)
+    # savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
+    # os.makedirs(savedir, exist_ok=True)
+    # best_scores_col = []
+    # for triali in range(0, 100):
+    #     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
+    #     experiment.get_basis()
+    #     experiment.run()
+    #     fig0 = experiment.visualize_best(show=False)
+    #     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
+    #     fig = experiment.visualize_trajectory(show=False)
+    #     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
+    #     fig2 = experiment.visualize_exp(show=False)
+    #     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
+    #     plt.close("all")
+    #     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
+    #              generations=experiment.generations,
+    #              scores_all=experiment.scores_all)
+    #     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+    #      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+    #     best_scores_col.append(lastgen_max)
+    # best_scores_col = np.array(best_scores_col)
+    # np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    #
+    # subspace_d = 50
+    # unit = ('caffe-net', 'fc6', 1)
+    # savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
+    # os.makedirs(savedir, exist_ok=True)
+    # best_scores_col = []
+    # for triali in range(100):
+    #     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
+    #     experiment.get_basis()
+    #     experiment.run()
+    #     fig0 = experiment.visualize_best(show=False)
+    #     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
+    #     fig = experiment.visualize_trajectory(show=False)
+    #     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
+    #     fig2 = experiment.visualize_exp(show=False)
+    #     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
+    #     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
+    #              generations=experiment.generations,
+    #              scores_all=experiment.scores_all)
+    #     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+    #      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+    #     best_scores_col.append(lastgen_max)
+    # best_scores_col = np.array(best_scores_col)
+    # np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    #
+    # subspace_d = 50
+    # unit = ('caffe-net', 'fc7', 1)
+    # savedir = os.path.join(recorddir, "%s_%s_%d" % (unit[0], unit[1], unit[2]))
+    # os.makedirs(savedir, exist_ok=True)
+    # best_scores_col = []
+    # for triali in range(100):
+    #     experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
+    #     experiment.get_basis()
+    #     experiment.run()
+    #     fig0 = experiment.visualize_best(show=False)
+    #     fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
+    #     fig = experiment.visualize_trajectory(show=False)
+    #     fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
+    #     fig2 = experiment.visualize_exp(show=False)
+    #     fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
+    #     np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
+    #              generations=experiment.generations,
+    #              scores_all=experiment.scores_all)
+    #     lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+    #      range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+    #     best_scores_col.append(lastgen_max)
+    # best_scores_col = np.array(best_scores_col)
+    # np.save(join(savedir, "best_scores.npy"), best_scores_col)
 
-#%% Baseline Full Evolution
-unit_arr = [('caffe-net', 'conv3', 5, 10, 10),
-            ('caffe-net', 'conv5', 5, 10, 10),
-            ('caffe-net', 'fc6', 1),
-            ('caffe-net', 'fc7', 1),
-            ('caffe-net', 'fc8', 1)]
-# unit = ('caffe-net', 'fc7', 1)
-# for unit in unit_arr:
-#     savedir = os.path.join(recorddir, "%s_%s_%d_full" % (unit[0], unit[1], unit[2]))
-#     os.makedirs(savedir, exist_ok=True)
-#     best_scores_col = []
-#     for triali in range(20):
-#         experiment = ExperimentEvolve(unit, max_step=200)
-#         experiment.run()
-#         fig0 = experiment.visualize_best(show=False)
-#         fig0.savefig(join(savedir, "FullBestImgTrial%03d.png" % (triali)))
-#         fig = experiment.visualize_trajectory(show=False)
-#         fig.savefig(join(savedir, "FullScoreTrajTrial%03d.png" % (triali)))
-#         fig2 = experiment.visualize_exp(show=False)
-#         fig2.savefig(join(savedir, "EvolveTrial%03d.png" % (triali)))
-#         plt.close('all')
-#         np.savez(join(savedir, "scores_trial%03d.npz" % (triali)),
-#                  generations=experiment.generations,
-#                  scores_all=experiment.scores_all)
-#         lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-#          range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-#         best_scores_col.append(lastgen_max)
-#     best_scores_col = np.array(best_scores_col)
-#     np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    #%% Baseline Full Evolution
+    unit_arr = [('caffe-net', 'conv3', 5, 10, 10),
+                ('caffe-net', 'conv5', 5, 10, 10),
+                ('caffe-net', 'fc6', 1),
+                ('caffe-net', 'fc7', 1),
+                ('caffe-net', 'fc8', 1)]
+    # unit = ('caffe-net', 'fc7', 1)
+    # for unit in unit_arr:
+    #     savedir = os.path.join(recorddir, "%s_%s_%d_full" % (unit[0], unit[1], unit[2]))
+    #     os.makedirs(savedir, exist_ok=True)
+    #     best_scores_col = []
+    #     for triali in range(20):
+    #         experiment = ExperimentEvolve(unit, max_step=200)
+    #         experiment.run()
+    #         fig0 = experiment.visualize_best(show=False)
+    #         fig0.savefig(join(savedir, "FullBestImgTrial%03d.png" % (triali)))
+    #         fig = experiment.visualize_trajectory(show=False)
+    #         fig.savefig(join(savedir, "FullScoreTrajTrial%03d.png" % (triali)))
+    #         fig2 = experiment.visualize_exp(show=False)
+    #         fig2.savefig(join(savedir, "EvolveTrial%03d.png" % (triali)))
+    #         plt.close('all')
+    #         np.savez(join(savedir, "scores_trial%03d.npz" % (triali)),
+    #                  generations=experiment.generations,
+    #                  scores_all=experiment.scores_all)
+    #         lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+    #          range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+    #         best_scores_col.append(lastgen_max)
+    #     best_scores_col = np.array(best_scores_col)
+    #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
 
-#%%
-unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
-            ('caffe-net', 'conv2', 5, 10, 10),
-            ('caffe-net', 'conv3', 5, 10, 10),
-            #('caffe-net', 'conv1', 5, 10, 10),
-            ]
-subspace_d = 20
-            #  [('caffe-net', 'conv3', 5, 10, 10),
-            # ('caffe-net', 'conv5', 5, 10, 10),
-            # ('caffe-net', 'fc6', 1),
-            # ('caffe-net', 'fc7', 1),
-            # ('caffe-net', 'fc8', 1)]
-# unit = ('caffe-net', 'fc7', 1)
-# for unit in unit_arr:
-#     savedir = os.path.join(recorddir, "%s_%s_%d_full" % (unit[0], unit[1], unit[2]))
-#     os.makedirs(savedir, exist_ok=True)
-#     best_scores_col = []
-#     for triali in range(20):
-#         experiment = ExperimentEvolve(unit, max_step=200)
-#         experiment.run()
-#         fig0 = experiment.visualize_best(show=False)
-#         fig0.savefig(join(savedir, "FullBestImgTrial%03d.png" % (triali)))
-#         fig = experiment.visualize_trajectory(show=False)
-#         fig.savefig(join(savedir, "FullScoreTrajTrial%03d.png" % (triali)))
-#         fig2 = experiment.visualize_exp(show=False)
-#         fig2.savefig(join(savedir, "EvolveTrial%03d.png" % (triali)))
-#         plt.close('all')
-#         np.savez(join(savedir, "scores_trial%03d.npz" % (triali)),
-#                  generations=experiment.generations,
-#                  scores_all=experiment.scores_all)
-#         lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-#          range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-#         best_scores_col.append(lastgen_max)
-#     best_scores_col = np.array(best_scores_col)
-#     np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    #%%
+    unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
+                ('caffe-net', 'conv2', 5, 10, 10),
+                ('caffe-net', 'conv3', 5, 10, 10),
+                #('caffe-net', 'conv1', 5, 10, 10),
+                ]
+    subspace_d = 20
+                #  [('caffe-net', 'conv3', 5, 10, 10),
+                # ('caffe-net', 'conv5', 5, 10, 10),
+                # ('caffe-net', 'fc6', 1),
+                # ('caffe-net', 'fc7', 1),
+                # ('caffe-net', 'fc8', 1)]
+    # unit = ('caffe-net', 'fc7', 1)
+    # for unit in unit_arr:
+    #     savedir = os.path.join(recorddir, "%s_%s_%d_full" % (unit[0], unit[1], unit[2]))
+    #     os.makedirs(savedir, exist_ok=True)
+    #     best_scores_col = []
+    #     for triali in range(20):
+    #         experiment = ExperimentEvolve(unit, max_step=200)
+    #         experiment.run()
+    #         fig0 = experiment.visualize_best(show=False)
+    #         fig0.savefig(join(savedir, "FullBestImgTrial%03d.png" % (triali)))
+    #         fig = experiment.visualize_trajectory(show=False)
+    #         fig.savefig(join(savedir, "FullScoreTrajTrial%03d.png" % (triali)))
+    #         fig2 = experiment.visualize_exp(show=False)
+    #         fig2.savefig(join(savedir, "EvolveTrial%03d.png" % (triali)))
+    #         plt.close('all')
+    #         np.savez(join(savedir, "scores_trial%03d.npz" % (triali)),
+    #                  generations=experiment.generations,
+    #                  scores_all=experiment.scores_all)
+    #         lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+    #          range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+    #         best_scores_col.append(lastgen_max)
+    #     best_scores_col = np.array(best_scores_col)
+    #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
 
-for unit in unit_arr:
-    savedir = os.path.join(recorddir, "%s_%s_%d_subspac%d" % (unit[0], unit[1], unit[2], subspace_d))
-    os.makedirs(savedir, exist_ok=True)
-    best_scores_col = []
-    for triali in range(100):
-        experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
-        experiment.get_basis()
-        experiment.run()
-        fig0 = experiment.visualize_best(show=False)
-        fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
-        fig = experiment.visualize_trajectory(show=False)
-        fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
-        fig2 = experiment.visualize_exp(show=False)
-        fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
-        plt.close('all')
-        np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
-                 generations=experiment.generations,
-                 scores_all=experiment.scores_all)
-        lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
-         range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
-        best_scores_col.append(lastgen_max)
-    best_scores_col = np.array(best_scores_col)
-    np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    for unit in unit_arr:
+        savedir = os.path.join(recorddir, "%s_%s_%d_subspac%d" % (unit[0], unit[1], unit[2], subspace_d))
+        os.makedirs(savedir, exist_ok=True)
+        best_scores_col = []
+        for triali in range(100):
+            experiment = ExperimentRestrictEvolve(subspace_d, unit, max_step=200)
+            experiment.get_basis()
+            experiment.run()
+            fig0 = experiment.visualize_best(show=False)
+            fig0.savefig(join(savedir, "Subspc%dBestImgTrial%03d.png" % (subspace_d, triali)))
+            fig = experiment.visualize_trajectory(show=False)
+            fig.savefig(join(savedir, "Subspc%dScoreTrajTrial%03d.png" % (subspace_d, triali)))
+            fig2 = experiment.visualize_exp(show=False)
+            fig2.savefig(join(savedir, "Subspc%dEvolveTrial%03d.png" % (subspace_d, triali)))
+            plt.close('all')
+            np.savez(join(savedir, "scores_subspc%dtrial%03d.npz" % (subspace_d, triali)),
+                     generations=experiment.generations,
+                     scores_all=experiment.scores_all)
+            lastgen_max = [experiment.scores_all[experiment.generations == geni].max() for geni in
+             range(experiment.generations.max() - 10, experiment.generations.max() + 1)]
+            best_scores_col.append(lastgen_max)
+        best_scores_col = np.array(best_scores_col)
+        np.save(join(savedir, "best_scores.npy"), best_scores_col)
