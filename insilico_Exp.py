@@ -173,7 +173,7 @@ class ExperimentEvolve:
         return figh
 
 class ExperimentManifold:
-    def __init__(self, model_unit, max_step=100):
+    def __init__(self, model_unit, max_step=100, savedir="", explabel=""):
         self.recording = []
         self.scores_all = []
         self.codes_all = []
@@ -184,7 +184,8 @@ class ExperimentManifold:
                                        init_code=np.zeros([1, code_length]),
                                        Aupdate_freq=Aupdate_freq)  # , optim_params=optim_params
         self.max_steps = max_step
-        return
+        self.savedir = savedir
+        self.explabel = explabel
 
     def run(self, init_code=None):
         self.recording = []
@@ -236,9 +237,9 @@ class ExperimentManifold:
 
     def run_manifold(self, subspace_list, interval=9):
         '''Generate examples on manifold and run'''
-        score_sum = []
+        self.score_sum = []
         figsum = plt.figure(figsize=[5, 10])
-        for subspace in subspace_list:
+        for spi, subspace in enumerate(subspace_list):
             if subspace == "RND":
                 title = "Norm%dRND%dRND%d" % (self.sphere_norm, 0 + 1, 1 + 1)
                 print("Generating images on PC1, Random vector1, Random vector2 sphere (rad = %d)" % self.sphere_norm)
@@ -279,9 +280,14 @@ class ExperimentManifold:
                         # plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (
                         # self.sphere_norm, interval * j, interval * k)), img)
             scores = self.CNNmodel.score(img_list)
+            fig = utils.visualize_img_list(img_list, scores=scores)
+            fig.savefig(os.path.join(self.savedir, "%s_%s.png" % (title, self.explabel)))
             scores = np.array(scores).reshape((interv_n, interv_n))
-            score_sum.append(scores)
-            fig1 = utils.visualize_img_list(img_list)
+            self.score_sum.append(scores)
+            ax = figsum.add_subplot(1, len(subspace_list), spi)
+            ax.imshow(scores)
+        figsum.savefig(os.path.join(self.savedir, "Manifold_summary_%s.png" % (self.explabel)))
+        return self.score_sum
 
 class ExperimentRestrictEvolve:
     def __init__(self, subspace_d, model_unit, max_step=200):
@@ -587,3 +593,8 @@ if __name__ == "__main__":
     #         best_scores_col.append(lastgen_max)
     #     best_scores_col = np.array(best_scores_col)
     #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
+    experiment = ExperimentManifold(unit_arr[2], max_step=100, savedir=r"D:\Generator_DB_Windows\data\with_CNN",
+                                    explabel="Trial0")
+    experiment.run()
+    experiment.analyze_traj()
+    experiment.run_manifold([(1,2), (48,49), "RND"])
