@@ -178,6 +178,7 @@ class ExperimentManifold:
         self.scores_all = []
         self.codes_all = []
         self.generations = []
+        self.pref_unit = model_unit
         self.CNNmodel = CNNmodel(model_unit[0])  # 'caffe-net'
         self.CNNmodel.select_unit(model_unit)
         self.optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma,
@@ -238,7 +239,7 @@ class ExperimentManifold:
     def run_manifold(self, subspace_list, interval=9):
         '''Generate examples on manifold and run'''
         self.score_sum = []
-        figsum = plt.figure(figsize=[5, 10])
+        figsum = plt.figure(figsize=[16.7, 4])
         for spi, subspace in enumerate(subspace_list):
             if subspace == "RND":
                 title = "Norm%dRND%dRND%d" % (self.sphere_norm, 0 + 1, 1 + 1)
@@ -264,7 +265,7 @@ class ExperimentManifold:
             else:
                 PCi, PCj = subspace
                 title = "Norm%dPC%dPC%d" % (self.sphere_norm, PCi + 1, PCj + 1)
-                print("Generating images on PC1, PC%d, PC%d sphere (rad = %d)" % (self.sphere_norm, PCi + 1, PCj + 1))
+                print("Generating images on PC1, PC%d, PC%d sphere (rad = %d)" % (PCi + 1, PCj + 1, self.sphere_norm, ))
                 img_list = []
                 interv_n = int(90 / interval)
                 for j in range(-interv_n, interv_n + 1):
@@ -280,14 +281,19 @@ class ExperimentManifold:
                         # plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (
                         # self.sphere_norm, interval * j, interval * k)), img)
             scores = self.CNNmodel.score(img_list)
-            fig = utils.visualize_img_list(img_list, scores=scores)
+            fig = utils.visualize_img_list(img_list, scores=scores, ncol=2*interv_n+1, nrow=2*interv_n+1, )
             fig.savefig(os.path.join(self.savedir, "%s_%s.png" % (title, self.explabel)))
-            scores = np.array(scores).reshape((interv_n, interv_n))
+            scores = np.array(scores).reshape((2*interv_n+1, 2*interv_n+1))
             self.score_sum.append(scores)
-            ax = figsum.add_subplot(1, len(subspace_list), spi)
-            ax.imshow(scores)
-        figsum.savefig(os.path.join(self.savedir, "Manifold_summary_%s.png" % (self.explabel)))
-        return self.score_sum
+            ax = figsum.add_subplot(1, len(subspace_list), spi + 1)
+            im = ax.imshow(scores)
+            plt.colorbar(im, ax=ax)
+            ax.set_xticks([0, interv_n / 2, interv_n, 1.5 * interv_n, 2*interval]); ax.set_xticklabels([-90,45,0,45,90])
+            ax.set_yticks([0, interv_n / 2, interv_n, 1.5 * interv_n, 2*interval]); ax.set_yticklabels([-90,45,0,45,90])
+            ax.set_title(title+"_Hemisphere")
+        figsum.suptitle("%s-%s-unit%03d  %s" % (self.pref_unit[0], self.pref_unit[1], self.pref_unit[2], self.explabel))
+        figsum.savefig(os.path.join(self.savedir, "Manifold_summary_%s_norm%d.png" % (self.explabel, self.sphere_norm)))
+        return self.score_sum, figsum
 
 class ExperimentRestrictEvolve:
     def __init__(self, subspace_d, model_unit, max_step=200):
@@ -593,8 +599,22 @@ if __name__ == "__main__":
     #         best_scores_col.append(lastgen_max)
     #     best_scores_col = np.array(best_scores_col)
     #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
-    experiment = ExperimentManifold(unit_arr[2], max_step=100, savedir=r"D:\Generator_DB_Windows\data\with_CNN",
-                                    explabel="Trial0")
-    experiment.run()
-    experiment.analyze_traj()
-    experiment.run_manifold([(1,2), (48,49), "RND"])
+    unit_arr = [('caffe-net', 'conv3', 5, 10, 10),
+                ('caffe-net', 'conv5', 5, 10, 10),
+                ('caffe-net', 'fc6', 1),
+                ('caffe-net', 'fc7', 1),
+                ('caffe-net', 'fc8', 1),
+                ]
+    for unit in unit_arr:
+        savedir = os.path.join(r"D:\Generator_DB_Windows\data\with_CNN", "%s_%s_manifold" % (unit[0], unit[1]))
+        os.makedirs(savedir, exist_ok=True)
+        for chan in range(40):
+            if len(unit) == 3:
+                unit = (unit[0], unit[1], chan)
+            else:
+                unit = (unit[0], unit[1], chan, 10, 10)
+            experiment = ExperimentManifold(unit, max_step=100, savedir=savedir, explabel="chan%d"% chan)
+            experiment.run()
+            experiment.analyze_traj()
+            experiment.run_manifold([(1,2), (24,25), (48,49), "RND"])
+            plt.close("all")
