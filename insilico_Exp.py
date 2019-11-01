@@ -187,6 +187,7 @@ class ExperimentManifold:
         self.max_steps = max_step
         self.savedir = savedir
         self.explabel = explabel
+        self.Perturb_vec = []
 
     def run(self, init_code=None):
         self.recording = []
@@ -250,6 +251,7 @@ class ExperimentManifold:
                 rand_vec2[1, :] = rand_vec2[1, :] - (rand_vec2[1, :] @ rand_vec2[0, :].T) * rand_vec2[0, :]
                 rand_vec2[1, :] = rand_vec2[1, :] / np.linalg.norm(rand_vec2[1, :])
                 vectors = np.concatenate((self.PC_vectors[0:1, :], rand_vec2), axis=0)
+                self.Perturb_vec.append(vectors)
                 img_list = []
                 interv_n = int(90 / interval)
                 for j in range(-interv_n, interv_n + 1):
@@ -268,6 +270,7 @@ class ExperimentManifold:
                 print("Generating images on PC1, PC%d, PC%d sphere (rad = %d)" % (PCi + 1, PCj + 1, self.sphere_norm, ))
                 img_list = []
                 interv_n = int(90 / interval)
+                self.Perturb_vec.append(self.PC_vectors[[0, PCi, PCj], :])
                 for j in range(-interv_n, interv_n + 1):
                     for k in range(-interv_n, interv_n + 1):
                         theta = interval * j / 180 * np.pi
@@ -293,6 +296,7 @@ class ExperimentManifold:
             ax.set_title(title+"_Hemisphere")
         figsum.suptitle("%s-%s-unit%03d  %s" % (self.pref_unit[0], self.pref_unit[1], self.pref_unit[2], self.explabel))
         figsum.savefig(os.path.join(self.savedir, "Manifold_summary_%s_norm%d.png" % (self.explabel, self.sphere_norm)))
+        self.Perturb_vec = np.concatenate(tuple(self.Perturb_vec), axis=0)
         return self.score_sum, figsum
 
 class ExperimentRestrictEvolve:
@@ -599,22 +603,60 @@ if __name__ == "__main__":
     #         best_scores_col.append(lastgen_max)
     #     best_scores_col = np.array(best_scores_col)
     #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
-    unit_arr = [('caffe-net', 'conv3', 5, 10, 10),
-                ('caffe-net', 'conv5', 5, 10, 10),
-                ('caffe-net', 'fc6', 1),
-                ('caffe-net', 'fc7', 1),
-                ('caffe-net', 'fc8', 1),
-                ]
+    #%%
+    unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
+                ('caffe-net', 'conv2', 5, 10, 10),
+                ('caffe-net', 'conv4', 5, 10, 10),]
+                # ('caffe-net', 'conv3', 5, 10, 10),
+                # ('caffe-net', 'conv5', 5, 10, 10),
+                # ('caffe-net', 'fc6', 1),
+                # ('caffe-net', 'fc7', 1),
+                # ('caffe-net', 'fc8', 1),
+                # ]
     for unit in unit_arr:
         savedir = os.path.join(r"D:\Generator_DB_Windows\data\with_CNN", "%s_%s_manifold" % (unit[0], unit[1]))
         os.makedirs(savedir, exist_ok=True)
-        for chan in range(40):
+        for chan in range(50):
             if len(unit) == 3:
                 unit = (unit[0], unit[1], chan)
             else:
                 unit = (unit[0], unit[1], chan, 10, 10)
-            experiment = ExperimentManifold(unit, max_step=100, savedir=savedir, explabel="chan%d"% chan)
+            experiment = ExperimentManifold(unit, max_step=100, savedir=savedir, explabel="chan%03d" % chan)
             experiment.run()
             experiment.analyze_traj()
-            experiment.run_manifold([(1,2), (24,25), (48,49), "RND"])
+            score_sum, _ = experiment.run_manifold([(1, 2), (24, 25), (48, 49), "RND"])
+            np.savez(os.path.join(savedir, "score_map_chan%d.npz" % chan), score_sum=score_sum,
+                     Perturb_vectors=experiment.Perturb_vec, sphere_norm=experiment.sphere_norm)
+            plt.close("all")
+
+    for unit in unit_arr:
+        savedir = os.path.join(r"D:\Generator_DB_Windows\data\with_CNN", "%s_%s_manifold_25gen" % (unit[0], unit[1]))
+        os.makedirs(savedir, exist_ok=True)
+        for chan in range(50):
+            if len(unit) == 3:
+                unit = (unit[0], unit[1], chan)
+            else:
+                unit = (unit[0], unit[1], chan, 10, 10)
+            experiment = ExperimentManifold(unit, max_step=25, savedir=savedir, explabel="step25_chan%03d" % chan)
+            experiment.run()
+            experiment.analyze_traj()
+            score_sum, _ = experiment.run_manifold([(1, 2), (24, 25), (48, 49), "RND"])
+            np.savez(os.path.join(savedir, "score_map_step25_chan%d.npz" % chan), score_sum=score_sum,
+                     Perturb_vectors=experiment.Perturb_vec, sphere_norm=experiment.sphere_norm)
+            plt.close("all")
+
+    for unit in unit_arr:
+        savedir = os.path.join(r"D:\Generator_DB_Windows\data\with_CNN", "%s_%s_manifold_50gen" % (unit[0], unit[1]))
+        os.makedirs(savedir, exist_ok=True)
+        for chan in range(50):
+            if len(unit) == 3:
+                unit = (unit[0], unit[1], chan)
+            else:
+                unit = (unit[0], unit[1], chan, 10, 10)
+            experiment = ExperimentManifold(unit, max_step=50, savedir=savedir, explabel="step50_chan%03d" % chan)
+            experiment.run()
+            experiment.analyze_traj()
+            score_sum, _ = experiment.run_manifold([(1, 2), (24, 25), (48, 49), "RND"])
+            np.savez(os.path.join(savedir, "score_map_step50_chan%d.npz" % chan), score_sum=score_sum,
+                     Perturb_vectors=experiment.Perturb_vec, sphere_norm=experiment.sphere_norm)
             plt.close("all")
