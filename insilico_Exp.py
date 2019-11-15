@@ -23,7 +23,7 @@ else:
 code_length = 4096
 init_sigma = 3
 Aupdate_freq = 10
-
+#%%
 class CNNmodel:
     def __init__(self, model_name):
         self._classifier = net_utils.load(model_name)
@@ -298,7 +298,97 @@ class ExperimentManifold:
         figsum.savefig(os.path.join(self.savedir, "Manifold_summary_%s_norm%d.png" % (self.explabel, self.sphere_norm)))
         self.Perturb_vec = np.concatenate(tuple(self.Perturb_vec), axis=0)
         return self.score_sum, figsum
+#%%
+from scipy.stats import ortho_group, special_ortho_group
+import math
+def make_orthonormal_matrix(n):
+    """
+    Makes a square matrix which is orthonormal by concatenating
+    random Householder transformations
+    """
+    A = np.identity(n)
+    d = np.zeros(n)
+    d[n-1] = np.random.choice([-1.0, 1.0])
+    for k in range(n-2, -1, -1):
+        # generate random Householder transformation
+        x = np.random.randn(n-k)
+        s = np.sqrt((x**2).sum()) # norm(x)
+        sign = math.copysign(1.0, x[0])
+        s *= sign
+        d[k] = -sign
+        x[0] += s
+        beta = s * x[0]
+        # apply the transformation
+        y = np.dot(x,A[k:n,:]) / beta
+        A[k:n,:] -= np.outer(x,y)
+    # change sign of rows
+    A *= d.reshape(n,1)
+    return A
 
+class ExperimentGANAxis:
+    def __init__(self, model_unit, savedir="", explabel=""):
+        self.recording = []
+        self.scores_all = []
+        self.scores_all_rnd = []
+        self.codes_all = []
+        self.pref_unit = model_unit
+        self.CNNmodel = CNNmodel(model_unit[0])  # 'caffe-net'
+        self.CNNmodel.select_unit(model_unit)
+        self.savedir = savedir
+        self.explabel = explabel
+
+    def run_axis(self, Norm, orthomat=None):
+        '''Generate examples on manifold and run'''
+        self.score_sum = []
+        figsum = plt.figure(figsize=[16.7, 8])
+
+        BATCH_SIZE = 128
+        BATCH_N = int(4096 / BATCH_SIZE)
+        print("Test the tuning on all the axis in GAN space (Norm %d)"%Norm)
+        code_mat = np.eye(4096, 4096)
+        scores_all = []
+        for bi in range(BATCH_N):
+            img_list = []
+            for j in range(BATCH_SIZE):
+                img = generator.visualize(Norm * code_mat[bi * BATCH_N + j, :])
+                img_list.append(img.copy())
+            scores = self.CNNmodel.score(img_list)
+            scores_all.extend(list(scores))
+            print("Finished batch %02d/%02d"%( bi+1, BATCH_N))
+        self.scores_all = np.array(scores_all)
+        ax = figsum.add_subplot(2, 1, 1)
+        ax.scatter(np.arange(4096), scores_all, alpha=0.5)
+        ax.plot(sorted(scores_all), color='orange')
+        ax.set_xlim(-50, 4150)
+        if orthomat is None:
+            code_mat = make_orthonormal_matrix(4096)# ortho_group.rvs(4096)
+        else:
+            code_mat = orthomat
+        scores_all = []
+        print("Test the tuning on a random O(N) in GAN space (Norm %d)" % Norm)
+        for bi in range(BATCH_N):
+            img_list = []
+            for j in range(BATCH_SIZE):
+                img = generator.visualize(Norm * code_mat[bi * BATCH_N + j, :])
+                img_list.append(img.copy())
+            scores = self.CNNmodel.score(img_list)
+            scores_all.extend(list(scores))
+            print("Finished batch %02d/%02d"% (bi + 1, BATCH_N))
+        self.scores_all_rnd = np.array(scores_all)
+        ax = figsum.add_subplot(2, 1, 2)
+        ax.scatter(np.arange(4096), scores_all, alpha=0.5)
+        ax.plot(sorted(scores_all), color='orange')
+        ax.set_xlim(-50, 4150)
+        # ax = figsum.add_subplot(1, len(subspace_list), spi + 1)
+        # im = ax.imshow(scores)
+        # plt.colorbar(im, ax=ax)
+        # ax.set_xticks([0, interv_n / 2, interv_n, 1.5 * interv_n, 2*interval]); ax.set_xticklabels([-90,45,0,45,90])
+        # ax.set_yticks([0, interv_n / 2, interv_n, 1.5 * interv_n, 2*interval]); ax.set_yticklabels([-90,45,0,45,90])
+        # ax.set_title(title+"_Hemisphere")
+        # figsum.suptitle("%s-%s-unit%03d  %s" % (self.pref_unit[0], self.pref_unit[1], self.pref_unit[2], self.explabel))
+        figsum.savefig(os.path.join(self.savedir, "Axis_summary_%s_norm%d.png" % (self.explabel, Norm)))
+        return self.scores_all, self.scores_all_rnd, figsum
+#%%
 class ExperimentRestrictEvolve:
     def __init__(self, subspace_d, model_unit, max_step=200):
         self.sub_d = subspace_d
