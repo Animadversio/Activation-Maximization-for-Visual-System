@@ -750,3 +750,19 @@ if __name__ == "__main__":
             np.savez(os.path.join(savedir, "score_map_step50_chan%d.npz" % chan), score_sum=score_sum,
                      Perturb_vectors=experiment.Perturb_vec, sphere_norm=experiment.sphere_norm)
             plt.close("all")
+#%%
+savedir = join(recorddir, "axis_data")
+unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
+            ('caffe-net', 'conv2', 5, 10, 10),
+            ('caffe-net', 'conv3', 5, 10, 10),
+            ('caffe-net', 'conv4', 5, 10, 10),
+            ('caffe-net', 'conv5', 5, 10, 10),
+            ('caffe-net', 'fc6', 1),
+            ('caffe-net', 'fc7', 1),
+            ('caffe-net', 'fc8', 1),
+            ]
+for unit in unit_arr:
+    exp = ExperimentGANAxis(unit, savedir=savedir,
+                            explabel="%s_%d" % (unit[1],unit[2]))
+    %time exp.run_axis(350, orthomat=omat)
+    np.savez(join(savedir, "axis_score_%s_%d" % (unit[1],unit[2])), scores_all=exp.scores_all, scores_all_rnd=exp.scores_all_rnd)
