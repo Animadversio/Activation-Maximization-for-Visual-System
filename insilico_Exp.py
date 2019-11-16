@@ -347,6 +347,7 @@ class ExperimentGANAxis:
         print("Test the tuning on all the axis in GAN space (Norm %d)"%Norm)
         code_mat = np.eye(4096, 4096)
         scores_all = []
+        scores_all_neg = []
         for bi in range(BATCH_N):
             img_list = []
             for j in range(BATCH_SIZE):
@@ -354,17 +355,26 @@ class ExperimentGANAxis:
                 img_list.append(img.copy())
             scores = self.CNNmodel.score(img_list)
             scores_all.extend(list(scores))
+            img_list = []
+            for j in range(BATCH_SIZE):
+                img = generator.visualize(- Norm * code_mat[bi * BATCH_N + j, :])
+                img_list.append(img.copy())
+            scores = self.CNNmodel.score(img_list)
+            scores_all_neg.extend(list(scores))
             print("Finished batch %02d/%02d"%( bi+1, BATCH_N))
-        self.scores_all = np.array(scores_all)
+        self.scores_all = np.array(scores_all + scores_all_neg)
         ax = figsum.add_subplot(2, 1, 1)
         ax.scatter(np.arange(4096), scores_all, alpha=0.5)
+        ax.scatter(np.arange(4096), scores_all_neg, alpha=0.4)
         ax.plot(sorted(scores_all), color='orange')
+        ax.plot(sorted(scores_all_neg), color='green')
         ax.set_xlim(-50, 4150)
         if orthomat is None:
             code_mat = make_orthonormal_matrix(4096)# ortho_group.rvs(4096)
         else:
             code_mat = orthomat
         scores_all = []
+        scores_all_neg = []
         print("Test the tuning on a random O(N) in GAN space (Norm %d)" % Norm)
         for bi in range(BATCH_N):
             img_list = []
@@ -373,11 +383,19 @@ class ExperimentGANAxis:
                 img_list.append(img.copy())
             scores = self.CNNmodel.score(img_list)
             scores_all.extend(list(scores))
+            img_list = []
+            for j in range(BATCH_SIZE):
+                img = generator.visualize(- Norm * code_mat[bi * BATCH_N + j, :])
+                img_list.append(img.copy())
+            scores = self.CNNmodel.score(img_list)
+            scores_all_neg.extend(list(scores))
             print("Finished batch %02d/%02d"% (bi + 1, BATCH_N))
-        self.scores_all_rnd = np.array(scores_all)
+        self.scores_all_rnd = np.array(scores_all + scores_all_neg)
         ax = figsum.add_subplot(2, 1, 2)
         ax.scatter(np.arange(4096), scores_all, alpha=0.5)
         ax.plot(sorted(scores_all), color='orange')
+        ax.scatter(np.arange(4096), scores_all_neg, alpha=0.4)
+        ax.plot(sorted(scores_all_neg), color='green')
         ax.set_xlim(-50, 4150)
         # ax = figsum.add_subplot(1, len(subspace_list), spi + 1)
         # im = ax.imshow(scores)
@@ -694,6 +712,7 @@ if __name__ == "__main__":
     #     best_scores_col = np.array(best_scores_col)
     #     np.save(join(savedir, "best_scores.npy"), best_scores_col)
     #%%
+
     unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
                 ('caffe-net', 'conv2', 5, 10, 10),
                 ('caffe-net', 'conv4', 5, 10, 10),]
@@ -751,6 +770,7 @@ if __name__ == "__main__":
                      Perturb_vectors=experiment.Perturb_vec, sphere_norm=experiment.sphere_norm)
             plt.close("all")
 #%%
+omat = np.load("ortho4096.npy")
 savedir = join(recorddir, "axis_data")
 unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
             ('caffe-net', 'conv2', 5, 10, 10),
