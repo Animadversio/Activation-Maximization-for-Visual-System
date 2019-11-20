@@ -11,6 +11,8 @@ import torch.nn.functional as F
 from cv2 import imread, imwrite
 import matplotlib.pylab as plt
 sys.path.append("D:\Github\pytorch-caffe")
+sys.path.append("D:\Github\pytorch-receptive-field")
+from torch_receptive_field import receptive_field, receptive_field_for_unit
 from caffenet import *
 from hessian import hessian
 print(torch.cuda.current_device())
@@ -36,8 +38,8 @@ net.eval()
 
 basedir = r"D:/Generator_DB_Windows/nets"
 save_path = os.path.join(basedir, r"upconv/fc6/generator_state_dict.pt")
-protofile = os.path.join(basedir, r"upconv/fc6/generator.prototxt") # 'resnet50/deploy.prototxt'
-weightfile = os.path.join(basedir, r'upconv/fc6/generator.caffemodel') # 'resnet50/resnet50.caffemodel'
+protofile = os.path.join(basedir, r"upconv/fc6/generator.prototxt")  # 'resnet50/deploy.prototxt'
+weightfile = os.path.join(basedir, r'upconv/fc6/generator.caffemodel')  # 'resnet50/resnet50.caffemodel'
 Generator = CaffeNet(protofile)
 print(Generator)
 if os.path.exists(save_path):
@@ -61,12 +63,15 @@ detfmr = net_utils.get_detransformer(net_utils.load('generator'))
 tfmr = net_utils.get_transformer(net_utils.load('caffe-net'))
 #%%
 unit_arr = [('caffe-net', 'fc6', 1),
+            ('caffe-net', 'fc6', 2),
+            ('caffe-net', 'fc6', 3),
             ('caffe-net', 'fc7', 1),
-            ('caffe-net', 'fc8', 1),
-        ('caffe-net', 'conv1', 5, 10, 10),
-        ('caffe-net', 'conv2', 5, 10, 10),
+            ('caffe-net', 'fc7', 2),
+            ('caffe-net', 'fc8', 10),
+            ('caffe-net', 'conv1', 10, 10, 10),
+            ('caffe-net', 'conv2', 5, 10, 10),
             ('caffe-net', 'conv4', 5, 10, 10),
-            ('caffe-net', 'conv3', 5, 10, 10),
+            ('caffe-net', 'conv3', 10, 10, 10),
             ('caffe-net', 'conv5', 5, 10, 10),
             ]
 unit = unit_arr[7]
@@ -74,8 +79,11 @@ unit = unit_arr[7]
 # def display_image(ax, out_img):
 #     deproc_img = detfmr.deprocess('data', out_img.data.numpy())
 #     ax.imshow(np.clip(deproc_img, 0, 1))
+BGR_mean = torch.tensor([104.0, 117.0, 123.0])
+BGR_mean = torch.reshape(BGR_mean, (1, 3, 1, 1))
 for unit in unit_arr:
     print(unit)
+    Evol_Success = False
     feat = 0.05 * np.random.rand(1, 4096)
     feat = torch.from_numpy(np.float32(feat))
     feat = Variable(feat, requires_grad=True)
@@ -91,7 +99,8 @@ for unit in unit_arr:
             pipe_optimizer.zero_grad()
         blobs = Generator(feat)  # forward the feature vector through the GAN
         out_img = blobs['deconv0']  # get raw output image from GAN
-        resz_out_img = F.interpolate(out_img, (224, 224), mode='bilinear', align_corners=True)
+        clamp_out_img = torch.clamp(out_img + BGR_mean, 0, 255)
+        resz_out_img = F.interpolate(clamp_out_img - BGR_mean, (227, 227), mode='bilinear', align_corners=True)
         blobs_CNN = net(resz_out_img)
         if len(unit) == 5:
             neg_activ = - blobs_CNN[unit[1]][0, unit[2], unit[3], unit[4]]
@@ -100,6 +109,13 @@ for unit in unit_arr:
         else:
             neg_activ = - blobs_CNN['fc8'][0, 1]
         neg_activ.backward()
+        if feat.grad.norm() < 1E-10:
+            print("%d steps, No Gradient, Neuron activation %.3f, Re-initialize" % (step, - neg_activ.data.item()))
+            feat = Variable(0.75 * torch.randn((1, 4096)), requires_grad=True)
+            pipe_optimizer = optim.SGD([feat], lr=0.05)
+            continue
+        else:
+            Evol_Success = True
         pipe_optimizer.step()
         score.append(- neg_activ.data.item())
         feat_norm.append(feat.norm(p=2).data.item())
@@ -108,6 +124,9 @@ for unit in unit_arr:
             # display.clear_output(wait=True)
             # display.display(fig)
             print("%d steps, Neuron activation %.3f" % (step, - neg_activ.data.item()))
+    if not Evol_Success:
+        print(unit, " evolution not successful! Continue! ")
+        continue
     deproc_img = detfmr.deprocess('data', out_img.data.numpy())
     plt.figure(figsize=[6, 6])
     plt.imshow(np.clip(deproc_img, 0, 1))# .view([224,224,3])

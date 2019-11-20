@@ -8,6 +8,7 @@ import numpy as np
 from Optimizer import CholeskyCMAES
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+import sys
 import os
 from os.path import join
 from sys import platform
@@ -23,7 +24,7 @@ else:
 code_length = 4096
 init_sigma = 3
 Aupdate_freq = 10
-#%%
+#%% Simplified in silico experiment modules
 class CNNmodel:
     def __init__(self, model_name):
         self._classifier = net_utils.load(model_name)
@@ -110,6 +111,109 @@ class ExperimentEvolve:
             print('\n>>> step %d' % self.istep)
             t0 = time()
             self.current_images = render(codes)
+            t1 = time()  # generate image from code
+            synscores = self.CNNmodel.score(self.current_images)
+            t2 = time()  # score images
+            codes_new = self.optimizer.step_simple(synscores, codes)
+            t3 = time()  # use results to update optimizer
+            self.codes_all.append(codes)
+            self.scores_all = self.scores_all + list(synscores)
+            self.generations = self.generations + [self.istep] * len(synscores)
+            codes = codes_new
+            # summarize scores & delays
+            print('synthetic img scores: mean {}, all {}'.format(np.nanmean(synscores), synscores))
+            print(('step %d time: total %.2fs | ' +
+                   'code visualize %.2fs  score %.2fs  optimizer step %.2fs')
+                  % (self.istep, t3 - t0, t1 - t0, t2 - t1, t3 - t2))
+        self.codes_all = np.concatenate(tuple(self.codes_all), axis=0)
+        self.scores_all = np.array(self.scores_all)
+        self.generations = np.array(self.generations)
+
+    def visualize_exp(self, show=False):
+        idx_list = []
+        for geni in range(min(self.generations), max(self.generations)+1):
+            rel_idx = np.argmax(self.scores_all[self.generations == geni])
+            idx_list.append(np.nonzero(self.generations == geni)[0][rel_idx])
+        idx_list = np.array(idx_list)
+        select_code = self.codes_all[idx_list, :]
+        score_select = self.scores_all[idx_list]
+        img_select = render(select_code)
+        fig = utils.visualize_img_list(img_select, score_select, show=show)
+        return fig
+
+    def visualize_best(self, show=False):
+        idx = np.argmax(self.scores_all)
+        select_code = self.codes_all[idx:idx+1, :]
+        score_select = self.scores_all[idx]
+        img_select = render(select_code)
+        fig = plt.figure(figsize=[3, 3])
+        plt.imshow(img_select[0])
+        plt.axis('off')
+        plt.title("{0:.2f}".format(score_select), fontsize=16)
+        if show:
+            plt.show()
+        return fig
+
+    def visualize_trajectory(self, show=True):
+        gen_slice = np.arange(min(self.generations), max(self.generations)+1)
+        AvgScore = np.zeros_like(gen_slice)
+        MaxScore = np.zeros_like(gen_slice)
+        for i, geni in enumerate(gen_slice):
+            AvgScore[i] = np.mean(self.scores_all[self.generations == geni])
+            MaxScore[i] = np.max(self.scores_all[self.generations == geni])
+        figh = plt.figure()
+        plt.scatter(self.generations, self.scores_all, s=16, alpha=0.6, label="all score")
+        plt.plot(gen_slice, AvgScore, color='black', label="Average score")
+        plt.plot(gen_slice, MaxScore, color='red', label="Max score")
+        plt.xlabel("generation #")
+        plt.ylabel("CNN unit score")
+        plt.title("Optimization Trajectory of Score\n")# + title_str)
+        plt.legend()
+        if show:
+            plt.show()
+        return figh
+
+from cv2 import resize
+import cv2
+sys.path.append("D:\Github\pytorch-receptive-field")
+from torch_receptive_field import receptive_field, receptive_field_for_unit
+def resize_and_pad(img_list, size, coord, canvas_size=(227, 227)):
+    '''Render a list of codes to list of images'''
+    resize_img = []
+    for img in img_list:
+        pad_img = np.ones(canvas_size + (3,)) * 0.5
+        pad_img[coord[0]:coord[0]+size[0], coord[1]:coord[1]+size[1], :] = resize(img, size, cv2.INTER_AREA)
+        resize_img.append(pad_img.copy())
+    return resize_img
+
+class ExperimentResizeEvolve:
+    """Resize the evolved image before feeding into CNN and see how the evolution goes. """
+    def __init__(self, model_unit, max_step=200):
+        self.recording = []
+        self.scores_all = []
+        self.codes_all = []
+        self.generations = []
+        self.CNNmodel = CNNmodel(model_unit[0])  # 'caffe-net'
+        self.CNNmodel.select_unit(model_unit)
+        self.optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma,
+                                       init_code=np.zeros([1, code_length]), Aupdate_freq=Aupdate_freq) # , optim_params=optim_params
+        self.max_steps = max_step
+
+    def run(self, init_code=None):
+        self.recording = []
+        self.scores_all = []
+        self.codes_all = []
+        self.generations = []
+        for self.istep in range(self.max_steps):
+            if self.istep == 0:
+                if init_code is None:
+                    codes = np.zeros([1, code_length])
+                else:
+                    codes = init_code
+            print('\n>>> step %d' % self.istep)
+            t0 = time()
+            self.current_images = render(codes)
+            self.current_images = resize_and_pad(self.current_images, (50, 50), (100, 100))
             t1 = time()  # generate image from code
             synscores = self.CNNmodel.score(self.current_images)
             t2 = time()  # score images
@@ -326,6 +430,7 @@ def make_orthonormal_matrix(n):
     return A
 
 class ExperimentGANAxis:
+    """ Tuning w.r.t. all the major axis in the GAN or the randomly generated O(n) frame set. """
     def __init__(self, model_unit, savedir="", explabel=""):
         self.recording = []
         self.scores_all = []
@@ -408,6 +513,7 @@ class ExperimentGANAxis:
         return self.scores_all, self.scores_all_rnd, figsum
 #%%
 class ExperimentRestrictEvolve:
+    """Evolution in a restricted linear subspace with subspace_d """
     def __init__(self, subspace_d, model_unit, max_step=200):
         self.sub_d = subspace_d
         self.recording = []
@@ -784,5 +890,27 @@ unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
 for unit in unit_arr:
     exp = ExperimentGANAxis(unit, savedir=savedir,
                             explabel="%s_%d" % (unit[1],unit[2]))
-    %time exp.run_axis(350, orthomat=omat)
+    exp.run_axis(350, orthomat=omat)
     np.savez(join(savedir, "axis_score_%s_%d" % (unit[1],unit[2])), scores_all=exp.scores_all, scores_all_rnd=exp.scores_all_rnd)
+
+
+#%%
+savedir = join(recorddir, "resize_data")
+os.makedirs(savedir, exist_ok=True)
+unit_arr = [
+            ('caffe-net', 'conv5', 5, 10, 10),
+            ('caffe-net', 'conv1', 5, 10, 10),
+            ('caffe-net', 'conv2', 5, 10, 10),
+            ('caffe-net', 'conv3', 5, 10, 10),
+            ('caffe-net', 'conv4', 5, 10, 10),
+            ('caffe-net', 'fc6', 1),
+            ('caffe-net', 'fc7', 1),
+            ('caffe-net', 'fc8', 1),
+            ]
+for unit in unit_arr:
+    exp = ExperimentResizeEvolve(unit, )
+                            #explabel="%s_%d" % (unit[1],unit[2]))
+    exp.run()
+    exp.visualize_best()
+    exp.visualize_trajectory()
+    exp.visualize_exp()
