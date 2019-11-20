@@ -12,15 +12,15 @@ import sys
 import os
 from os.path import join
 from sys import platform
-#%%
-if platform == "linux":
+#%% Decide the result storage place based on the computer the code is running
+if platform == "linux": # cluster
     recorddir = "/scratch/binxu/CNN_data/"
 else:
     if os.environ['COMPUTERNAME'] == 'DESKTOP-9DDE2RH':  # PonceLab-Desktop 3
         recorddir = r"D:\Generator_DB_Windows\data\with_CNN"
     elif os.environ['COMPUTERNAME'] == 'DESKTOP-MENSD6S':  ## Home_WorkStation
         recorddir = r"D:\Monkey_Data\Generator_DB_Windows\data\with_CNN"
-
+# Basic properties for Optimizer.
 code_length = 4096
 init_sigma = 3
 Aupdate_freq = 10
@@ -84,6 +84,13 @@ def render(codes):
     else:
         images = [generator.visualize(codes[i, :]) for i in range(codes.shape[0])]
     return images
+
+# Compiled Experimental module!
+# Currently
+# - Evolution
+# - resize and evolution
+# - evolution in a restricted linear subspace
+# - tuning among major axis of the GAN model and rotated O(N) axis for GAN model
 
 class ExperimentEvolve:
     def __init__(self, model_unit, max_step=200):
@@ -188,7 +195,8 @@ def resize_and_pad(img_list, size, coord, canvas_size=(227, 227)):
 
 class ExperimentResizeEvolve:
     """Resize the evolved image before feeding into CNN and see how the evolution goes. """
-    def __init__(self, model_unit, max_step=200):
+    def __init__(self, model_unit, imgsize=(227, 227), corner=(0, 0),
+                 max_step=200, savedir="", explabel=""):
         self.recording = []
         self.scores_all = []
         self.codes_all = []
@@ -198,6 +206,10 @@ class ExperimentResizeEvolve:
         self.optimizer = CholeskyCMAES(recorddir=recorddir, space_dimen=code_length, init_sigma=init_sigma,
                                        init_code=np.zeros([1, code_length]), Aupdate_freq=Aupdate_freq) # , optim_params=optim_params
         self.max_steps = max_step
+        self.corner = corner  # up left corner of the image
+        self.imgsize = imgsize  # size of image
+        self.savedir = savedir
+        self.explabel = explabel
 
     def run(self, init_code=None):
         self.recording = []
@@ -213,7 +225,7 @@ class ExperimentResizeEvolve:
             print('\n>>> step %d' % self.istep)
             t0 = time()
             self.current_images = render(codes)
-            self.current_images = resize_and_pad(self.current_images, (50, 50), (100, 100))
+            self.current_images = resize_and_pad(self.current_images, self.corner, self.imgsize)
             t1 = time()  # generate image from code
             synscores = self.CNNmodel.score(self.current_images)
             t2 = time()  # score images
@@ -242,6 +254,7 @@ class ExperimentResizeEvolve:
         score_select = self.scores_all[idx_list]
         img_select = render(select_code)
         fig = utils.visualize_img_list(img_select, score_select, show=show)
+        fig.savefig(join(self.savedir, "Evolv_Img_Traj_%s.png" % (self.explabel)))
         return fig
 
     def visualize_best(self, show=False):
@@ -250,11 +263,18 @@ class ExperimentResizeEvolve:
         score_select = self.scores_all[idx]
         img_select = render(select_code)
         fig = plt.figure(figsize=[3, 3])
+        plt.subplot(1,2,1)
         plt.imshow(img_select[0])
+        plt.axis('off')
+        plt.title("{0:.2f}".format(score_select), fontsize=16)
+        plt.subplot(1, 2, 2)
+        resize_select = resize_and_pad(img_select, self.corner, self.imgsize)
+        plt.imshow(resize_select[0])
         plt.axis('off')
         plt.title("{0:.2f}".format(score_select), fontsize=16)
         if show:
             plt.show()
+        fig.savefig(join(self.savedir, "Best_Img_%s.png" % (self.explabel)))
         return fig
 
     def visualize_trajectory(self, show=True):
@@ -274,6 +294,7 @@ class ExperimentResizeEvolve:
         plt.legend()
         if show:
             plt.show()
+        figh.savefig(join(self.savedir, "Evolv_Traj_%s.png" % (self.explabel)))
         return figh
 
 class ExperimentManifold:
@@ -389,7 +410,7 @@ class ExperimentManifold:
                         # self.sphere_norm, interval * j, interval * k)), img)
             scores = self.CNNmodel.score(img_list)
             fig = utils.visualize_img_list(img_list, scores=scores, ncol=2*interv_n+1, nrow=2*interv_n+1, )
-            fig.savefig(os.path.join(self.savedir, "%s_%s.png" % (title, self.explabel)))
+            fig.savefig(join(self.savedir, "%s_%s.png" % (title, self.explabel)))
             scores = np.array(scores).reshape((2*interv_n+1, 2*interv_n+1))
             self.score_sum.append(scores)
             ax = figsum.add_subplot(1, len(subspace_list), spi + 1)
@@ -399,7 +420,7 @@ class ExperimentManifold:
             ax.set_yticks([0, interv_n / 2, interv_n, 1.5 * interv_n, 2*interval]); ax.set_yticklabels([-90,45,0,45,90])
             ax.set_title(title+"_Hemisphere")
         figsum.suptitle("%s-%s-unit%03d  %s" % (self.pref_unit[0], self.pref_unit[1], self.pref_unit[2], self.explabel))
-        figsum.savefig(os.path.join(self.savedir, "Manifold_summary_%s_norm%d.png" % (self.explabel, self.sphere_norm)))
+        figsum.savefig(join(self.savedir, "Manifold_summary_%s_norm%d.png" % (self.explabel, self.sphere_norm)))
         self.Perturb_vec = np.concatenate(tuple(self.Perturb_vec), axis=0)
         return self.score_sum, figsum
 #%%
@@ -409,6 +430,7 @@ def make_orthonormal_matrix(n):
     """
     Makes a square matrix which is orthonormal by concatenating
     random Householder transformations
+    Note: May not distribute uniformly in the O(n) manifold.
     """
     A = np.identity(n)
     d = np.zeros(n)
@@ -876,41 +898,41 @@ if __name__ == "__main__":
                      Perturb_vectors=experiment.Perturb_vec, sphere_norm=experiment.sphere_norm)
             plt.close("all")
 #%%
-omat = np.load("ortho4096.npy")
-savedir = join(recorddir, "axis_data")
-unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
-            ('caffe-net', 'conv2', 5, 10, 10),
-            ('caffe-net', 'conv3', 5, 10, 10),
-            ('caffe-net', 'conv4', 5, 10, 10),
-            ('caffe-net', 'conv5', 5, 10, 10),
-            ('caffe-net', 'fc6', 1),
-            ('caffe-net', 'fc7', 1),
-            ('caffe-net', 'fc8', 1),
-            ]
-for unit in unit_arr:
-    exp = ExperimentGANAxis(unit, savedir=savedir,
-                            explabel="%s_%d" % (unit[1],unit[2]))
-    exp.run_axis(350, orthomat=omat)
-    np.savez(join(savedir, "axis_score_%s_%d" % (unit[1],unit[2])), scores_all=exp.scores_all, scores_all_rnd=exp.scores_all_rnd)
+    omat = np.load("ortho4096.npy")
+    savedir = join(recorddir, "axis_data")
+    unit_arr = [('caffe-net', 'conv1', 5, 10, 10),
+                ('caffe-net', 'conv2', 5, 10, 10),
+                ('caffe-net', 'conv3', 5, 10, 10),
+                ('caffe-net', 'conv4', 5, 10, 10),
+                ('caffe-net', 'conv5', 5, 10, 10),
+                ('caffe-net', 'fc6', 1),
+                ('caffe-net', 'fc7', 1),
+                ('caffe-net', 'fc8', 1),
+                ]
+    for unit in unit_arr:
+        exp = ExperimentGANAxis(unit, savedir=savedir,
+                                explabel="%s_%d" % (unit[1],unit[2]))
+        exp.run_axis(350, orthomat=omat)
+        np.savez(join(savedir, "axis_score_%s_%d" % (unit[1],unit[2])), scores_all=exp.scores_all, scores_all_rnd=exp.scores_all_rnd)
 
 
-#%%
-savedir = join(recorddir, "resize_data")
-os.makedirs(savedir, exist_ok=True)
-unit_arr = [
-            ('caffe-net', 'conv5', 5, 10, 10),
-            ('caffe-net', 'conv1', 5, 10, 10),
-            ('caffe-net', 'conv2', 5, 10, 10),
-            ('caffe-net', 'conv3', 5, 10, 10),
-            ('caffe-net', 'conv4', 5, 10, 10),
-            ('caffe-net', 'fc6', 1),
-            ('caffe-net', 'fc7', 1),
-            ('caffe-net', 'fc8', 1),
-            ]
-for unit in unit_arr:
-    exp = ExperimentResizeEvolve(unit, )
-                            #explabel="%s_%d" % (unit[1],unit[2]))
-    exp.run()
-    exp.visualize_best()
-    exp.visualize_trajectory()
-    exp.visualize_exp()
+    #%%
+    savedir = join(recorddir, "resize_data")
+    os.makedirs(savedir, exist_ok=True)
+    unit_arr = [
+                ('caffe-net', 'conv5', 5, 10, 10),
+                ('caffe-net', 'conv1', 5, 10, 10),
+                ('caffe-net', 'conv2', 5, 10, 10),
+                ('caffe-net', 'conv3', 5, 10, 10),
+                ('caffe-net', 'conv4', 5, 10, 10),
+                ('caffe-net', 'fc6', 1),
+                ('caffe-net', 'fc7', 1),
+                ('caffe-net', 'fc8', 1),
+                ]
+    for unit in unit_arr:
+        exp = ExperimentResizeEvolve(unit, )
+                                #explabel="%s_%d" % (unit[1],unit[2]))
+        exp.run()
+        exp.visualize_best()
+        exp.visualize_trajectory()
+        exp.visualize_exp()
