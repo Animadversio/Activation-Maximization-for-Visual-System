@@ -625,9 +625,9 @@ def visualize_img_list(img_list, scores=None, ncol=11, nrow=11, title_cmap=plt.c
     else:
         cmap_flag = False
     if not len(img_list) <= ncol * nrow:
-        nrow = int(np.ceil(len(img_list) / ncol))
-    figW = 30
-    figH = figW / ncol * nrow + 1
+        ncol = int(np.ceil(len(img_list) / nrow))
+    figH = 30
+    figW = figH / nrow * ncol + 1
     fig = plt.figure(figsize=[figW, figH])
     for i, img in enumerate(img_list):
         plt.subplot(nrow, ncol, i + 1)

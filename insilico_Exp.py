@@ -58,7 +58,7 @@ class CNNmodel:
         scores = np.zeros(len(images))
         for i, img in enumerate(images):
             # Note: now only support single repetition
-            tim = self._transformer.preprocess('data', img)  # shape=(3, 227, 227)
+            tim = self._transformer.preprocess('data', img)  # shape=(3, 227, 227) # assuming input scale is 0,1 output will be 0,255
             self._classifier.blobs['data'].data[...] = tim
             self._classifier.forward(end=self._net_layer)  # propagate the image the target layer
             # record only the neuron intended
@@ -77,12 +77,12 @@ class CNNmodel:
         else:
             return scores
 
-def render(codes):
+def render(codes, scale=255):
     '''Render a list of codes to list of images'''
     if type(codes) is list:
-        images = [generator.visualize(codes[i]) for i in range(len(codes))]
+        images = [generator.visualize(codes[i], scale) for i in range(len(codes))]
     else:
-        images = [generator.visualize(codes[i, :]) for i in range(codes.shape[0])]
+        images = [generator.visualize(codes[i, :], scale) for i in range(codes.shape[0])]
     return images
 
 # Compiled Experimental module!
@@ -185,10 +185,12 @@ import cv2
 sys.path.append("D:\Github\pytorch-receptive-field")
 from torch_receptive_field import receptive_field, receptive_field_for_unit
 def resize_and_pad(img_list, size, coord, canvas_size=(227, 227)):
-    '''Render a list of codes to list of images'''
+    '''Render a list of codes to list of images
+    Note this function is assuming the image is in (0,1) scale so padding with 0.5 as gray background.
+    '''
     resize_img = []
     for img in img_list:
-        pad_img = np.ones(canvas_size + (3,)) * 0.5
+        pad_img = np.ones(canvas_size + (3,)) * 127.5
         pad_img[coord[0]:coord[0]+size[0], coord[1]:coord[1]+size[1], :] = resize(img, size, cv2.INTER_AREA)
         resize_img.append(pad_img.copy())
     return resize_img
@@ -224,8 +226,8 @@ class ExperimentResizeEvolve:
                     codes = init_code
             print('\n>>> step %d' % self.istep)
             t0 = time()
-            self.current_images = render(codes)
-            self.current_images = resize_and_pad(self.current_images, self.corner, self.imgsize)
+            self.current_images = render(codes)  # note visualize to 0,1 scale
+            self.current_images = resize_and_pad(self.current_images, self.imgsize, self.corner)
             t1 = time()  # generate image from code
             synscores = self.CNNmodel.score(self.current_images)
             t2 = time()  # score images
@@ -252,7 +254,7 @@ class ExperimentResizeEvolve:
         idx_list = np.array(idx_list)
         select_code = self.codes_all[idx_list, :]
         score_select = self.scores_all[idx_list]
-        img_select = render(select_code)
+        img_select = render(select_code, scale=1)
         fig = utils.visualize_img_list(img_select, score_select, show=show)
         fig.savefig(join(self.savedir, "Evolv_Img_Traj_%s.png" % (self.explabel)))
         return fig
@@ -261,15 +263,15 @@ class ExperimentResizeEvolve:
         idx = np.argmax(self.scores_all)
         select_code = self.codes_all[idx:idx+1, :]
         score_select = self.scores_all[idx]
-        img_select = render(select_code)
+        img_select = render(select_code)#, scale=1
         fig = plt.figure(figsize=[3, 3])
         plt.subplot(1,2,1)
-        plt.imshow(img_select[0])
+        plt.imshow(img_select[0]/255)
         plt.axis('off')
         plt.title("{0:.2f}".format(score_select), fontsize=16)
         plt.subplot(1, 2, 2)
-        resize_select = resize_and_pad(img_select, self.corner, self.imgsize)
-        plt.imshow(resize_select[0])
+        resize_select = resize_and_pad(img_select, self.imgsize, self.corner)
+        plt.imshow(resize_select[0]/255)
         plt.axis('off')
         plt.title("{0:.2f}".format(score_select), fontsize=16)
         if show:
@@ -279,8 +281,8 @@ class ExperimentResizeEvolve:
 
     def visualize_trajectory(self, show=True):
         gen_slice = np.arange(min(self.generations), max(self.generations)+1)
-        AvgScore = np.zeros_like(gen_slice)
-        MaxScore = np.zeros_like(gen_slice)
+        AvgScore = np.zeros_like(gen_slice).astype("float64")
+        MaxScore = np.zeros_like(gen_slice).astype("float64")
         for i, geni in enumerate(gen_slice):
             AvgScore[i] = np.mean(self.scores_all[self.generations == geni])
             MaxScore[i] = np.max(self.scores_all[self.generations == geni])
