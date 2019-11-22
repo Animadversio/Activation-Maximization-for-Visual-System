@@ -28,7 +28,7 @@ unit_arr = [#('caffe-net', 'conv5', 5, 10, 10),
             # ('caffe-net', 'fc7', 1),
             # ('caffe-net', 'fc8', 1),
             ]
-layer_list = ["conv4", "conv3", "conv2"]
+layer_list = ["conv1"]
 for layer in layer_list:
     for channel in range(1, 51):
         unit = ('caffe-net', layer, channel, 7, 7)

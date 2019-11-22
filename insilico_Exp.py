@@ -348,6 +348,10 @@ class ExperimentManifold:
         self.scores_all = np.array(self.scores_all)
         self.generations = np.array(self.generations)
 
+    def load_traj(self, filename):
+        data = np.load(join(savedir, filename))
+
+
     def analyze_traj(self):
         '''Get the trajectory and the PCs and the structures of it'''
         final_gen_norms = np.linalg.norm(self.codes_all[self.generations == max(self.generations), :], axis=1)
