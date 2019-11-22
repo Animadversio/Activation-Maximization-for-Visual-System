@@ -28,7 +28,9 @@ unit_arr = [#('caffe-net', 'conv5', 5, 10, 10),
             # ('caffe-net', 'fc7', 1),
             # ('caffe-net', 'fc8', 1),
             ]
-for unit in unit_arr:
+for channel in range(1, 51):
+    unit = ('caffe-net', 'conv5', channel, 10, 10)
+#for unit in unit_arr:
     if "conv" in unit[1]:
         rf_pos = receptive_field_for_unit(rf_dict, (3, 227, 227), layer_name_map[unit[1]], (unit[3], unit[4]))
         imgsize = (int(rf_pos[0][1] - rf_pos[0][0]), int(rf_pos[1][1] - rf_pos[1][0]))
