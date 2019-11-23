@@ -349,7 +349,7 @@ class ExperimentManifold:
         self.generations = np.array(self.generations)
 
     def load_traj(self, filename):
-        data = np.load(join(savedir, filename))
+        data = np.load(join(self.savedir, filename))
         self.codes_all = data["codes_all"]
         self.scores_all = data["scores_all"]
         self.generations = data["generations"]

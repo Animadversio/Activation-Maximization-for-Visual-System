@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use('Agg')
 savedir = join(recorddir, "resize_data")
 os.makedirs(savedir, exist_ok=True)
+#%%
 unit_arr = [#('caffe-net', 'conv5', 5, 10, 10),
             ('caffe-net', 'conv5', 6, 10, 10),
             ('caffe-net', 'conv5', 7, 10, 10),
@@ -28,10 +29,11 @@ unit_arr = [#('caffe-net', 'conv5', 5, 10, 10),
             # ('caffe-net', 'fc7', 1),
             # ('caffe-net', 'fc8', 1),
             ]
-layer_list = ["conv1"]
+layer_list = ["conv1", "conv3", "conv5", "conv2", "conv4"]
 for layer in layer_list:
     for channel in range(1, 51):
         unit = ('caffe-net', layer, channel, 7, 7)
+        print(unit)
     #for unit in unit_arr:
         if "conv" in unit[1]:
             rf_pos = receptive_field_for_unit(rf_dict, (3, 227, 227), layer_name_map[unit[1]], (unit[3], unit[4]))
@@ -41,14 +43,14 @@ for layer in layer_list:
             rf_pos = [(0, 227), (0, 227)]
             imgsize = (227, 227)
             corner = (0, 0)
-        exp = ExperimentResizeEvolve(unit, imgsize=imgsize, corner=corner,
-                                         max_step=100, savedir=savedir, explabel="%s_%d_rf_fit" % (unit[1], unit[2]))
-        exp.run()
-        exp.visualize_best()
-        exp.visualize_trajectory()
-        exp.visualize_exp()
-        np.savez(join(savedir, "Evolv_%s_%d_%d_%d_rf_fit.npz" % (unit[1], unit[2], unit[3], unit[4])), scores_all=exp.scores_all,
-                 codes_all=exp.codes_all, generations=exp.generations)
+        # exp = ExperimentResizeEvolve(unit, imgsize=imgsize, corner=corner,
+        #                                  max_step=100, savedir=savedir, explabel="%s_%d_rf_fit" % (unit[1], unit[2]))
+        # exp.run()
+        # exp.visualize_best()
+        # exp.visualize_trajectory()
+        # exp.visualize_exp()
+        # np.savez(join(savedir, "Evolv_%s_%d_%d_%d_rf_fit.npz" % (unit[1], unit[2], unit[3], unit[4])), scores_all=exp.scores_all,
+        #          codes_all=exp.codes_all, generations=exp.generations)
 
         expo = ExperimentResizeEvolve(unit, imgsize=(227, 227), corner=(0, 0),
                                      max_step=100, savedir=savedir, explabel="%s_%d_origin" % (unit[1], unit[2]))
@@ -57,14 +59,30 @@ for layer in layer_list:
         expo.visualize_trajectory()
         expo.visualize_exp()
         np.savez(join(savedir, "Evolv_%s_%d_%d_%d_orig.npz" % (unit[1], unit[2], unit[3], unit[4])), scores_all=expo.scores_all,
-                 codes_all=exp.codes_all, generations=expo.generations)
+                 codes_all=expo.codes_all, generations=expo.generations)  # Bug is here the codes saved is expo
+        plt.close("all")
 
 #%%
-layer_list = ["conv1"]
+layer_list = ["conv3", "conv5", "conv4", "conv2"] # "conv1",
 for layer in layer_list:
     for channel in range(1, 51):
         unit = ('caffe-net', layer, channel, 7, 7)
-        exp = ExperimentManifold(unit, max_step=100, savedir=join(savedir, layer), explabel="%s_%d_%d_%d_original" % (unit[1], unit[2], unit[3], unit[4]))
+        #del exp
+        exp = ExperimentManifold(unit, max_step=100, savedir=join(savedir, layer),
+                                 explabel="%s_%d_%d_%d_original" % (unit[1], unit[2], unit[3], unit[4]))
         exp.load_traj("Evolv_%s_%d_%d_%d_orig.npz" % (unit[1], unit[2], unit[3], unit[4]))
         exp.analyze_traj()
-        score_sum, figsum = exp.run_manifold([(1, 2), (24, 25), (48, 49), "RND"], interval=9)
+        score_sum, _ = exp.run_manifold([(1, 2), (24, 25), (48, 49), "RND"], interval=9)
+        np.save(join(savedir, layer, "Manifold_score_%s_%d_%d_%d_orig" %
+                     (unit[1], unit[2], unit[3], unit[4])), score_sum)
+        plt.clf()
+        del exp
+        exp = ExperimentManifold(unit, max_step=100, savedir=join(savedir, layer),
+                                 explabel="%s_%d_%d_%d_rf_fit" % (unit[1], unit[2], unit[3], unit[4]))
+        exp.load_traj("Evolv_%s_%d_%d_%d_rf_fit.npz" % (unit[1], unit[2], unit[3], unit[4]))
+        exp.analyze_traj()
+        score_sum, _ = exp.run_manifold([(1, 2), (24, 25), (48, 49), "RND"], interval=9)
+        np.save(join(savedir, layer, "Manifold_score_%s_%d_%d_%d_rf_fit" %
+                     (unit[1], unit[2], unit[3], unit[4])), score_sum)
+        plt.clf()
+        plt.close("all")
