@@ -58,3 +58,12 @@ for layer in layer_list:
         expo.visualize_exp()
         np.savez(join(savedir, "Evolv_%s_%d_%d_%d_orig.npz" % (unit[1], unit[2], unit[3], unit[4])), scores_all=expo.scores_all,
                  codes_all=exp.codes_all, generations=expo.generations)
+
+#%%
+layer_list = ["conv1"]
+for layer in layer_list:
+    for channel in range(1, 51):
+        unit = ('caffe-net', layer, channel, 7, 7)
+        exp = ExperimentManifold(unit, max_step=100, savedir="", explabel="")
+        exp.analyze_traj()
+        exp.run_manifold(subspace_list, interval=9)

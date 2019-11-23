@@ -350,7 +350,9 @@ class ExperimentManifold:
 
     def load_traj(self, filename):
         data = np.load(join(savedir, filename))
-
+        self.codes_all = data["codes_all"]
+        self.scores_all = data["scores_all"]
+        self.generations = data["generations"]
 
     def analyze_traj(self):
         '''Get the trajectory and the PCs and the structures of it'''
