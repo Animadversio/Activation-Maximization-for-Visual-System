@@ -63,12 +63,23 @@ for layer in layer_list:
         plt.close("all")
 
 #%%
-layer_list = ["conv3", "conv5", "conv4", "conv2"] # "conv1",
+from time import time
+savedir = join(recorddir, "resize_data")
+layer_list = ["conv5", "conv4",  "conv1", "conv2"]  # "conv3",
 for layer in layer_list:
     for channel in range(1, 51):
         unit = ('caffe-net', layer, channel, 7, 7)
-        #del exp
-        exp = ExperimentManifold(unit, max_step=100, savedir=join(savedir, layer),
+        if "conv" in layer:
+            rf_pos = receptive_field_for_unit(rf_dict, (3, 227, 227), layer_name_map[unit[1]], (unit[3], unit[4]))
+            imgsize = (int(rf_pos[0][1] - rf_pos[0][0]), int(rf_pos[1][1] - rf_pos[1][0]))
+            corner = (int(rf_pos[0][0]), int(rf_pos[1][0]))
+        else:
+            rf_pos = [(0, 227), (0, 227)]
+            imgsize = (227, 227)
+            corner = (0, 0)
+        # Original experiment
+        t0 = time()
+        exp = ExperimentManifold(unit, max_step=100, imgsize=(227, 227), corner=(0, 0), savedir=join(savedir, layer),
                                  explabel="%s_%d_%d_%d_original" % (unit[1], unit[2], unit[3], unit[4]))
         exp.load_traj("Evolv_%s_%d_%d_%d_orig.npz" % (unit[1], unit[2], unit[3], unit[4]))
         exp.analyze_traj()
@@ -76,8 +87,12 @@ for layer in layer_list:
         np.save(join(savedir, layer, "Manifold_score_%s_%d_%d_%d_orig" %
                      (unit[1], unit[2], unit[3], unit[4])), score_sum)
         plt.clf()
-        del exp
-        exp = ExperimentManifold(unit, max_step=100, savedir=join(savedir, layer),
+        t1 = time()
+        print("Original Exp Processing time %.f" % (t1 - t0))
+        # Resized Manifold experiment
+        if layer == "conv5":
+            unit = ('caffe-net', layer, channel, 10, 10)
+        exp = ExperimentManifold(unit, max_step=100, imgsize=imgsize, corner=corner, savedir=join(savedir, layer),
                                  explabel="%s_%d_%d_%d_rf_fit" % (unit[1], unit[2], unit[3], unit[4]))
         exp.load_traj("Evolv_%s_%d_%d_%d_rf_fit.npz" % (unit[1], unit[2], unit[3], unit[4]))
         exp.analyze_traj()
@@ -86,3 +101,6 @@ for layer in layer_list:
                      (unit[1], unit[2], unit[3], unit[4])), score_sum)
         plt.clf()
         plt.close("all")
+        t2 = time()
+        print("Pair Processing time %.f" % (t2-t0) )
+        print("Existing figures %d" % (len(plt.get_fignums())))

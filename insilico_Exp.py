@@ -300,7 +300,8 @@ class ExperimentResizeEvolve:
         return figh
 
 class ExperimentManifold:
-    def __init__(self, model_unit, max_step=100, savedir="", explabel=""):
+    def __init__(self, model_unit, max_step=100, imgsize=(227, 227), corner=(0, 0),
+                 savedir="", explabel=""):
         self.recording = []
         self.scores_all = []
         self.codes_all = []
@@ -312,6 +313,8 @@ class ExperimentManifold:
                                        init_code=np.zeros([1, code_length]),
                                        Aupdate_freq=Aupdate_freq)  # , optim_params=optim_params
         self.max_steps = max_step
+        self.corner = corner  # up left corner of the image
+        self.imgsize = imgsize  # size of image
         self.savedir = savedir
         self.explabel = explabel
         self.Perturb_vec = []
@@ -416,7 +419,8 @@ class ExperimentManifold:
                         img_list.append(img.copy())
                         # plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (
                         # self.sphere_norm, interval * j, interval * k)), img)
-            scores = self.CNNmodel.score(img_list)
+            pad_img_list = resize_and_pad(img_list, self.imgsize, self.corner)
+            scores = self.CNNmodel.score(pad_img_list)
             fig = utils.visualize_img_list(img_list, scores=scores, ncol=2*interv_n+1, nrow=2*interv_n+1, )
             fig.savefig(join(self.savedir, "%s_%s.png" % (title, self.explabel)))
             scores = np.array(scores).reshape((2*interv_n+1, 2*interv_n+1))
