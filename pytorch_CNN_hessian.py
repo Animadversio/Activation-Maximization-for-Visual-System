@@ -12,17 +12,30 @@ from cv2 import imread, imwrite
 import matplotlib.pylab as plt
 sys.path.append("D:\Github\pytorch-caffe")
 sys.path.append("D:\Github\pytorch-receptive-field")
-from torch_receptive_field import receptive_field, receptive_field_for_unit
-from caffenet import *
+from torch_receptive_field import receptive_field, receptive_field_for_unit  # Compute receptive field
+from caffenet import *  # Pytorch-caffe converter
 from hessian import hessian
 print(torch.cuda.current_device())
 # print(torch.cuda.device(0))
 if torch.cuda.is_available():
     print(torch.cuda.device_count(), " GPU is available:", torch.cuda.get_device_name(0))
-
+#%%
 output_dir = join(r"D:\Generator_DB_Windows\data\with_CNN", "hessian")
 os.makedirs(output_dir,exist_ok=True)
-#%%
+#% Put all the UNITS of INTEREST HERE! Or input from cmdline !
+unit_arr = [('caffe-net', 'fc6', 1),
+            ('caffe-net', 'fc6', 2),
+            ('caffe-net', 'fc6', 3),
+            ('caffe-net', 'fc7', 1),
+            ('caffe-net', 'fc7', 2),
+            ('caffe-net', 'fc8', 10),
+            ('caffe-net', 'conv1', 10, 10, 10),
+            ('caffe-net', 'conv2', 5, 10, 10),
+            ('caffe-net', 'conv4', 5, 10, 10),
+            ('caffe-net', 'conv3', 10, 10, 10),
+            ('caffe-net', 'conv5', 5, 10, 10),
+            ]
+#%% Prepare PyTorch version of the Caffe networks
 basedir = r"D:\Generator_DB_Windows\nets"
 protofile = os.path.join(basedir, r"caffenet\caffenet.prototxt") # 'resnet50/deploy.prototxt'
 weightfile = os.path.join(basedir, 'bvlc_reference_caffenet.caffemodel') # 'resnet50/resnet50.caffemodel'
@@ -35,6 +48,10 @@ else:
     net.load_weights(weightfile)
     torch.save(net.state_dict(), save_path)
 net.eval()
+net.verbose = False
+net.requires_grad_(requires_grad=False)
+for param in net.parameters():
+    param.requires_grad = False
 
 basedir = r"D:/Generator_DB_Windows/nets"
 save_path = os.path.join(basedir, r"upconv/fc6/generator_state_dict.pt")
@@ -48,34 +65,15 @@ else:
     Generator.load_weights(weightfile)
     Generator.save(Generator.state_dict(), save_path)
 Generator.eval()
-
-net.verbose = False
 Generator.verbose = False
-net.requires_grad_(requires_grad=False)
 Generator.requires_grad_(requires_grad=False)
-for param in net.parameters():
-    param.requires_grad = False
 for param in Generator.parameters():
     param.requires_grad = False
 
 import net_utils
 detfmr = net_utils.get_detransformer(net_utils.load('generator'))
 tfmr = net_utils.get_transformer(net_utils.load('caffe-net'))
-#%%
-unit_arr = [('caffe-net', 'fc6', 1),
-            ('caffe-net', 'fc6', 2),
-            ('caffe-net', 'fc6', 3),
-            ('caffe-net', 'fc7', 1),
-            ('caffe-net', 'fc7', 2),
-            ('caffe-net', 'fc8', 10),
-            ('caffe-net', 'conv1', 10, 10, 10),
-            ('caffe-net', 'conv2', 5, 10, 10),
-            ('caffe-net', 'conv4', 5, 10, 10),
-            ('caffe-net', 'conv3', 10, 10, 10),
-            ('caffe-net', 'conv5', 5, 10, 10),
-            ]
-unit = unit_arr[7]
-#%%
+#%% Script for running Evolution and hessian computation!
 # def display_image(ax, out_img):
 #     deproc_img = detfmr.deprocess('data', out_img.data.numpy())
 #     ax.imshow(np.clip(deproc_img, 0, 1))
@@ -169,6 +167,7 @@ for unit in unit_arr:
              activation=-neg_activ.detach().numpy(),
              grad=gradient.numpy(),H=H.detach().numpy(),
              heig=eigval,heigvec=eigvec)
+    # Generating figure of Hessian Spectrum and Sorted Gradient entry
     plt.figure(figsize=[12,6])
     plt.subplot(211)
     plt.plot(g[0,::-1])
