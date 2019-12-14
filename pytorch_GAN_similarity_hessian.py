@@ -136,7 +136,8 @@ def sim_hessian_computation(z, percept_loss, savepath=None):
 def visualize_eig_spectra(gradient,eigval,figh):
     g = gradient.numpy()
     g = np.sort(g)
-    plt.figure(figh)
+    plt.figure(figh.number)
+    #plt.set_current_figure(figh)
     plt.clf()
     plt.subplot(211)
     plt.plot(g[0, ::-1])
@@ -158,22 +159,13 @@ for unit in unit_arr[:]:
     os.makedirs(unit_savedir, exist_ok=True)
     savepath = join(output_dir, "hessian_sim_alex_lin_%s_%d.npz" % (unit[1], unit[2]))
     H, eigval, eigvec, gradient, d_sim = sim_hessian_computation(z, model, savepath=savepath)
-    g = gradient.numpy()
-    g = np.sort(g)
-    plt.figure(figsize=[12, 6])
-    plt.subplot(211)
-    plt.plot(g[0, ::-1])
-    plt.xticks(np.arange(0, 4200, 200))
-    plt.ylabel("Gradient")
-    plt.subplot(212)
-    plt.plot(eigval[::-1])
-    plt.xticks(np.arange(0, 4200, 200))
-    plt.ylabel("EigenVal of Hessian")
+    figh = plt.figure(2, figsize=[12, 6]);plt.clf()
+    visualize_eig_spectra(gradient,eigval,figh)
     plt.suptitle("Gradient and Hessian Spectrum of Hotspot under Alexnet Linear Perceptual Metric")
     plt.savefig(join(output_dir, "%s_%s_%d_sim_alex_lin_hessian_eig.png" % (unit[0], unit[1], unit[2])))
-    plt.show()
+
 #%%
-for i in range(20):
+for i in range(1,20):
     z = 4 * np.random.randn(1, 4096).astype(np.float32)
     _, ref_img_vis = decaf_tfm(Generator(Variable(torch.from_numpy(z)))['deconv0'])
     plt.figure(1, figsize=[3, 3])
@@ -197,7 +189,7 @@ for i in range(20):
     figh.savefig(join(output_dir, "RAND_VEC_%d_sim_alex_lin_hessian_eig.png" % (i)))
 
     savepath = join(output_dir, "hessian_sim_vgg_lin_randspot%d.npz" % (i))
-    H, eigval, eigvec, gradient, d_sim = sim_hessian_computation(z, model_alex, savepath=savepath)
+    H, eigval, eigvec, gradient, d_sim = sim_hessian_computation(z, model_vgg, savepath=savepath)
     figh = plt.figure(2, figsize=[12, 6]);plt.clf()
     visualize_eig_spectra(gradient, eigval, figh)
     figh.suptitle("Gradient and Hessian Spectrum of Hotspot under VGGnet Linear Perceptual Metric")
