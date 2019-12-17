@@ -68,8 +68,8 @@ from torchvision import transforms
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])  # Note without normalization, the
 denormalize = transforms.Normalize(
-    mean=[-0.485/0.229, -0.456/0.224, -0.406/0.255],
-    std=[1/0.229, 1/0.224, 1/0.255])
+    mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225],
+    std=[1/0.229, 1/0.224, 1/0.225])
 #%%
 t0 = time()
 Bnum = 10
@@ -122,7 +122,7 @@ class SaveFeatures():
     def __init__(self, module):
         self.hook = module.register_forward_hook(self.hook_fn)
     def hook_fn(self, module, input, output):
-        self.features = torch.tensor(output,requires_grad=True).cuda()
+        self.features = output#torch.tensor(output,requires_grad=True).cuda()
     def close(self):
         self.hook.remove()
 
@@ -133,42 +133,91 @@ def val_tfms(img_np):
 
 def val_detfms(img_tsr):
     img = denormalize(img_tsr.squeeze()).permute(1,2,0)
-    return img
+    return img.detach().cpu().numpy()
 
 class FilterVisualizer():
-    def __init__(self, size=56, upscaling_steps=12, upscaling_factor=1.2):
-        self.size, self.upscaling_steps, self.upscaling_factor = size, upscaling_steps, upscaling_factor
-        self.model = alexnet.features.cuda().eval()
-        # set_trainable(self.model, False)
-        for param in self.model.parameters():
-            param.requires_grad = False
+    def __init__(self,model):
+        self.model = model
+        self.weights = None
 
-    def visualize(self, layer, filter, lr=0.1, opt_steps=20, blur=None):
-        sz = self.size
-        img = np.uint8(np.random.uniform(150, 180, (sz, sz, 3))) / 255  # generate random image
-        activations = SaveFeatures(list(self.model.children())[layer])  # register hook
+    def visualize(self, sz, layer, filter, weights=None, 
+                  upscaling_steps=12, upscaling_factor=1.2, lr=0.1, opt_steps=20, blur=None, print_losses=False):
+        '''Add weights to support visualize combination of channels'''
+        if weights is not None:
+            assert len(weights) == len(filter)
+            self.weights = torch.tensor(weights,dtype=torch.float,device='cuda')
+        img = (np.random.random((sz,sz, 3)) * 20 + 128.)/255 # value b/t 0 and 1        
+        activations = SaveFeatures(layer)  # register hook
 
-        for _ in range(self.upscaling_steps):  # scale the image up upscaling_steps times
-            # train_tfms, val_tfms = tfms_from_model(vgg16, sz)
-            img_var = Variable(val_tfms(img), requires_grad=True) # convert image to Variable that requires grad
-            optimizer = torch.optim.Adam([img_var], lr=lr, weight_decay=1e-6)
-            for n in range(opt_steps):  # optimize pixel values for opt_steps times
+        for i in range(upscaling_steps):  
+            # convert np to tensor + channel first + new axis, and apply imagenet norm
+            img_tensor = val_tfms(img)#,np.float32)
+            img_tensor = img_tensor.cuda()
+            img_tensor.requires_grad_();
+            if not img_tensor.grad is None:
+                img_tensor.grad.zero_(); 
+            
+            
+            optimizer = torch.optim.Adam([img_tensor], lr=0.1, weight_decay=1e-6)
+            if i > upscaling_steps/2:
+                opt_steps_ = int(opt_steps*1.3)
+            else:
+                opt_steps_ = opt_steps
+            for n in range(opt_steps_):  # optimize pixel values for opt_steps times
                 optimizer.zero_grad()
-                self.model(img_var)
-                loss = -activations.features[0, filter].mean()
+                _=self.model(img_tensor)
+                if weights is None:
+                    loss = -1*activations.features[0, filter].mean()
+                else: 
+                    loss = -1*torch.einsum("ijk,i->jk", activations.features[0, filter], self.weights).mean()
+                if print_losses:
+                    if i%3==0 and n%5==0:
+                        print(f'{i} - {n} - {float(-loss)}')
                 loss.backward()
                 optimizer.step()
-            img = val_detfms(img_var.data.cpu()).numpy()
+            
+            # convert tensor back to np
+            img = val_detfms(img_tensor)
             self.output = img
-            sz = int(self.upscaling_factor * sz)  # calculate new image size
-            img = cv2.resize(img, (sz, sz), interpolation=cv2.INTER_CUBIC)  # scale image up
-            if blur is not None: img = cv2.blur(img, (blur, blur))  # blur image to reduce high frequency patterns
-        self.save(layer, filter)
+            sz = int(upscaling_factor * sz)  # calculate new image size
+#             print(f'Upscale img to: {sz}')
+            img = cv2.resize(img, (sz, sz), interpolation = cv2.INTER_CUBIC)  # scale image up
+            if blur is not None: img = cv2.blur(img,(blur,blur))  # blur image to reduce high frequency patterns
+                
         activations.close()
+        return np.clip(self.output, 0, 1)
+    
+    def get_transformed_img(self,img,sz):
+        '''
+        Scale up/down img to sz. Channel last (same as input)
+        image: np.array [sz,sz,3], already divided by 255"    
+        '''
+        return cv2.resize(img, (sz, sz), interpolation = cv2.INTER_CUBIC)
+    
+    def most_activated(self, img, layer):
+        '''
+        image: np.array [sz,sz,3], already divided by 255"    
+        '''
+        img = cv2.resize(img, (224,224), interpolation = cv2.INTER_CUBIC)
+        activations = SaveFeatures(layer)
+        img_tensor = val_tfms(img)#,np.float32)
+        img_tensor = img_tensor.cuda()
+        
+        _=self.model(img_tensor)
+        mean_act = [np.squeeze(to_np(activations.features[0,i].mean())) for i in range(activations.features.shape[1])]
+        activations.close()
+        return mean_act
 
     def save(self, layer, filter):
         plt.imsave("layer_" + str(layer) + "_filter_" + str(filter) + ".jpg", np.clip(self.output, 0, 1))
 
 #%%
-FVis = FilterVisualizer(size=224, upscaling_steps=10, upscaling_factor=1.2)
-FVis.visualize(8, 20, blur=5)
+feat = alexnet.features.cuda().eval()
+FVis = FilterVisualizer(feat)
+img = FVis.visualize(sz=227, layer=feat[8], filter=[1,5,3,10], weights=[1,3,1,7], blur=10, opt_steps=20, upscaling_steps=3, upscaling_factor=1.2, print_losses=True)
+plt.figure(figsize=[8,8])
+plt.imshow(FVis.output)
+plt.show()
+
+# FVis = FilterVisualizer(size=224, upscaling_steps=10, upscaling_factor=1.2)
+# FVis.visualize(8, 20, blur=5)
