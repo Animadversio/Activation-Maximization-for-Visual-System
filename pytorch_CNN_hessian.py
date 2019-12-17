@@ -36,40 +36,9 @@ unit_arr = [('caffe-net', 'fc6', 1),
             ('caffe-net', 'conv5', 5, 10, 10),
             ]
 #%% Prepare PyTorch version of the Caffe networks
-basedir = r"D:\Generator_DB_Windows\nets"
-protofile = os.path.join(basedir, r"caffenet\caffenet.prototxt") # 'resnet50/deploy.prototxt'
-weightfile = os.path.join(basedir, 'bvlc_reference_caffenet.caffemodel') # 'resnet50/resnet50.caffemodel'
-save_path = os.path.join(basedir, r"caffenet\caffenet_state_dict.pt")
-net = CaffeNet(protofile)
-print(net)
-if os.path.exists(save_path):
-    net.load_state_dict(torch.load(save_path))
-else:
-    net.load_weights(weightfile)
-    torch.save(net.state_dict(), save_path)
-net.eval()
-net.verbose = False
-net.requires_grad_(requires_grad=False)
-for param in net.parameters():
-    param.requires_grad = False
-
-basedir = r"D:/Generator_DB_Windows/nets"
-save_path = os.path.join(basedir, r"upconv/fc6/generator_state_dict.pt")
-protofile = os.path.join(basedir, r"upconv/fc6/generator.prototxt")  # 'resnet50/deploy.prototxt'
-weightfile = os.path.join(basedir, r'upconv/fc6/generator.caffemodel')  # 'resnet50/resnet50.caffemodel'
-Generator = CaffeNet(protofile)
-print(Generator)
-if os.path.exists(save_path):
-    Generator.load_state_dict(torch.load(save_path))
-else:
-    Generator.load_weights(weightfile)
-    Generator.save(Generator.state_dict(), save_path)
-Generator.eval()
-Generator.verbose = False
-Generator.requires_grad_(requires_grad=False)
-for param in Generator.parameters():
-    param.requires_grad = False
-
+from torch_net_utils import load_caffenet,load_generator
+net = load_caffenet()
+Generator = load_generator()
 import net_utils
 detfmr = net_utils.get_detransformer(net_utils.load('generator'))
 tfmr = net_utils.get_transformer(net_utils.load('caffe-net'))
