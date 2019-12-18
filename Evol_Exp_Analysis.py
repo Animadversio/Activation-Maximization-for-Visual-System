@@ -23,12 +23,16 @@ from torch_net_utils import load_caffenet,load_generator, visualize
 # net = load_caffenet()
 Generator = load_generator()
 #%%
-rspPath = r"D:\Network_Data_Sync\Data-Ephys-MAT"#r"N:\Data-Ephys-MAT"
-EphsFN = "Beto64chan-30102019-001"
+rspPath = r"D:\Network_Data_Sync\Data-Ephys-MAT"#r"N:\Data-Ephys-MAT"#
+EphsFN = "Beto64chan-30102019-001"  # "Beto64chan-11112019-006" #
+
 Rspfns = sorted(glob(join(rspPath, EphsFN+"*")))
 rspData = h5py.File(Rspfns[1])
 spikeID = rspData['meta']['spikeID']
 rsp = rspData['rasters']
+# Extremely useful code snippet to solve the problem
+imgnms_refs = np.array(rspData['Trials']['imageName']).flatten()
+imgnms = np.array([''.join(chr(i) for i in rspData[ref]) for ref in imgnms_refs])
 #%%
 prefchan_idx = np.nonzero(spikeID[0,:]==26)[0] - 1
 prefrsp = rsp[:, :, prefchan_idx]  # Dataset reading takes time
@@ -37,9 +41,8 @@ scores = prefrsp[:, 50:, :].mean(axis=1) - prefrsp[:, :40, :].mean(axis=1)
 vis_img = visualize(Generator, codes[3,:])
 plt.imshow(vis_img)
 plt.show()
-#%%
-# imgnmdata = loadmat(join(rspPath, EphsFN+"_imgName.mat")) # doesn't work so well
-#%%
+
+#%% If not readable from py side, read from matlab side and export!
 imgnms = [] # the one stored in *.mat file. Depleted of .jpg suffix
 with open(join(rspPath, EphsFN+"_imgName.csv"), newline='\n') as csvfile:
     reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
