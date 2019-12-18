@@ -95,12 +95,13 @@ t1 = time()
 print("%d s"% t1-t0) # 203.1430070400238 s for 3000 samples # 344s for larger batch
 #%%
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
-model = Lasso()
+model = Ridge(alpha=10)#Lasso()
 #%%
-y = scores[gen_rows, 0]
+y = scores[gen_rows, 1]
 model.fit(out_feats_all.numpy(), y)
 fitY = model.predict(out_feats_all.numpy())
-np.savez("LASSO_weights.npz", weights = model.coef_, bias = model.intercept_, L1=model.l1_ratio)
+# np.savez("LASSO_weights.npz", weights = model.coef_, bias = model.intercept_, L1=model.l1_ratio)
+#np.savez("Ridge_weights.npz", weights = model.coef_, bias = model.intercept_, L1=model.l1_ratio)
 #%%
 plt.figure(2)
 plt.clf()
@@ -212,12 +213,225 @@ class FilterVisualizer():
         plt.imsave("layer_" + str(layer) + "_filter_" + str(filter) + ".jpg", np.clip(self.output, 0, 1))
 
 #%%
-feat = alexnet.features.cuda().eval()
+# feat = alexnet.features.cuda().eval()
+feat = conv4net.cuda().eval() # this is a clipped version of alexnet.features 0:8 layers
 FVis = FilterVisualizer(feat)
-img = FVis.visualize(sz=227, layer=feat[8], filter=[1,5,3,10], weights=[1,3,1,7], blur=10, opt_steps=20, upscaling_steps=3, upscaling_factor=1.2, print_losses=True)
-plt.figure(figsize=[8,8])
+#%%
+weightVec = weightTsr[:, 4:5, 10:11].mean(axis=(1, 2))
+filters = np.arange(weightVec.shape[0])
+img = FVis.visualize(sz=50, layer=feat[8], filter=filters, weights=weightVec/weightVec.std(),
+                     blur=10, opt_steps=11, upscaling_steps=7, upscaling_factor=1.2, print_losses=True)
+plt.figure(figsize=[8, 8])
 plt.imshow(FVis.output)
 plt.show()
+#%%
+row_num, col_num = weightTsr.shape[1:]
+img_arr = []
+for i in range(row_num):
+    for j in range(col_num):
+        weightVec = weightTsr[:, i:i+1, j:j+1].mean(axis=(1, 2))
+        filters = np.arange(weightVec.shape[0])
+        img = FVis.visualize(sz=50, layer=feat[8], filter=filters, weights=weightVec/weightVec.std(),
+                     blur=10, opt_steps=11, upscaling_steps=7, upscaling_factor=1.2, print_losses=True)
+        img_arr.append(img)
 
-# FVis = FilterVisualizer(size=224, upscaling_steps=10, upscaling_factor=1.2)
-# FVis.visualize(8, 20, blur=5)
+from imutils import build_montages
+montages = build_montages(img_arr, (100, 100), (15, 15))
+plt.figure();plt.imshow(montages[0]);plt.show()
+
+#%%
+savepath = r"C:\Users\ponce\OneDrive - Washington University in St. Louis\Tuning_Interpretation\Exp11_Chan26_Evol"
+csr = 0
+for i in range(row_num):
+    for j in range(col_num):
+        plt.imsave(join(savepath, "layer_" + "conv4"+ "_FV_(%d, %d).jpg"%(i+1, j+1)), img_arr[csr])
+        csr = csr + 1
+
+#%%
+def build_montages(image_list, image_shape, montage_shape):
+    """Adapted from imutils.build_montages   add automatic normalization in it.
+    ---------------------------------------------------------------------------------------------
+    author: Kyle Hounslow
+    ---------------------------------------------------------------------------------------------
+    Converts a list of single images into a list of 'montage' images of specified rows and columns.
+    A new montage image is started once rows and columns of montage image is filled.
+    Empty space of incomplete montage images are filled with black pixels
+    ---------------------------------------------------------------------------------------------
+    :param image_list: python list of input images
+    :param image_shape: tuple, size each image will be resized to for display (width, height)
+    :param montage_shape: tuple, shape of image montage (width, height)
+    :return: list of montage images in numpy array format
+    ---------------------------------------------------------------------------------------------
+
+    example usage:
+
+    # load single image
+    img = cv2.imread('lena.jpg')
+    # duplicate image 25 times
+    num_imgs = 25
+    img_list = []
+    for i in xrange(num_imgs):
+        img_list.append(img)
+    # convert image list into a montage of 256x256 images tiled in a 5x5 montage
+    montages = make_montages_of_images(img_list, (256, 256), (5, 5))
+    # iterate through montages and display
+    for montage in montages:
+        cv2.imshow('montage image', montage)
+        cv2.waitKey(0)
+
+    ----------------------------------------------------------------------------------------------
+    """
+    if len(image_shape) != 2:
+        raise Exception('image shape must be list or tuple of length 2 (rows, cols)')
+    if len(montage_shape) != 2:
+        raise Exception('montage shape must be list or tuple of length 2 (rows, cols)')
+    image_montages = []
+    # start with black canvas to draw images onto
+    montage_image = np.zeros(shape=(image_shape[1] * (montage_shape[1]), image_shape[0] * montage_shape[0], 3),
+                          dtype=np.uint8)
+    cursor_pos = [0, 0]
+    start_new_img = False
+    for img in image_list:
+        if type(img).__module__ != np.__name__:
+            raise Exception('input of type {} is not a valid numpy array'.format(type(img)))
+        start_new_img = False
+        img = cv2.resize(img, image_shape)
+        if img.dtype in (np.float, np.float32, np.float64, np.float16) and img.max() <= 1.0:  # float 0,1 image
+            img = (255 * img).astype(np.uint8)
+        # draw image to black canvas
+        montage_image[cursor_pos[1]:cursor_pos[1] + image_shape[1], cursor_pos[0]:cursor_pos[0] + image_shape[0]] = img
+        cursor_pos[0] += image_shape[0]  # increment cursor x position
+        if cursor_pos[0] >= montage_shape[0] * image_shape[0]:
+            cursor_pos[1] += image_shape[1]  # increment cursor y position
+            cursor_pos[0] = 0
+            if cursor_pos[1] >= montage_shape[1] * image_shape[1]:
+                cursor_pos = [0, 0]
+                image_montages.append(montage_image)
+                # reset black canvas
+                montage_image = np.zeros(shape=(image_shape[1] * (montage_shape[1]), image_shape[0] * montage_shape[0], 3),
+                                      dtype=np.uint8)
+                start_new_img = True
+    if start_new_img is False:
+        image_montages.append(montage_image)  # add unfinished montage
+    return image_montages
+
+#%%
+BGR_mean = torch.tensor([104.0, 117.0, 123.0])
+BGR_mean = torch.reshape(BGR_mean, (1, 3, 1, 1)).cuda()
+def visualize_for_torchnet(G, code):
+    """Do the De-caffe transform (Validated)"""
+    blobs = G(code)
+    out_img = blobs['deconv0']  # get raw output image from GAN
+    clamp_out_img = torch.clamp(out_img + BGR_mean, 0, 255) / 255
+    vis_img = clamp_out_img[:, [2, 1, 0], :, :] # still use BCHW sequence
+    return vis_img
+#%%
+import torch.optim as optim
+import torch.nn.functional as F
+class FilterVisualizerGAN():
+    def __init__(self, model):
+        self.model = model
+        self.G = load_generator()
+        self.G.cuda().eval()
+        self.weights = None
+
+    def visualize(self, sz, layer, filter, weights=None,
+                  lr=0.1, opt_steps=20, blur=None, print_losses=False):  # upscaling_steps=12, upscaling_factor=1.2,
+        '''Add weights to support visualize combination of channels'''
+        if weights is not None:
+            assert len(weights) == len(filter)
+            self.weights = torch.tensor(weights, dtype=torch.float, device='cuda')
+
+        activations = SaveFeatures(layer)  # register hook
+        feat = 0.01 * np.random.rand(1, 4096)
+        feat = torch.from_numpy(np.float32(feat))
+        # feat = Variable(feat, requires_grad=True).cuda()
+        feat = Variable(torch.from_numpy(np.float32(feat))).cuda().detach().requires_grad_(True)
+        optimizer = optim.SGD([feat], lr=0.05, momentum=0.3, dampening=0.1)
+
+        for n in range(opt_steps):  # optimize pixel values for opt_steps times
+            optimizer.zero_grad()
+            img = visualize_for_torchnet(self.G, feat)
+            resz_img = F.interpolate(img, (sz, sz), mode='bilinear', align_corners=True)
+            img_tensor = normalize(resz_img.squeeze()).unsqueeze(0)
+            _ = self.model(img_tensor)
+            if weights is None:
+                loss = -1 * activations.features[0, filter].mean()
+            else:
+                loss = -1 * torch.einsum("ijk,i->jk", activations.features[0, filter], self.weights).mean()
+            if print_losses:
+                if n % 5 == 0:
+                    print(f'{n} - {float(-loss)}')
+            loss.backward()
+            optimizer.step()
+
+        # convert tensor back to np
+        #img = val_detfms(img_tensor)
+        #img = visualize(self.G, feat.cpu().data.numpy())
+        self.output = img.cpu().data.permute(2,3,1,0).squeeze().numpy()
+        #img = cv2.resize(img, (sz, sz), interpolation=cv2.INTER_CUBIC)  # scale image up
+        #if blur is not None: img = cv2.blur(img, (blur, blur))  # blur image to reduce high frequency patterns
+
+        activations.close()
+        return np.clip(self.output, 0, 1)
+
+    def get_transformed_img(self, img, sz):
+        '''
+        Scale up/down img to sz. Channel last (same as input)
+        image: np.array [sz,sz,3], already divided by 255"
+        '''
+        return cv2.resize(img, (sz, sz), interpolation=cv2.INTER_CUBIC)
+#%%
+from torch_net_utils import visualize, load_generator
+featlayer = alexnet.features.cuda().eval()
+FVisG = FilterVisualizerGAN(conv4net)
+#%%
+img = FVisG.visualize(sz=50, layer=conv4net[8], filter=[1,10], weights=[2,10], blur=10, opt_steps=40, print_losses=True)
+plt.figure(figsize=[8,8])
+plt.imshow(FVisG.output)
+plt.show()
+#%%
+# featlayer = alexnet.features.cuda().eval()
+# activations = SaveFeatures(featlayer[8])
+# feat = 0.01 * np.random.rand(1, 4096)
+# feat = Variable(torch.from_numpy(np.float32(feat))).cuda().detach().requires_grad_(True)
+# # img = visualize_for_torchnet(FVisG.G, feat)
+# # resz_img = F.interpolate(img, (200, 200), mode='bilinear', align_corners=True)
+# # img_tensor = normalize(resz_img.squeeze()).unsqueeze(0)
+# # _ = featlayer(img_tensor)
+# # loss = -1 * activations.features[0, :].mean()
+# optimizer = optim.SGD([feat], lr=0.05, momentum=0.3, dampening=0.1)
+# # feat = feat.cuda()
+# # feat.requires_grad_();
+# for n in range(10):  # optimize pixel values for opt_steps times
+#     optimizer.zero_grad()
+#     img = visualize_for_torchnet(FVisG.G, feat)
+#     resz_img = F.interpolate(img, (200, 200), mode='bilinear', align_corners=True)
+#     img_tensor = normalize(resz_img.squeeze()).unsqueeze(0)
+#     _ = featlayer(img_tensor)
+#     loss = -1 * activations.features[0, :].mean()
+#%%
+# featlayer = alexnet.features.cuda().eval()
+FVisG = FilterVisualizerGAN(conv4net)
+row_num, col_num = weightTsr.shape[1:]
+img_arr2 = []
+for i in range(row_num):
+    for j in range(col_num):
+        weightVec = weightTsr[:, i:i+1, j:j+1].mean(axis=(1, 2))
+        filters = np.arange(weightVec.shape[0])
+        img = FVisG.visualize(sz=70, layer=conv4net[8], filter=filters, weights=weightVec/weightVec.std(), blur=10, opt_steps=40, print_losses=True)
+        img_arr2.append(img)
+        plt.imsave(join(savepath, "layer_" + "conv4" + "_FVG_(%d, %d).jpg" % (i + 1, j + 1)), img)
+
+# from imutils import build_montages
+montages = build_montages(img_arr2, (70, 70), (15, 15))
+plt.figure();plt.imshow(montages[0])
+plt.savefig(join(savepath, "layer_conv4_FVG_montage.jpg"))
+plt.show()
+#%%
+# savepath = r"C:\Users\ponce\OneDrive - Washington University in St. Louis\Tuning_Interpretation\Exp11_Chan26_Evol"
+# csr = 0
+# for i in range(row_num):
+#     for j in range(col_num):
+#         plt.imsave(join(savepath, "layer_" + "conv4"+ "_FV_(%d, %d).jpg"%(i+1, j+1)), img_arr[csr])
+#         csr = csr + 1

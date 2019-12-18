@@ -49,7 +49,7 @@ BGR_mean = torch.tensor([104.0, 117.0, 123.0])
 BGR_mean = torch.reshape(BGR_mean, (1, 3, 1, 1))
 #%%
 def visualize(G, code):
-    """Do the De-caffe transform """
+    """Do the De-caffe transform (Validated)"""
     code = code.reshape(-1, 4096).astype(np.float32)
     blobs = G(torch.from_numpy(code))
     out_img = blobs['deconv0']  # get raw output image from GAN
@@ -59,3 +59,4 @@ def visualize(G, code):
 # import net_utils
 # detfmr = net_utils.get_detransformer(net_utils.load('generator'))
 # tfmr = net_utils.get_transformer(net_utils.load('caffe-net'))
+
