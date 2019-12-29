@@ -112,7 +112,7 @@ plt.plot(y)
 plt.plot(fitY)
 plt.show()
 #%%
-weightTsr = np.reshape(model.coef_,np.array(FeatTsrShape))
+weightTsr = np.reshape(model.coef_, np.array(FeatTsrShape))
 wightMap = np.abs(weightTsr).sum(axis=0)
 #%%
 figh = plt.figure(3)
