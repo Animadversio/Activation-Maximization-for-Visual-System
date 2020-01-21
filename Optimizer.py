@@ -310,6 +310,66 @@ class Genetic(Optimizer):
         if not no_image:
             self._prepare_images()
 
+    def step_simple(self, scores, codes):
+        """ Taking scores and codes from outside to return new codes,
+        without generating images
+        Used in cases when the images are better handled in outer objects like Experiment object
+
+        Discard the nan handling part!
+        Discard the genealogy recording part
+        """
+        assert len(scores) == len(codes), \
+            'number of scores (%d) != population size (%d)' % (len(scores), len(codes))
+        new_size = self._popsize  # this may != len(curr_samples) if it has been dynamically updated
+        new_samples = np.empty((new_size, codes.shape[1]))
+        # instead of chaining the genealogy, alias it at every step
+        curr_genealogy = np.array(self._curr_sample_ids, dtype=str)
+        new_genealogy = [''] * new_size  # np array not used because str len will be limited by len at init
+
+        # deal with nan scores:
+        nan_mask = np.isnan(scores)
+        n_nans = int(np.sum(nan_mask))
+        valid_mask = ~nan_mask
+        n_valid = int(np.sum(valid_mask))
+        assert n_nans == 0  # discard the part dealing with nans
+        # if some images have scores
+        valid_scores = scores[valid_mask]
+        self._kT = max((np.std(valid_scores) * self._kT_mul, 1e-8))  # prevents underflow kT = 0
+        print('kT: %f' % self._kT)
+        sort_order = np.argsort(valid_scores)[::-1]  # sort from high to low
+        valid_scores = valid_scores[sort_order]
+        # Note: if new_size is smalled than n_valid, low ranking images will be lost
+        thres_n_valid = min(n_valid, new_size)
+        new_samples[:thres_n_valid] = codes[valid_mask][sort_order][:thres_n_valid]
+        new_genealogy[:thres_n_valid] = curr_genealogy[valid_mask][sort_order][:thres_n_valid]
+
+        fitness = np.exp((valid_scores - valid_scores[0]) / self._kT)
+        # skips first n_conserve samples
+        n_mate = new_size - self._n_conserve - n_nans
+        new_samples[self._n_conserve:thres_n_valid], new_genealogy[self._n_conserve:thres_n_valid] = \
+            mate(
+                new_samples[:thres_n_valid], new_genealogy[:thres_n_valid],
+                fitness, n_mate, self._random_generator, self._parental_skew
+            )
+        new_samples[self._n_conserve:thres_n_valid], new_genealogy[self._n_conserve:thres_n_valid] = \
+            mutate(
+                new_samples[self._n_conserve:thres_n_valid], new_genealogy[self._n_conserve:thres_n_valid],
+                self._mut_size, self._mut_rate, self._random_generator
+            )
+
+        self._istep += 1
+        self._genealogy = new_genealogy
+        self._curr_samples = new_samples
+        self._genealogy = new_genealogy
+        self._curr_sample_idc = range(self._next_sample_idx, self._next_sample_idx + new_size)  # cumulative id .
+        self._next_sample_idx += new_size
+        if self._thread is None:
+            self._curr_sample_ids = ['gen%03d_%06d' % (self._istep, idx) for idx in self._curr_sample_idc]
+        else:
+            self._curr_sample_ids = ['thread%02d_gen%03d_%06d' %
+                                     (self._thread, self._istep, idx) for idx in self._curr_sample_idc]
+        return new_samples
+
     # def step_with_immigration(self, scores, immigrants, immigrant_scores):
     #     assert len(immigrants.shape) == 2, 'population is not batch sized (dim != 2)'
     #     self._curr_samples = np.concatenate((self._curr_samples, immigrants))
@@ -752,8 +812,11 @@ class CholeskyCMAES(Optimizer):
         return new_samples
 
     def step_simple(self, scores, codes):
+        """ Taking scores and codes to return new codes, without generating images
+        Used in cases when the images are better handled in outer objects like Experiment object
+        """
         # Note it's important to decide which variable is to be saved in the `Optimizer` object
-        # Note to conform with other code, this part is transposed.
+        # Note to confirm with other code, this part is transposed.
 
         # set short name for everything to simplify equations
         N = self.space_dimen

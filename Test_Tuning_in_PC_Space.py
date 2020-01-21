@@ -4,7 +4,7 @@ How is the neuron tuning to the submanifold (Linear or spherical) spanned by PCs
 '''
 import utils
 from sklearn.decomposition import PCA
-import  matplotlib.pylab as plt
+import matplotlib.pylab as plt
 from CNNScorer import NoIOCNNScorer
 import numpy as np
 #%%
